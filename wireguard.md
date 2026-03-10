@@ -165,6 +165,10 @@ You should see a `latest handshake` timestamp and data transfer stats for the pe
 
 3. On your Windows laptop, visit [https://whatismyipaddress.com](https://whatismyipaddress.com) — it should show your EC2 Elastic IP if using full tunnel mode.
 
+In the server, you could monitor the client's traffic using tcpdump
+```
+sudo tcpdump -envi wg0 host 8.8.8.8 << replace 8.8.8.8 with the ip of the traffic destination specified in the client
+```
 ---
 
 ## Troubleshooting
