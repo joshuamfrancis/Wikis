@@ -17,7 +17,6 @@ Requirements:
 import argparse
 import html
 import sys
-import textwrap
 import yaml
 from pathlib import Path
 
@@ -151,17 +150,18 @@ def _edge_label(iface: dict) -> str:
     iid       = iface.get("id", "")
 
     lines = [
-        f"<b>{_esc(iface['name'])}</b>",
-        f"{_esc(iid)}",
-        f"🔌 {_esc(protocol)}{(':' + str(port)) if port else ''}",
-        f"🔐 {_esc(auth)}",
+        iface['name'],
+        iid,
+        f"Protocol: {protocol}{(':' + str(port)) if port else ''}",
+        f"Auth: {auth}",
     ]
     if fmt:
-        lines.append(f"📄 {_esc(fmt)}")
+        lines.append(f"Format: {fmt}")
     if freq:
-        lines.append(f"{icon} {_esc(freq)}")
+        lines.append(f"{icon} {freq}")
 
-    return "<br>".join(lines)
+    # Join with XML-encoded newline so draw.io renders multi-line labels correctly
+    return "&#xa;".join(_esc(l) for l in lines)
 
 
 def build_drawio_xml(interfaces: list[dict], layout: str = "layered") -> str:
@@ -195,12 +195,11 @@ def build_drawio_xml(interfaces: list[dict], layout: str = "layered") -> str:
         sid   = sys_ids[name]
         x, y  = positions.get(name, (60, 60))
         style = _style_for_system(sys_type)
-        label = f"<b>{_esc(name)}</b><br/><i>{_esc(sys_type)}</i>"
+        label = f"{_esc(name)}&#xa;{_esc(sys_type)}"
         cells.append(
-            f'    <mxCell id="{sid}" value="{label}" style="{style}" '
-            f'vertex="1" parent="1">\n'
-            f'      <mxGeometry x="{x}" y="{y}" width="160" height="60" as="geometry"/>\n'
-            f'    </mxCell>'
+            f'    <mxCell id="{sid}" value="{label}" style="{style}" vertex="1" parent="1">'
+            f'<mxGeometry x="{x}" y="{y}" width="160" height="60" as="geometry"/>'
+            f'</mxCell>'
         )
 
     # --- interface edges ---
@@ -215,27 +214,26 @@ def build_drawio_xml(interfaces: list[dict], layout: str = "layered") -> str:
         label    = _edge_label(iface)
 
         cells.append(
-            f'    <mxCell id="{eid}" value="{label}" style="{style}" '
-            f'edge="1" source="{src_id}" target="{tgt_id}" parent="1">\n'
-            f'      <mxGeometry relative="1" as="geometry"/>\n'
-            f'    </mxCell>'
+            f'    <mxCell id="{eid}" value="{label}" style="{style}" edge="1" source="{src_id}" target="{tgt_id}" parent="1">'
+            f'<mxGeometry relative="1" as="geometry"/>'
+            f'</mxCell>'
         )
 
     cells_xml = "\n".join(cells)
 
-    return textwrap.dedent(f"""\
-        <?xml version="1.0" encoding="UTF-8"?>
-        <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1"
-                      tooltips="1" connect="1" arrows="1" fold="1" page="1"
-                      pageScale="1" pageWidth="1654" pageHeight="1169"
-                      math="0" shadow="0">
-          <root>
-            <mxCell id="0"/>
-            <mxCell id="1" parent="0"/>
-        {cells_xml}
-          </root>
-        </mxGraphModel>
-        """)
+    lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1"'
+        ' tooltips="1" connect="1" arrows="1" fold="1" page="1"'
+        ' pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">',
+        '  <root>',
+        '    <mxCell id="0"/>',
+        '    <mxCell id="1" parent="0"/>',
+        cells_xml,
+        '  </root>',
+        '</mxGraphModel>',
+    ]
+    return "\n".join(lines) + "\n"
 
 
 # ---------------------------------------------------------------------------
@@ -276,16 +274,17 @@ def build_legend_xml() -> str:
         )
 
     cells_xml = "\n".join(legend_cells)
-    return textwrap.dedent(f"""\
-        <?xml version="1.0" encoding="UTF-8"?>
-        <mxGraphModel>
-          <root>
-            <mxCell id="0"/>
-            <mxCell id="1" parent="0"/>
-        {cells_xml}
-          </root>
-        </mxGraphModel>
-        """)
+    lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<mxGraphModel>',
+        '  <root>',
+        '    <mxCell id="0"/>',
+        '    <mxCell id="1" parent="0"/>',
+        cells_xml,
+        '  </root>',
+        '</mxGraphModel>',
+    ]
+    return "\n".join(lines) + "\n"
 
 
 # ---------------------------------------------------------------------------
