@@ -1,8 +1,5 @@
 ---
 # System Interface Registry
-# Version: 1.0
-# Description: Defines all system-to-system interfaces for architecture documentation
-
 metadata:
   project: "Enterprise Integration Architecture"
   version: "1.0.0"
@@ -17,30 +14,33 @@ interfaces:
     source:
       system: "Salesforce CRM"
       type: "SaaS"
-      environment: "Production"
-      host: "org.salesforce.com"
+      # environment and host are optional — omitted here
       owner: "Sales Operations"
 
     target:
       system: "Snowflake Data Warehouse"
       type: "Cloud Database"
-      environment: "Production"
-      host: "account.snowflakecomputing.com"
+      environment: "Production"        # optional — included here
+      host: "account.snowflakecomputing.com"  # optional — included here
       owner: "Data Engineering"
 
     transport:
       protocol: "HTTPS"
-      port: 443
-      direction: "unidirectional"   # unidirectional | bidirectional
+      port: 443                        # optional — included here
+      direction: "unidirectional"
 
     security:
       authentication:
-        method: "OAuth2"            # OAuth2 | API_Key | Basic | Certificate | SAML | None
+        method: "OAuth2"
         token_endpoint: "https://login.salesforce.com/services/oauth2/token"
       authorization:
-        model: "RBAC"               # RBAC | ABAC | ACL | None
+        model: "RBAC"
         roles:
           - "etl_service_account"
+        permissions:                   # optional — triggers a note in the diagram
+          - "read:Account"
+          - "read:Contact"
+          - "read:Opportunity"
 
     data:
       description: "Customer profiles, opportunities, account records"
@@ -48,30 +48,19 @@ interfaces:
         - "Account"
         - "Contact"
         - "Opportunity"
-      format: "JSON"                # JSON | CSV | XML | Parquet | Avro | Fixed-Width | Binary
-      volume_per_run: "~50MB"
-      sensitivity: "PII"            # Public | Internal | Confidential | PII | PHI
+      format: "JSON"
+      sensitivity: "PII"
 
     scheduling:
-      frequency: "scheduled"        # realtime | scheduled | event-driven | manual | batch
-      cron: "0 2 * * *"             # 02:00 UTC daily
+      frequency: "scheduled"
+      cron: "0 2 * * *"
       timezone: "UTC"
-      window: "02:00-03:00 UTC"
 
     execution:
       container: "etl-salesforce-dwh"
       image: "joshuamfrancis/etl-salesforce:1.4.2"
-      platform: "Docker"            # Docker | Kubernetes | Lambda | ECS | Glue | Airflow
+      platform: "Docker"
       orchestrator: "Apache Airflow"
-      dag_id: "salesforce_to_snowflake_daily"
-      resource_profile:
-        cpu: "2"
-        memory: "4Gi"
-
-    monitoring:
-      sla_minutes: 60
-      alert_email: "data-team@company.com"
-      health_check_url: "https://airflow.internal/health/IF-001"
 
     tags:
       - "etl"
@@ -85,20 +74,18 @@ interfaces:
     source:
       system: "Order Service"
       type: "Microservice"
-      environment: "Production"
-      host: "order-service.internal"
       owner: "Commerce Team"
+      # environment and host omitted — optional
 
     target:
       system: "Notification Service"
       type: "Microservice"
-      environment: "Production"
-      host: "notification-service.internal"
       owner: "Platform Team"
+      # environment and host omitted — optional
 
     transport:
-      protocol: "AMQP"             # HTTPS | AMQP | MQTT | SFTP | Kafka | gRPC | JDBC | S3
-      port: 5672
+      protocol: "AMQP"
+      # port omitted — optional
       direction: "unidirectional"
       broker: "RabbitMQ"
       queue: "order.events"
@@ -109,59 +96,49 @@ interfaces:
         header: "X-API-KEY"
       authorization:
         model: "ACL"
-        permissions:
+        permissions:                   # optional — triggers a note in the diagram
           - "queue:publish"
+          - "queue:consume"
 
     data:
-      description: "Order lifecycle events (created, paid, shipped, delivered)"
+      description: "Order lifecycle events"
       entities:
         - "OrderEvent"
       format: "JSON"
-      schema_registry: "https://schema-registry.internal/order-events"
-      volume_per_run: "~1000 events/min"
       sensitivity: "Confidential"
 
     scheduling:
       frequency: "realtime"
-      latency_target_ms: 500
 
     execution:
       container: "order-service"
       image: "joshuamfrancis/order-service:3.1.0"
       platform: "Kubernetes"
-      namespace: "commerce"
-      replicas: 3
-
-    monitoring:
-      sla_minutes: 1
-      alert_email: "platform-team@company.com"
 
     tags:
       - "event-driven"
       - "messaging"
-      - "ecommerce"
 
   - id: IF-003
-    name: "ERP to Reporting Portal (CSV Export)"
-    description: "Weekly financial data extract from SAP ERP to reporting portal via SFTP"
+    name: "ERP to Reporting Portal"
+    description: "Weekly financial data extract via SFTP"
 
     source:
       system: "SAP ERP"
       type: "On-Premise"
-      environment: "Production"
-      host: "sap-erp.company.local"
+      environment: "Production"        # optional — included
+      host: "sap-erp.company.local"   # optional — included
       owner: "Finance IT"
 
     target:
       system: "Reporting Portal"
       type: "Web Application"
-      environment: "Production"
-      host: "reports.company.com"
       owner: "Finance Operations"
+      # environment and host omitted — optional
 
     transport:
       protocol: "SFTP"
-      port: 22
+      port: 22                         # optional — included
       direction: "unidirectional"
 
     security:
@@ -170,39 +147,24 @@ interfaces:
         key_path: "/secrets/sftp/erp_rsa_key"
       authorization:
         model: "ACL"
-        permissions:
-          - "sftp:write"
-          - "directory:/finance/inbound"
+        # permissions omitted — no note generated for this interface
 
     data:
       description: "Weekly P&L, Balance Sheet, Cost Centre reports"
-      entities:
-        - "ProfitLoss"
-        - "BalanceSheet"
-        - "CostCentre"
       format: "CSV"
-      delimiter: ","
-      encoding: "UTF-8"
-      volume_per_run: "~5MB"
       sensitivity: "Confidential"
 
     scheduling:
       frequency: "scheduled"
-      cron: "0 6 * * 1"            # 06:00 UTC every Monday
+      cron: "0 6 * * 1"
       timezone: "UTC"
 
     execution:
       container: "sap-sftp-exporter"
       image: "joshuamfrancis/sap-exporter:2.0.1"
       platform: "Docker"
-      orchestrator: "cron"
-
-    monitoring:
-      sla_minutes: 120
-      alert_email: "finance-it@company.com"
 
     tags:
       - "finance"
       - "reporting"
       - "sftp"
-      - "batch"
