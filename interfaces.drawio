@@ -1,0 +1,37 @@
+    <?xml version="1.0" encoding="UTF-8"?>
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1"
+                  tooltips="1" connect="1" arrows="1" fold="1" page="1"
+                  pageScale="1" pageWidth="1654" pageHeight="1169"
+                  math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="10" value="<b>Salesforce CRM</b><br/><i>SaaS</i>" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+  <mxGeometry x="60" y="380" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="11" value="<b>Snowflake Data Warehouse</b><br/><i>Cloud Database</i>" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+  <mxGeometry x="540" y="380" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="12" value="<b>Order Service</b><br/><i>Microservice</i>" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+  <mxGeometry x="60" y="60" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="13" value="<b>Notification Service</b><br/><i>Microservice</i>" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+  <mxGeometry x="540" y="60" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="14" value="<b>SAP ERP</b><br/><i>On-Premise</i>" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+  <mxGeometry x="60" y="220" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="15" value="<b>Reporting Portal</b><br/><i>Web Application</i>" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+  <mxGeometry x="540" y="220" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="16" value="<b>CRM to Data Warehouse ETL</b><br>IF-001<br>🔌 HTTPS:443<br>🔐 OAuth2<br>📄 JSON<br>🕐 scheduled" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#007bff;strokeWidth=2;startArrow=none;endArrow=block;fontStyle=0;fontSize=9;" edge="1" source="10" target="11" parent="1">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="17" value="<b>Order Service to Notification Service</b><br>IF-002<br>🔌 AMQP:5672<br>🔐 API_Key<br>📄 JSON<br>⚡ realtime" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#fd7e14;strokeWidth=2;startArrow=none;endArrow=block;fontStyle=0;fontSize=9;" edge="1" source="12" target="13" parent="1">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="18" value="<b>ERP to Reporting Portal (CSV Export)</b><br>IF-003<br>🔌 SFTP:22<br>🔐 Certificate<br>📄 CSV<br>🕐 scheduled" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#6f42c1;strokeWidth=2;startArrow=none;endArrow=block;fontStyle=0;fontSize=9;" edge="1" source="14" target="15" parent="1">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+      </root>
+    </mxGraphModel>
