@@ -75,12 +75,20 @@ FREQUENCY_ICONS = {
     "manual":       "✎ manual",
 }
 
+# Icons for edge label fields (all BMP-safe, U+0000-U+FFFF)
+ICON_PROTOCOL = "⇄"   # ⇄  transfer arrows
+ICON_AUTH     = "⚿"   # ⚿  key
+ICON_FORMAT   = "⎕"   # ⎕  document grid
+
 # Status → (stroke colour, stroke width, dash pattern, label prefix)
 # All characters must be BMP (U+0000–U+FFFF) — draw.io rejects non-BMP Unicode
 STATUS_STYLES = {
-    "active":   {"color": "#00a854", "width": 3, "dashed": False, "icon": "● ACTIVE",   "summary_icon": "●"},
-    "inactive": {"color": "#555555", "width": 2, "dashed": True,  "icon": "○ INACTIVE", "summary_icon": "○"},
-    "broken":   {"color": "#e53935", "width": 3, "dashed": False, "icon": "✖ BROKEN",   "summary_icon": "✖"},
+    "active":   {"color": "#00a854", "width": 3, "dashed": False,
+                 "icon": "● ACTIVE",   "html_color": "#00a854", "summary_icon": "●"},
+    "inactive": {"color": "#555555", "width": 2, "dashed": True,
+                 "icon": "○ INACTIVE", "html_color": "#555555", "summary_icon": "○"},
+    "broken":   {"color": "#e53935", "width": 3, "dashed": False,
+                 "icon": "✖ BROKEN",   "html_color": "#e53935", "summary_icon": "✖"},
 }
 STATUS_DEFAULT = STATUS_STYLES["active"]
 
@@ -171,7 +179,7 @@ def _style_for_edge(protocol: str, direction: str, status: str = "active") -> st
 
     style = (
         f"edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;"
-        f"jettySize=auto;"
+        f"jettySize=auto;html=1;"
         f"strokeColor={stroke_color};strokeWidth={stroke_width};"
         f"startArrow={start_arrow};endArrow={end_arrow};"
         f"fontStyle=0;fontSize=9;"
@@ -204,43 +212,65 @@ def _system_label(name: str, sys_type: str, env: str = "", host: str = "") -> st
     return "&#xa;".join(_esc(l) for l in lines)
 
 
+def _htag(tag: str) -> str:
+    """Return an XML-escaped HTML open tag, e.g. '<b>' -> '&lt;b&gt;'.
+    draw.io with html=1 unescapes these back to real HTML when rendering."""
+    return html.escape(tag)
+
+
 def _edge_label(iface: dict, ref_symbol: str = "") -> str:
-    """Build a plain-text multi-line label for an interface edge."""
+    """Build an HTML label for the interface edge.
+    HTML tags are XML-escaped so the attribute is valid XML.
+    draw.io with html=1 unescapes and renders them as HTML.
+    Status line is colour-coded via <font color="...">.
+    """
     t     = iface.get("transport", {})
     s     = iface.get("security", {})
     d     = iface.get("data", {})
     sched = iface.get("scheduling", {})
 
     protocol = t.get("protocol", "?")
-    port     = t.get("port")                          # optional
+    port     = t.get("port")
     auth     = s.get("authentication", {}).get("method", "None")
     fmt      = d.get("format", "")
     freq     = sched.get("frequency", "")
-    icon     = FREQUENCY_ICONS.get(freq, "")
     iid      = iface.get("id", "")
     status   = iface.get("status", "active").lower()
     st       = STATUS_STYLES.get(status, STATUS_DEFAULT)
 
-    proto_str = f"Protocol: {protocol}" + (f":{port}" if port is not None else "")
+    # XML-escaped HTML tags for use inside an XML attribute value
+    BR      = _htag("<br>")
+    B_O     = _htag("<b>")
+    B_C     = _htag("</b>")
+    NBSP    = "&#160;"
+    FONT_O  = _htag(f'<font color="{st["html_color"]}">')
+    FONT_C  = _htag("</font>")
 
-    # Name line: name + optional permission ref symbol
-    name_line = iface["name"]
+    proto_str = (f"{_esc(ICON_PROTOCOL)}&#160;{_esc(protocol)}"
+                 + (f":{port}" if port is not None else ""))
+
+    # Name line — bold, with optional permission ref symbol
+    name_part = _esc(iface["name"])
     if ref_symbol:
-        name_line = f"{name_line}  {ref_symbol}"
+        name_part = f"{name_part}&#160;&#160;{_esc(ref_symbol)}"
+    name_line = f"{B_O}{name_part}{B_C}"
+
+    # Status line — coloured icon + label
+    status_line = f"{FONT_O}{_esc(st['icon'])}{FONT_C}"
 
     lines = [
         name_line,
-        f"{iid}  {st['icon']}",
+        f"{_esc(iid)}&#160;&#160;{status_line}",
         proto_str,
-        f"Auth: {auth}",
+        f"{_esc(ICON_AUTH)}&#160;{_esc(auth)}",
     ]
     if fmt:
-        lines.append(f"Format: {fmt}")
+        lines.append(f"{_esc(ICON_FORMAT)}&#160;{_esc(fmt)}")
     if freq:
         freq_label = FREQUENCY_ICONS.get(freq, freq.upper())
-        lines.append(freq_label)
+        lines.append(_esc(freq_label))
 
-    return "&#xa;".join(_esc(l) for l in lines)
+    return BR.join(lines)
 
 
 def _note_label(iface: dict, ref_symbol: str) -> str:
