@@ -68,19 +68,19 @@ PROTOCOL_COLORS = {
 }
 
 FREQUENCY_ICONS = {
-    "realtime":     "[RT]",
-    "scheduled":    "[SCHED]",
-    "event-driven": "[EVENT]",
-    "batch":        "[BATCH]",
-    "manual":       "[MANUAL]",
+    "realtime":     "⚡ realtime",
+    "scheduled":    "⧖ scheduled",
+    "event-driven": "➤ event-driven",
+    "batch":        "☰ batch",
+    "manual":       "✎ manual",
 }
 
 # Status → (stroke colour, stroke width, dash pattern, label prefix)
 # All characters must be BMP (U+0000–U+FFFF) — draw.io rejects non-BMP Unicode
 STATUS_STYLES = {
-    "active":   {"color": "#00a854", "width": 3, "dashed": False, "icon": "[ACTIVE]",   "summary_icon": "( )"},
-    "inactive": {"color": "#555555", "width": 2, "dashed": True,  "icon": "[INACTIVE]", "summary_icon": "---"},
-    "broken":   {"color": "#e53935", "width": 3, "dashed": False, "icon": "[BROKEN]",   "summary_icon": "[!]"},
+    "active":   {"color": "#00a854", "width": 3, "dashed": False, "icon": "● ACTIVE",   "summary_icon": "●"},
+    "inactive": {"color": "#555555", "width": 2, "dashed": True,  "icon": "○ INACTIVE", "summary_icon": "○"},
+    "broken":   {"color": "#e53935", "width": 3, "dashed": False, "icon": "✖ BROKEN",   "summary_icon": "✖"},
 }
 STATUS_DEFAULT = STATUS_STYLES["active"]
 
