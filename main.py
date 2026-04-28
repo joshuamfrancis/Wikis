@@ -347,6 +347,113 @@ def _mxcell(cell_id, value, style, vertex=None, edge=None,
     return f'<mxCell {attrs}>{geo}</mxCell>'
 
 
+
+# ---------------------------------------------------------------------------
+# Legend builder
+# ---------------------------------------------------------------------------
+
+def _build_legend(legend_x: int, legend_y: int, id_base: int) -> list:
+    """Return a list of mxCell strings forming a legend box.
+    All values are built from constants — no multi-line f-strings that could
+    accumulate leading whitespace during future edits."""
+
+    cells = []
+    cid = id_base
+
+    # ── Outer legend box ─────────────────────────────────────────────────────
+    box_w, box_h = 230, 390
+    box_style = ("rounded=1;whiteSpace=wrap;html=0;"
+                 "fillColor=#f5f5f5;strokeColor=#666666;"
+                 "fontStyle=1;fontSize=11;verticalAlign=top;align=left;")
+    cells.append(_mxcell(cid, "LEGEND", box_style, vertex=True,
+                         x=legend_x, y=legend_y, width=box_w, height=box_h))
+    cid += 1
+
+    row_h   = 28   # height of each legend row
+    swatch_w = 30   # width of colour swatch / sample line
+    label_x = legend_x + swatch_w + 10
+    label_w = box_w - swatch_w - 20
+
+    label_style = ("text;html=0;strokeColor=none;fillColor=none;"
+                   "align=left;verticalAlign=middle;fontSize=9;")
+
+    # ── Section: System types ─────────────────────────────────────────────────
+    section_style = ("text;html=0;strokeColor=none;fillColor=none;"
+                     "align=left;verticalAlign=middle;fontSize=9;fontStyle=1;")
+    cells.append(_mxcell(cid, "System types", section_style, vertex=True,
+                         x=legend_x + 5, y=legend_y + 24,
+                         width=box_w - 10, height=20))
+    cid += 1
+
+    sys_types = [
+        ("SaaS",            PALETTE["SaaS"]),
+        ("Cloud Database",  PALETTE["Cloud Database"]),
+        ("Microservice",    PALETTE["Microservice"]),
+        ("On-Premise",      PALETTE["On-Premise"]),
+        ("Web Application", PALETTE["Web Application"]),
+        ("Other",           PALETTE["default"]),
+    ]
+    row_y = legend_y + 46
+    for label, colors in sys_types:
+        swatch_style = ("rounded=1;whiteSpace=wrap;html=0;"
+                        "fillColor=" + colors["fill"] + ";"
+                        "strokeColor=" + colors["stroke"] + ";fontSize=8;")
+        cells.append(_mxcell(cid, "", swatch_style, vertex=True,
+                             x=legend_x + 5, y=row_y, width=swatch_w, height=row_h - 4))
+        cid += 1
+        cells.append(_mxcell(cid, label, label_style, vertex=True,
+                             x=label_x, y=row_y, width=label_w, height=row_h - 4))
+        cid += 1
+        row_y += row_h
+
+    # ── Section: Status ───────────────────────────────────────────────────────
+    row_y += 4
+    cells.append(_mxcell(cid, "Interface status", section_style, vertex=True,
+                         x=legend_x + 5, y=row_y, width=box_w - 10, height=20))
+    cid += 1
+    row_y += 22
+
+    for key, st in STATUS_STYLES.items():
+        line_style = ("endArrow=block;startArrow=none;html=0;"
+                      "strokeColor=" + st["color"] + ";"
+                      "strokeWidth=3;"
+                      + ("dashed=1;" if st["dashed"] else ""))
+        cells.append(_mxcell(cid, "", line_style, edge=True,
+                             source=None, target=None, relative=True,
+                             x=legend_x + 5, y=row_y + 10,
+                             width=swatch_w, height=4))
+        cid += 1
+        status_label = st["icon"] + " " + key.capitalize()
+        cells.append(_mxcell(cid, status_label, label_style, vertex=True,
+                             x=label_x, y=row_y, width=label_w, height=row_h - 4))
+        cid += 1
+        row_y += row_h
+
+    # ── Section: Edge field icons ─────────────────────────────────────────────
+    row_y += 4
+    cells.append(_mxcell(cid, "Connector fields", section_style, vertex=True,
+                         x=legend_x + 5, y=row_y, width=box_w - 10, height=20))
+    cid += 1
+    row_y += 22
+
+    field_icons = [
+        (ICON_PROTOCOL, "Protocol / Port"),
+        (ICON_AUTH,     "Authentication"),
+        (ICON_AUTHZ,    "Authorization model"),
+        (ICON_FORMAT,   "Data format"),
+        (ICON_EXEC,     "Execution environment"),
+    ]
+    for icon, desc in field_icons:
+        cells.append(_mxcell(cid, icon, label_style, vertex=True,
+                             x=legend_x + 5, y=row_y, width=swatch_w, height=row_h - 4))
+        cid += 1
+        cells.append(_mxcell(cid, desc, label_style, vertex=True,
+                             x=label_x, y=row_y, width=label_w, height=row_h - 4))
+        cid += 1
+        row_y += row_h
+
+    return cells
+
 # ---------------------------------------------------------------------------
 # Main diagram builder
 # ---------------------------------------------------------------------------
@@ -445,6 +552,14 @@ def build_drawio_xml(interfaces: list, layout: str = "layered") -> str:
             cid = conn_base + i
             cells.append(_mxcell(cid, "", NOTE_CONNECTOR_STYLE,
                                   edge=True, source=nid, target=eid, relative=True))
+
+    # ── Legend ───────────────────────────────────────────────────────────────
+    # Place legend to the right of the rightmost system node
+    max_x = max((pos[0] for pos in positions.values()), default=60)
+    legend_x = max_x + 220
+    legend_y = min((pos[1] for pos in positions.values()), default=60)
+    legend_id_base = conn_base + len(interfaces) + 100
+    cells.extend(_build_legend(legend_x, legend_y, legend_id_base))
 
     # Build compact single-line XML — draw.io rejects leading whitespace on tags
     inner = "".join(cells)
