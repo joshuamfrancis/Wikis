@@ -54,12 +54,9 @@ STATUS_DEFAULT = STATUS_STYLES["active"]
 _REF_SYMBOLS = list("\u2460\u2461\u2462\u2463\u2464\u2465\u2466\u2467\u2468\u2469"
                     "\u246a\u246b\u246c\u246d\u246e\u246f\u2470\u2471\u2472\u2473")
 
-NOTE_STYLE = ("shape=callout;whiteSpace=wrap;html=0;"
+NOTE_STYLE = ("rounded=0;whiteSpace=wrap;html=0;"
               "fillColor=#ffffc0;strokeColor=#999900;"
-              "fontSize=9;align=left;perimeter=calloutPerimeter;")
-
-NOTE_CONNECTOR_STYLE = ("edgeStyle=none;dashed=1;strokeColor=#999900;"
-                        "strokeWidth=1;endArrow=none;startArrow=none;")
+              "fontSize=10;align=left;verticalAlign=top;")
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -258,22 +255,6 @@ def _edge_label(iface, ref_symbol=""):
 
     return BR.join(lines)
 
-def _note_label(iface, ref_symbol):
-    authz = iface.get("security", {}).get("authorization", {})
-    model = authz.get("model", "")
-    perms = authz.get("permissions", [])
-    roles = authz.get("roles", [])
-    lines = ["Permissions " + ref_symbol, "Ref: " + iface.get("id", "")]
-    if model:
-        lines.append("Model: " + model)
-    if roles:
-        lines.append("Roles: " + ", ".join(str(r) for r in roles))
-    if perms:
-        lines.append("Permissions:")
-        for p in perms:
-            lines.append("  - " + str(p))
-    return "&#xa;".join(_esc(l) for l in lines)
-
 # ---------------------------------------------------------------------------
 # Legend
 # ---------------------------------------------------------------------------
@@ -300,24 +281,31 @@ def _build_legend(legend_x, legend_y, id_base):
                        "fillColor=#ffffff;strokeColor=#aaaaaa;"
                        "verticalAlign=top;align=left;fontStyle=1;fontSize=9;"
                        "container=1;collapsible=0;")
+    outer_style = ("rounded=0;fillColor=none;strokeColor=none;html=0;"
+                   "container=1;collapsible=0;")
 
-    # Title bar (drawn first, sits above first group)
+    # Reserve the outer group id; prepend the cell at the end once total height is known.
+    outer_id        = next_id()
+    title_bar_h     = 28
+    title_bar_gap   = 6  # gap between title bar and first section
+
+    # Title bar (child of outer group)
     cells.append(_mxcell(next_id(), "LEGEND",
                          ("rounded=0;whiteSpace=wrap;html=0;"
                           "fillColor=#dae8fc;strokeColor=#6c8ebf;"
                           "fontStyle=1;fontSize=11;verticalAlign=middle;align=center;"),
-                         vertex=True,
-                         x=legend_x, y=legend_y - 34, width=box_w, height=28))
+                         vertex=True, parent=outer_id,
+                         x=0, y=0, width=box_w, height=title_bar_h))
 
-    row_y = legend_y
+    row_y = title_bar_h + title_bar_gap
 
     def open_container(title, item_count):
         nonlocal row_y
         box_id = next_id()
         box_y  = row_y
         box_h  = title_h + item_count * row_h + bottom_pad
-        cells.append(_mxcell(box_id, title, container_style, vertex=True,
-                             x=legend_x, y=box_y,
+        cells.append(_mxcell(box_id, title, container_style, vertex=True, parent=outer_id,
+                             x=0, y=box_y,
                              width=box_w, height=box_h))
         row_y = box_y + box_h + 10
         return box_id
@@ -384,6 +372,11 @@ def _build_legend(legend_x, legend_y, id_base):
                              x=label_x, y=inner_y, width=label_w, height=row_h - 4))
         inner_y += row_h
 
+    total_h = row_y - 10  # last open_container added a trailing 10px gap
+    cells.insert(0, _mxcell(outer_id, "", outer_style, vertex=True,
+                            x=legend_x, y=legend_y - title_bar_h - title_bar_gap,
+                            width=box_w, height=total_h))
+
     return cells
 
 # ---------------------------------------------------------------------------
@@ -402,8 +395,7 @@ def build_drawio_xml(interfaces, layout="layered"):
     base       = 10
     sys_ids    = {name: base + i for i, name in enumerate(system_names)}
     edge_base  = base + len(system_names)
-    note_base  = edge_base + len(interfaces)
-    conn_base  = note_base + len(interfaces)
+    note_id    = edge_base + len(interfaces)
 
     cells = []
 
@@ -419,8 +411,7 @@ def build_drawio_xml(interfaces, layout="layered"):
     ref_map = {}
     sym_counter = 0
     for i, iface in enumerate(interfaces):
-        authz = iface.get("security", {}).get("authorization", {})
-        if authz.get("permissions") or authz.get("roles"):
+        if iface.get("notes"):
             ref_map[i] = _ref_symbol(sym_counter)
             sym_counter += 1
 
@@ -440,20 +431,29 @@ def build_drawio_xml(interfaces, layout="layered"):
                              _style_for_edge(protocol, direction),
                              edge=True, source=src_id, target=tgt_id, relative=True))
 
-        if ref_sym:
-            nid    = note_base + i
-            note_x = 60 + i * 220
-            note_h = 80 + len(iface.get("security", {}).get("authorization", {}).get("permissions", [])) * 14
-            cells.append(_mxcell(nid, _note_label(iface, ref_sym), NOTE_STYLE,
-                                 vertex=True, x=note_x, y=note_y_base, width=200, height=note_h))
-            cells.append(_mxcell(conn_base + i, "", NOTE_CONNECTOR_STYLE,
-                                 edge=True, source=nid, target=eid, relative=True))
+    notes_lines = ["Notes"]
+    for i, iface in enumerate(interfaces):
+        ref_sym = ref_map.get(i)
+        notes   = iface.get("notes", [])
+        if not ref_sym or not notes:
+            continue
+        notes_lines.append("")
+        notes_lines.append(ref_sym + " " + iface.get("id", "") + " — " + iface.get("name", ""))
+        for n in notes:
+            notes_lines.append("    - " + str(n))
+
+    if len(notes_lines) > 1:
+        note_w = 700
+        note_h = 30 + len(notes_lines) * 14
+        label  = "&#xa;".join(_esc(l) for l in notes_lines)
+        cells.append(_mxcell(note_id, label, NOTE_STYLE, vertex=True,
+                             x=60, y=note_y_base, width=note_w, height=note_h))
 
     max_x    = max((pos[0] for pos in positions.values()), default=60)
     min_y    = min((pos[1] for pos in positions.values()), default=60)
     legend_x = max_x + 220
     legend_y = min_y + 34
-    leg_id   = conn_base + len(interfaces) + 100
+    leg_id   = note_id + 100
     cells.extend(_build_legend(legend_x, legend_y, leg_id))
 
     inner = "".join(cells)
@@ -487,7 +487,7 @@ def print_summary(interfaces):
         fmt   = iface.get("data", {}).get("format", "-")
         freq  = iface.get("scheduling", {}).get("frequency", "-")
         ctr   = iface.get("execution", {}).get("container", "-")
-        perms = iface.get("security", {}).get("authorization", {}).get("permissions", [])
+        notes  = iface.get("notes", [])
         status = iface.get("status", "active").lower()
         icon   = STATUS_STYLES.get(status, STATUS_DEFAULT)["summary_icon"]
         port_s = ":" + str(port) if port is not None else ""
@@ -495,8 +495,8 @@ def print_summary(interfaces):
         print("    " + src + "  --" + proto + port_s + "-->  " + tgt)
         print("    Auth: " + auth + "   Format: " + fmt + "   Frequency: " + freq)
         print("    Container: " + ctr)
-        if perms:
-            print("    Permissions: " + ", ".join(str(p) for p in perms))
+        if notes:
+            print("    Notes: " + ", ".join(str(n) for n in notes))
     print()
 
 # ---------------------------------------------------------------------------
@@ -540,11 +540,9 @@ def main():
         count = sum(1 for i in interfaces if i.get("status", "active").lower() == s_val)
         if count:
             print("    " + STATUS_STYLES[s_val]["summary_icon"] + " " + s_val + ": " + str(count))
-    notes = sum(1 for i in interfaces
-                if i.get("security", {}).get("authorization", {}).get("permissions")
-                or i.get("security", {}).get("authorization", {}).get("roles"))
+    notes = sum(1 for i in interfaces if i.get("notes"))
     if notes:
-        print("  Permission notes: " + str(notes))
+        print("  Notes: " + str(notes))
     print("\nOpen in draw.io desktop or https://app.diagrams.net")
 
 if __name__ == "__main__":

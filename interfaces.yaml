@@ -37,10 +37,10 @@ interfaces:
         model: "RBAC"
         roles:
           - "etl_service_account"
-        permissions:                   # optional — triggers a note in the diagram
-          - "read:Account"
-          - "read:Contact"
-          - "read:Opportunity"
+
+    notes:                             # optional — triggers a note in the diagram
+      - This is a sample note about the ETL process.
+      - It runs nightly to sync data.
 
     data:
       description: "Customer profiles, opportunities, account records"
@@ -96,9 +96,9 @@ interfaces:
         header: "X-API-KEY"
       authorization:
         model: "ACL"
-        permissions:                   # optional — triggers a note in the diagram
-          - "queue:publish"
-          - "queue:consume"
+
+    notes:                             # optional — triggers a note in the diagram
+      - "This interface uses RabbitMQ for messaging."
 
     data:
       description: "Order lifecycle events"
