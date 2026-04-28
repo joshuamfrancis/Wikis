@@ -41,22 +41,6 @@ PROTOCOL_COLORS = {
     "default": "#555555",
 }
 
-FREQUENCY_ICONS = {
-    "realtime":     "\u26a1 realtime",
-    "scheduled":    "\u29d6 scheduled",
-    "event-driven": "\u27a4 event-driven",
-    "batch":        "\u2630 batch",
-    "manual":       "\u270e manual",
-    "file-polling": "\u231a file-polling",
-}
-
-ICON_PROTOCOL = "\u21c4"
-ICON_AUTH     = "\u26bf"
-ICON_AUTHZ    = "\u2611"
-ICON_FORMAT   = "\u2395"
-ICON_EXEC     = "\u25a3"
-ICON_POLL     = "\u231a"
-
 STATUS_STYLES = {
     "active":   {"color": "#00a854", "width": 3, "dashed": False,
                  "icon": "\u25cf ACTIVE",   "html_color": "#00a854", "summary_icon": "\u25cf"},
@@ -214,7 +198,7 @@ def _style_for_edge(protocol, direction):
             "jettySize=auto;html=1;"
             "strokeColor=" + proto_color + ";strokeWidth=2;"
             "startArrow=" + start_arrow + ";endArrow=block;"
-            "fontStyle=0;fontSize=9;")
+            "fontStyle=0;fontSize=9;align=left;verticalAlign=middle;")
 
 # ---------------------------------------------------------------------------
 # Label builders
@@ -254,22 +238,23 @@ def _edge_label(iface, ref_symbol=""):
     FONT_O = _htag('<font color="' + st["html_color"] + '">')
     FONT_C = _htag("</font>")
 
-    proto_str = _esc(ICON_PROTOCOL) + "&#160;" + _esc(protocol) + (":" + str(port) if port is not None else "")
+    proto_val = protocol + (":" + str(port) if port is not None else "")
+    proto_str = "Protocol: " + _esc(proto_val)
     name_part = _esc(iid) + ": " + _esc(iface["name"])
     if ref_symbol:
         name_part += "&#160;&#160;" + _esc(ref_symbol)
     name_line   = B_O + name_part + B_C
     status_line = FONT_O + _esc(st["icon"]) + FONT_C
 
-    lines = [name_line, status_line, proto_str, _esc(ICON_AUTH) + "&#160;" + _esc(auth)]
+    lines = [name_line, status_line, proto_str, "AuthN: " + _esc(auth)]
     if authz:
-        lines.append(_esc(ICON_AUTHZ) + "&#160;" + _esc(authz))
+        lines.append("AuthZ: " + _esc(authz))
     if fmt:
-        lines.append(_esc(ICON_FORMAT) + "&#160;" + _esc(fmt))
+        lines.append("Format: " + _esc(fmt))
     if freq:
-        lines.append(_esc(FREQUENCY_ICONS.get(freq, freq.upper())))
+        lines.append("Schedule: " + _esc(freq))
     if exe_str:
-        lines.append(_esc(ICON_EXEC) + "&#160;" + _esc(exe_str))
+        lines.append("Execution: " + _esc(exe_str))
 
     return BR.join(lines)
 
@@ -311,14 +296,14 @@ def _build_legend(legend_x, legend_y, id_base):
 
     lbl_style = ("text;html=0;strokeColor=none;fillColor=none;"
                  "align=left;verticalAlign=middle;fontSize=9;")
-    container_style = ("rounded=1;whiteSpace=wrap;html=0;"
+    container_style = ("rounded=0;whiteSpace=wrap;html=0;"
                        "fillColor=#ffffff;strokeColor=#aaaaaa;"
                        "verticalAlign=top;align=left;fontStyle=1;fontSize=9;"
                        "container=1;collapsible=0;")
 
     # Title bar (drawn first, sits above first group)
     cells.append(_mxcell(next_id(), "LEGEND",
-                         ("rounded=1;whiteSpace=wrap;html=0;"
+                         ("rounded=0;whiteSpace=wrap;html=0;"
                           "fillColor=#dae8fc;strokeColor=#6c8ebf;"
                           "fontStyle=1;fontSize=11;verticalAlign=middle;align=center;"),
                          vertex=True,
@@ -396,24 +381,6 @@ def _build_legend(legend_x, legend_y, id_base):
                              source_point=(8, line_y),
                              target_point=(8 + sw, line_y)))
         cells.append(_mxcell(next_id(), lbl, lbl_style, vertex=True, parent=box_id,
-                             x=label_x, y=inner_y, width=label_w, height=row_h - 4))
-        inner_y += row_h
-
-    # ── Group 4: Connector field icons ────────────────────────────────────────
-    field_icons = [
-        (ICON_PROTOCOL, "Protocol / Port"),
-        (ICON_AUTH,     "Authentication"),
-        (ICON_AUTHZ,    "Authorization model"),
-        (ICON_FORMAT,   "Data format"),
-        (ICON_EXEC,     "Execution environment"),
-        (ICON_POLL,     "File polling"),
-    ]
-    box_id = open_container("Connector field icons", len(field_icons))
-    inner_y = title_h
-    for icon, desc in field_icons:
-        cells.append(_mxcell(next_id(), icon, lbl_style, vertex=True, parent=box_id,
-                             x=8, y=inner_y, width=sw, height=row_h - 4))
-        cells.append(_mxcell(next_id(), desc, lbl_style, vertex=True, parent=box_id,
                              x=label_x, y=inner_y, width=label_w, height=row_h - 4))
         inner_y += row_h
 
