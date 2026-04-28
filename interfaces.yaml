@@ -19,7 +19,7 @@ interfaces:
 
     target:
       system: "Snowflake Data Warehouse"
-      type: "Cloud Database"
+      type: "Database"
       environment: "Production"        # optional — included here
       host: "account.snowflakecomputing.com"  # optional — included here
       owner: "Data Engineering"
