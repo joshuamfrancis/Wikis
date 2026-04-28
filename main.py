@@ -186,7 +186,7 @@ def _mxcell(cell_id, value, style, vertex=None, edge=None,
 # Style builders
 # ---------------------------------------------------------------------------
 def _style_for_system(sys_type):
-    c = PALETTE.get(sys_type, PALETTE["default"])
+    c = PALETTE.get(sys_type, PALETTE["default"]) 
     return ("rounded=1;whiteSpace=wrap;html=0;"
             "fillColor=" + c["fill"] + ";strokeColor=" + c["stroke"] + ";"
             "fontStyle=1;fontSize=11;")
