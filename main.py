@@ -283,7 +283,7 @@ def _mxcell(cell_id, value, style, vertex=None, edge=None,
     else:
         geo = f'<mxGeometry x="{x}" y="{y}" width="{width}" height="{height}" as="geometry"/>'
 
-    return f'    <mxCell {attrs}>{geo}</mxCell>'
+    return f'<mxCell {attrs}>{geo}</mxCell>'
 
 
 # ---------------------------------------------------------------------------
@@ -385,21 +385,20 @@ def build_drawio_xml(interfaces: list, layout: str = "layered") -> str:
             cells.append(_mxcell(cid, "", NOTE_CONNECTOR_STYLE,
                                   edge=True, source=nid, target=eid, relative=True))
 
-    cells_xml = "\n".join(cells)
-
-    lines = [
-        '<?xml version="1.0" encoding="UTF-8"?>',
+    # Build compact single-line XML — draw.io rejects leading whitespace on tags
+    inner = "".join(cells)
+    body = (
         '<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1"'
         ' tooltips="1" connect="1" arrows="1" fold="1" page="1"'
-        ' pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">',
-        '  <root>',
-        '    <mxCell id="0"/>',
-        '    <mxCell id="1" parent="0"/>',
-        cells_xml,
-        '  </root>',
-        '</mxGraphModel>',
-    ]
-    return "\n".join(lines) + "\n"
+        ' pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">'
+        "<root>"
+        '<mxCell id="0"/>'
+        '<mxCell id="1" parent="0"/>'
+        + inner +
+        "</root>"
+        "</mxGraphModel>"
+    )
+    return '<?xml version="1.0" encoding="UTF-8"?>\n' + body + "\n"
 
 
 # ---------------------------------------------------------------------------
