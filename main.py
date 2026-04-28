@@ -17,7 +17,7 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 PALETTE = {
     "SaaS":            {"fill": "#dae8fc", "stroke": "#6c8ebf"},
-    "Cloud Database":  {"fill": "#d5e8d4", "stroke": "#82b366"},
+    "Database":        {"fill": "#d5e8d4", "stroke": "#82b366"},
     "Microservice":    {"fill": "#fff2cc", "stroke": "#d6b656"},
     "On-Premise":      {"fill": "#f8cecc", "stroke": "#b85450"},
     "Web Application": {"fill": "#e1d5e7", "stroke": "#9673a6"},
@@ -207,19 +207,14 @@ def _style_for_system(sys_type):
             "fillColor=" + c["fill"] + ";strokeColor=" + c["stroke"] + ";"
             "fontStyle=1;fontSize=11;")
 
-def _style_for_edge(protocol, direction, status="active"):
+def _style_for_edge(protocol, direction):
     proto_color = PROTOCOL_COLORS.get(protocol, PROTOCOL_COLORS["default"])
-    st = STATUS_STYLES.get(status, STATUS_DEFAULT)
-    stroke_color = proto_color if status == "active" else st["color"]
     start_arrow = "block" if direction == "bidirectional" else "none"
-    style = ("edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;"
-             "jettySize=auto;html=1;"
-             "strokeColor=" + stroke_color + ";strokeWidth=" + str(st["width"]) + ";"
-             "startArrow=" + start_arrow + ";endArrow=block;"
-             "fontStyle=0;fontSize=9;")
-    if st["dashed"]:
-        style += "dashed=1;"
-    return style
+    return ("edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;"
+            "jettySize=auto;html=1;"
+            "strokeColor=" + proto_color + ";strokeWidth=2;"
+            "startArrow=" + start_arrow + ";endArrow=block;"
+            "fontStyle=0;fontSize=9;")
 
 # ---------------------------------------------------------------------------
 # Label builders
@@ -345,7 +340,7 @@ def _build_legend(legend_x, legend_y, id_base):
     # ── Group 1: System / Node types ─────────────────────────────────────────
     sys_types = [
         ("SaaS",            PALETTE["SaaS"]),
-        ("Cloud Database",  PALETTE["Cloud Database"]),
+        ("Database",        PALETTE["Database"]),
         ("Microservice",    PALETTE["Microservice"]),
         ("On-Premise",      PALETTE["On-Premise"]),
         ("Web Application", PALETTE["Web Application"]),
@@ -368,14 +363,13 @@ def _build_legend(legend_x, legend_y, id_base):
     box_id = open_container("Interface status", len(statuses))
     inner_y = title_h
     for key, st in statuses:
-        ls = ("endArrow=block;startArrow=none;html=0;"
-              "strokeColor=" + st["color"] + ";strokeWidth=3;"
-              + ("dashed=1;" if st["dashed"] else ""))
-        line_y = inner_y + (row_h - 4) // 2
-        cells.append(_mxcell(next_id(), "", ls, edge=True, relative=True, parent=box_id,
-                             source_point=(8, line_y),
-                             target_point=(8 + sw, line_y)))
-        cells.append(_mxcell(next_id(), st["icon"] + " " + key.capitalize(),
+        sym_style = ("text;html=0;strokeColor=none;fillColor=none;"
+                     "align=center;verticalAlign=middle;fontSize=11;fontStyle=1;"
+                     "fontColor=" + st["html_color"] + ";")
+        cells.append(_mxcell(next_id(), st["summary_icon"], sym_style,
+                             vertex=True, parent=box_id,
+                             x=8, y=inner_y, width=sw, height=row_h - 4))
+        cells.append(_mxcell(next_id(), key.capitalize(),
                              lbl_style, vertex=True, parent=box_id,
                              x=label_x, y=inner_y, width=label_w, height=row_h - 4))
         inner_y += row_h
@@ -473,11 +467,10 @@ def build_drawio_xml(interfaces, layout="layered"):
         t         = iface.get("transport", {})
         protocol  = t.get("protocol", "default")
         direction = t.get("direction", "unidirectional")
-        status    = iface.get("status", "active").lower()
         ref_sym   = ref_map.get(i, "")
 
         cells.append(_mxcell(eid, _edge_label(iface, ref_sym),
-                             _style_for_edge(protocol, direction, status),
+                             _style_for_edge(protocol, direction),
                              edge=True, source=src_id, target=tgt_id, relative=True))
 
         if ref_sym:
