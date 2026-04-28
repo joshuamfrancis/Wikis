@@ -12,32 +12,12 @@ Usage:
 
 Requirements:
     pip install pyyaml
-
-Optional YAML fields
---------------------
-source / target:
-    environment   - omit if not relevant
-    host          - omit if not relevant
-
-transport:
-    port          - omit for protocol-default or connectionless transports
-
-security.authorization:
-    permissions   - omit if not relevant; when present a callout note is
-                    added to the diagram referencing the interface by symbol.
-
-interface root:
-    status        - active | inactive | broken (default: active)
-                    Controls edge colour and dash pattern:
-                      active   → green stroke  (solid)
-                      inactive → grey stroke   (dashed)
-                      broken   → red stroke    (solid)
-                    A status icon (🟢 ⚫ 🔴) is shown on the edge label.
 """
 
 import argparse
 import html
 import sys
+import textwrap
 import yaml
 from pathlib import Path
 
@@ -46,71 +26,44 @@ from pathlib import Path
 # Colour palette  (draw.io fill / stroke hex values)
 # ---------------------------------------------------------------------------
 PALETTE = {
-    "SaaS":           {"fill": "#dae8fc", "stroke": "#6c8ebf"},
-    "Cloud Database": {"fill": "#d5e8d4", "stroke": "#82b366"},
-    "Microservice":   {"fill": "#fff2cc", "stroke": "#d6b656"},
-    "On-Premise":     {"fill": "#f8cecc", "stroke": "#b85450"},
-    "Web Application":{"fill": "#e1d5e7", "stroke": "#9673a6"},
+    "SaaS":           {"fill": "#dae8fc", "stroke": "#6c8ebf"},   # light blue
+    "Cloud Database": {"fill": "#d5e8d4", "stroke": "#82b366"},   # light green
+    "Microservice":   {"fill": "#fff2cc", "stroke": "#d6b656"},   # light yellow
+    "On-Premise":     {"fill": "#f8cecc", "stroke": "#b85450"},   # light red
+    "Web Application":{"fill": "#e1d5e7", "stroke": "#9673a6"},   # light purple
     "default":        {"fill": "#f5f5f5", "stroke": "#666666"},
 }
 
 PROTOCOL_COLORS = {
-    "HTTPS":   "#007bff",
-    "HTTP":    "#6c757d",
-    "AMQP":    "#fd7e14",
-    "MQTT":    "#20c997",
-    "SFTP":    "#6f42c1",
-    "Kafka":   "#dc3545",
-    "gRPC":    "#17a2b8",
-    "JDBC":    "#28a745",
-    "S3":      "#ffc107",
-    "default": "#555555",
+    "HTTPS":  "#007bff",
+    "HTTP":   "#6c757d",
+    "AMQP":   "#fd7e14",
+    "MQTT":   "#20c997",
+    "SFTP":   "#6f42c1",
+    "Kafka":  "#dc3545",
+    "gRPC":   "#17a2b8",
+    "JDBC":   "#28a745",
+    "S3":     "#ffc107",
+    "default":"#555555",
 }
 
 FREQUENCY_ICONS = {
-    "realtime":     "⚡ realtime",
-    "scheduled":    "⧖ scheduled",
-    "event-driven": "➤ event-driven",
-    "batch":        "☰ batch",
-    "manual":       "✎ manual",
+    "realtime":     "⚡",
+    "scheduled":    "🕐",
+    "event-driven": "📡",
+    "batch":        "📦",
+    "manual":       "👤",
 }
-
-# Icons for edge label fields (all BMP-safe, U+0000-U+FFFF)
-ICON_PROTOCOL = "⇄"   # ⇄  transfer arrows
-ICON_AUTH     = "⚿"   # ⚿  key
-ICON_FORMAT   = "⎕"   # ⎕  document grid
-ICON_EXEC     = "▣"   # ▣  container/runtime
-ICON_AUTHZ    = "☑"   # ☑  authorization model
-
-# Status → (stroke colour, stroke width, dash pattern, label prefix)
-# All characters must be BMP (U+0000–U+FFFF) — draw.io rejects non-BMP Unicode
-STATUS_STYLES = {
-    "active":   {"color": "#00a854", "width": 3, "dashed": False,
-                 "icon": "● ACTIVE",   "html_color": "#00a854", "summary_icon": "●"},
-    "inactive": {"color": "#555555", "width": 2, "dashed": True,
-                 "icon": "○ INACTIVE", "html_color": "#555555", "summary_icon": "○"},
-    "broken":   {"color": "#e53935", "width": 3, "dashed": False,
-                 "icon": "✖ BROKEN",   "html_color": "#e53935", "summary_icon": "✖"},
-}
-STATUS_DEFAULT = STATUS_STYLES["active"]
-
-# Symbols used to cross-reference permission notes → interfaces
-_REF_SYMBOLS = list("①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳")
-
-
-def _ref_symbol(index: int) -> str:
-    if index < len(_REF_SYMBOLS):
-        return _REF_SYMBOLS[index]
-    return f"({index + 1})"
 
 
 # ---------------------------------------------------------------------------
 # Geometry helpers
 # ---------------------------------------------------------------------------
 
-def grid_positions(systems: list, cols: int = 4,
+def grid_positions(systems: list[str], cols: int = 4,
                    x_gap: int = 220, y_gap: int = 160,
-                   x_off: int = 60, y_off: int = 60) -> dict:
+                   x_off: int = 60, y_off: int = 60) -> dict[str, tuple[int, int]]:
+    """Return {system_name: (x, y)} laid out in a grid."""
     positions = {}
     for i, name in enumerate(systems):
         col = i % cols
@@ -119,16 +72,21 @@ def grid_positions(systems: list, cols: int = 4,
     return positions
 
 
-def layered_positions(interfaces: list,
-                      x_gap: int = 280, y_gap: int = 160,
-                      x_off: int = 60, y_off: int = 60) -> dict:
+def layered_positions(interfaces: list[dict],
+                      x_gap: int = 240, y_gap: int = 160,
+                      x_off: int = 60, y_off: int = 60) -> dict[str, tuple[int, int]]:
+    """
+    Attempt a simple left-to-right layering: systems that only appear as
+    sources are on the left, systems that only appear as targets are on the
+    right, the rest in the middle.
+    """
     sources = {i["source"]["system"] for i in interfaces}
     targets = {i["target"]["system"] for i in interfaces}
-    only_src = sorted(sources - targets)
-    only_tgt = sorted(targets - sources)
-    both     = sorted(sources & targets)
+    only_src  = sorted(sources - targets)
+    only_tgt  = sorted(targets - sources)
+    both      = sorted(sources & targets)
 
-    positions = {}
+    positions: dict[str, tuple[int, int]] = {}
     for row, name in enumerate(only_src):
         positions[name] = (x_off, y_off + row * y_gap)
     for row, name in enumerate(both):
@@ -136,9 +94,10 @@ def layered_positions(interfaces: list,
     for row, name in enumerate(only_tgt):
         positions[name] = (x_off + x_gap * 2, y_off + row * y_gap)
 
-    all_placed  = set(positions.keys())
+    # anything missed (shouldn't happen)
+    all_placed = set(positions.keys())
     all_systems = sources | targets
-    missed      = sorted(all_systems - all_placed)
+    missed = sorted(all_systems - all_placed)
     for row, name in enumerate(missed):
         positions[name] = (x_off + x_gap * 3, y_off + row * y_gap)
 
@@ -146,323 +105,70 @@ def layered_positions(interfaces: list,
 
 
 # ---------------------------------------------------------------------------
-# XML helpers
+# draw.io XML builders
 # ---------------------------------------------------------------------------
 
-def _sanitise(text: str) -> str:
-    """Remove characters outside the Basic Multilingual Plane (U+0000–U+FFFF).
-    draw.io's XML parser rejects surrogate-pair encoded non-BMP code points."""
-    return "".join(c for c in str(text) if ord(c) <= 0xFFFF)
-
-
-def _esc(text) -> str:
-    return html.escape(_sanitise(str(text)))
+def _esc(text: str) -> str:
+    return html.escape(str(text))
 
 
 def _style_for_system(sys_type: str) -> str:
     c = PALETTE.get(sys_type, PALETTE["default"])
     return (
-        f"rounded=1;whiteSpace=wrap;html=0;"
+        f"rounded=1;whiteSpace=wrap;html=1;"
         f"fillColor={c['fill']};strokeColor={c['stroke']};"
         f"fontStyle=1;fontSize=11;"
     )
 
 
-def _style_for_edge(protocol: str, direction: str, status: str = "active") -> str:
-    # Protocol drives colour when active; status overrides colour for inactive/broken
-    proto_color = PROTOCOL_COLORS.get(protocol, PROTOCOL_COLORS["default"])
-    st          = STATUS_STYLES.get(status, STATUS_DEFAULT)
-
-    # Active: use protocol colour. Inactive/broken: status colour takes precedence.
-    stroke_color = proto_color if status == "active" else st["color"]
-    stroke_width = st["width"]
-    end_arrow    = "block"
-    start_arrow  = "block" if direction == "bidirectional" else "none"
-
-    style = (
+def _style_for_edge(protocol: str, direction: str) -> str:
+    color = PROTOCOL_COLORS.get(protocol, PROTOCOL_COLORS["default"])
+    end_arrow   = "block"
+    start_arrow = "block" if direction == "bidirectional" else "none"
+    return (
         f"edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;"
-        f"jettySize=auto;html=1;"
-        f"strokeColor={stroke_color};strokeWidth={stroke_width};"
+        f"jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;"
+        f"entryX=0;entryY=0.5;entryDx=0;entryDy=0;"
+        f"strokeColor={color};strokeWidth=2;"
         f"startArrow={start_arrow};endArrow={end_arrow};"
         f"fontStyle=0;fontSize=9;"
     )
-    if st["dashed"]:
-        style += "dashed=1;"
-
-    return style
 
 
-NOTE_STYLE = (
-    "shape=callout;whiteSpace=wrap;html=0;"
-    "fillColor=#ffffc0;strokeColor=#999900;"
-    "fontSize=9;align=left;perimeter=calloutPerimeter;"
-)
-
-NOTE_CONNECTOR_STYLE = (
-    "edgeStyle=none;dashed=1;strokeColor=#999900;"
-    "strokeWidth=1;endArrow=none;startArrow=none;"
-)
-
-
-def _system_label(name: str, sys_type: str, env: str = "", host: str = "") -> str:
-    """Build a plain-text multi-line label for a system node."""
-    lines = [name, sys_type]
-    if env:
-        lines.append(env)
-    if host:
-        lines.append(host)
-    return "&#xa;".join(_esc(l) for l in lines)
-
-
-def _clean_xml(xml: str) -> str:
-    """Strip stray tabs, newlines and inter-element whitespace.
-    draw.io requires a single unbroken line.  Only whitespace that sits
-    BETWEEN tags (i.e. after > and before <) is removed so that spaces
-    inside attribute values are never touched."""
-    import re
-    # 1. Remove all tab and carriage-return characters everywhere
-    xml = xml.replace("\t", "").replace("\r", "")
-    # 2. Remove newline characters everywhere
-    xml = xml.replace("\n", "")
-    # 3. Remove whitespace ONLY between a closing > and an opening <
-    #    This is safe because all content lives inside attribute values,
-    #    never as text nodes between elements.
-    xml = re.sub(r">\s+<", "><", xml)
-    return xml
-
-
-def _htag(tag: str) -> str:
-    """Return an XML-escaped HTML open tag, e.g. '<b>' -> '&lt;b&gt;'.
-    draw.io with html=1 unescapes these back to real HTML when rendering."""
-    return html.escape(tag)
-
-
-def _edge_label(iface: dict, ref_symbol: str = "") -> str:
-    """Build an HTML label for the interface edge.
-    HTML tags are XML-escaped so the attribute is valid XML.
-    draw.io with html=1 unescapes and renders them as HTML.
-    Status line is colour-coded via <font color="...">.
-    """
-    t     = iface.get("transport", {})
-    s     = iface.get("security", {})
-    d     = iface.get("data", {})
+def _edge_label(iface: dict) -> str:
+    """Build a compact HTML label for the edge."""
+    t = iface.get("transport", {})
+    s = iface.get("security", {})
+    d = iface.get("data", {})
     sched = iface.get("scheduling", {})
 
-    protocol = t.get("protocol", "?")
-    port     = t.get("port")
-    auth     = s.get("authentication", {}).get("method", "None")
-    authz    = s.get("authorization", {}).get("model", "")
-    fmt      = d.get("format", "")
-    freq     = sched.get("frequency", "")
-    iid      = iface.get("id", "")
-    status   = iface.get("status", "active").lower()
-    st       = STATUS_STYLES.get(status, STATUS_DEFAULT)
-
-    # XML-escaped HTML tags for use inside an XML attribute value
-    BR      = _htag("<br>")
-    B_O     = _htag("<b>")
-    B_C     = _htag("</b>")
-    NBSP    = "&#160;"
-    FONT_O  = _htag(f'<font color="{st["html_color"]}">')
-    FONT_C  = _htag("</font>")
-
-    proto_str = (f"{_esc(ICON_PROTOCOL)}&#160;{_esc(protocol)}"
-                 + (f":{port}" if port is not None else ""))
-
-    # Name line — bold, ID prefix + name + optional permission ref symbol
-    name_part = f"{_esc(iid)}: {_esc(iface['name'])}"
-    if ref_symbol:
-        name_part = f"{name_part}&#160;&#160;{_esc(ref_symbol)}"
-    name_line = f"{B_O}{name_part}{B_C}"
-
-    # Status line — coloured icon + label
-    status_line = f"{FONT_O}{_esc(st['icon'])}{FONT_C}"
-
-    # Execution environment
-    exe        = iface.get("execution", {})
-    container  = exe.get("container", "")
-    platform   = exe.get("platform", "")
-    exe_parts  = [p for p in [container, platform] if p]
-    exe_str    = " / ".join(exe_parts) if exe_parts else ""
+    protocol  = t.get("protocol", "?")
+    port      = t.get("port", "")
+    auth      = s.get("authentication", {}).get("method", "None")
+    fmt       = d.get("format", "")
+    freq      = sched.get("frequency", "")
+    icon      = FREQUENCY_ICONS.get(freq, "")
+    iid       = iface.get("id", "")
 
     lines = [
-        name_line,
-        f"{status_line}",
-        proto_str,
-        f"{_esc(ICON_AUTH)}&#160;{_esc(auth)}",
+        f"<b>{_esc(iface['name'])}</b>",
+        f"{_esc(iid)}",
+        f"🔌 {_esc(protocol)}{(':' + str(port)) if port else ''}",
+        f"🔐 {_esc(auth)}",
     ]
-    if authz:
-        lines.append(f"{_esc(ICON_AUTHZ)}&#160;{_esc(authz)}")
     if fmt:
-        lines.append(f"{_esc(ICON_FORMAT)}&#160;{_esc(fmt)}")
+        lines.append(f"📄 {_esc(fmt)}")
     if freq:
-        freq_label = FREQUENCY_ICONS.get(freq, freq.upper())
-        lines.append(_esc(freq_label))
-    if exe_str:
-        lines.append(f"{_esc(ICON_EXEC)}&#160;{_esc(exe_str)}")
+        lines.append(f"{icon} {_esc(freq)}")
 
-    return BR.join(lines)
+    return "<br>".join(lines)
 
 
-def _note_label(iface: dict, ref_symbol: str) -> str:
-    """Build the permissions note label for an interface."""
-    auth   = iface.get("security", {})
-    authz  = auth.get("authorization", {})
-    model  = authz.get("model", "")
-    perms  = authz.get("permissions", [])
-    roles  = authz.get("roles", [])
-
-    lines = [f"Permissions {ref_symbol}", f"Ref: {iface.get('id', '')}"]
-    if model:
-        lines.append(f"Model: {model}")
-    if roles:
-        lines.append("Roles: " + ", ".join(str(r) for r in roles))
-    if perms:
-        lines.append("Permissions:")
-        for p in perms:
-            lines.append(f"  - {p}")
-
-    return "&#xa;".join(_esc(l) for l in lines)
-
-
-def _mxcell(cell_id, value, style, vertex=None, edge=None,
-             source=None, target=None, x=None, y=None,
-             width=None, height=None, relative=False) -> str:
-    attrs = f'id="{cell_id}" value="{value}" style="{style}"'
-    if vertex:
-        attrs += ' vertex="1"'
-    if edge:
-        attrs += ' edge="1"'
-    if source is not None:
-        attrs += f' source="{source}"'
-    if target is not None:
-        attrs += f' target="{target}"'
-    attrs += ' parent="1"'
-
-    if relative:
-        geo = '<mxGeometry relative="1" as="geometry"/>'
-    else:
-        geo = f'<mxGeometry x="{x}" y="{y}" width="{width}" height="{height}" as="geometry"/>'
-
-    return f'<mxCell {attrs}>{geo}</mxCell>'
-
-
-
-# ---------------------------------------------------------------------------
-# Legend builder
-# ---------------------------------------------------------------------------
-
-def _build_legend(legend_x: int, legend_y: int, id_base: int) -> list:
-    """Return a list of mxCell strings forming a legend box.
-    All values are built from constants — no multi-line f-strings that could
-    accumulate leading whitespace during future edits."""
-
-    cells = []
-    cid = id_base
-
-    # ── Outer legend box ─────────────────────────────────────────────────────
-    box_w, box_h = 230, 390
-    box_style = ("rounded=1;whiteSpace=wrap;html=0;"
-                 "fillColor=#f5f5f5;strokeColor=#666666;"
-                 "fontStyle=1;fontSize=11;verticalAlign=top;align=left;")
-    cells.append(_mxcell(cid, "LEGEND", box_style, vertex=True,
-                         x=legend_x, y=legend_y, width=box_w, height=box_h))
-    cid += 1
-
-    row_h   = 28   # height of each legend row
-    swatch_w = 30   # width of colour swatch / sample line
-    label_x = legend_x + swatch_w + 10
-    label_w = box_w - swatch_w - 20
-
-    label_style = ("text;html=0;strokeColor=none;fillColor=none;"
-                   "align=left;verticalAlign=middle;fontSize=9;")
-
-    # ── Section: System types ─────────────────────────────────────────────────
-    section_style = ("text;html=0;strokeColor=none;fillColor=none;"
-                     "align=left;verticalAlign=middle;fontSize=9;fontStyle=1;")
-    cells.append(_mxcell(cid, "System types", section_style, vertex=True,
-                         x=legend_x + 5, y=legend_y + 24,
-                         width=box_w - 10, height=20))
-    cid += 1
-
-    sys_types = [
-        ("SaaS",            PALETTE["SaaS"]),
-        ("Cloud Database",  PALETTE["Cloud Database"]),
-        ("Microservice",    PALETTE["Microservice"]),
-        ("On-Premise",      PALETTE["On-Premise"]),
-        ("Web Application", PALETTE["Web Application"]),
-        ("Other",           PALETTE["default"]),
-    ]
-    row_y = legend_y + 46
-    for label, colors in sys_types:
-        swatch_style = ("rounded=1;whiteSpace=wrap;html=0;"
-                        "fillColor=" + colors["fill"] + ";"
-                        "strokeColor=" + colors["stroke"] + ";fontSize=8;")
-        cells.append(_mxcell(cid, "", swatch_style, vertex=True,
-                             x=legend_x + 5, y=row_y, width=swatch_w, height=row_h - 4))
-        cid += 1
-        cells.append(_mxcell(cid, label, label_style, vertex=True,
-                             x=label_x, y=row_y, width=label_w, height=row_h - 4))
-        cid += 1
-        row_y += row_h
-
-    # ── Section: Status ───────────────────────────────────────────────────────
-    row_y += 4
-    cells.append(_mxcell(cid, "Interface status", section_style, vertex=True,
-                         x=legend_x + 5, y=row_y, width=box_w - 10, height=20))
-    cid += 1
-    row_y += 22
-
-    for key, st in STATUS_STYLES.items():
-        line_style = ("endArrow=block;startArrow=none;html=0;"
-                      "strokeColor=" + st["color"] + ";"
-                      "strokeWidth=3;"
-                      + ("dashed=1;" if st["dashed"] else ""))
-        cells.append(_mxcell(cid, "", line_style, edge=True,
-                             source=None, target=None, relative=True,
-                             x=legend_x + 5, y=row_y + 10,
-                             width=swatch_w, height=4))
-        cid += 1
-        status_label = st["icon"] + " " + key.capitalize()
-        cells.append(_mxcell(cid, status_label, label_style, vertex=True,
-                             x=label_x, y=row_y, width=label_w, height=row_h - 4))
-        cid += 1
-        row_y += row_h
-
-    # ── Section: Edge field icons ─────────────────────────────────────────────
-    row_y += 4
-    cells.append(_mxcell(cid, "Connector fields", section_style, vertex=True,
-                         x=legend_x + 5, y=row_y, width=box_w - 10, height=20))
-    cid += 1
-    row_y += 22
-
-    field_icons = [
-        (ICON_PROTOCOL, "Protocol / Port"),
-        (ICON_AUTH,     "Authentication"),
-        (ICON_AUTHZ,    "Authorization model"),
-        (ICON_FORMAT,   "Data format"),
-        (ICON_EXEC,     "Execution environment"),
-    ]
-    for icon, desc in field_icons:
-        cells.append(_mxcell(cid, icon, label_style, vertex=True,
-                             x=legend_x + 5, y=row_y, width=swatch_w, height=row_h - 4))
-        cid += 1
-        cells.append(_mxcell(cid, desc, label_style, vertex=True,
-                             x=label_x, y=row_y, width=label_w, height=row_h - 4))
-        cid += 1
-        row_y += row_h
-
-    return cells
-
-# ---------------------------------------------------------------------------
-# Main diagram builder
-# ---------------------------------------------------------------------------
-
-def build_drawio_xml(interfaces: list, layout: str = "layered") -> str:
+def build_drawio_xml(interfaces: list[dict], layout: str = "layered") -> str:
     """Generate the full draw.io XML string."""
 
     # Collect unique systems
-    systems = {}   # name -> type
+    systems: dict[str, str] = {}   # name -> type
     for iface in interfaces:
         src = iface["source"]
         tgt = iface["target"]
@@ -477,112 +183,116 @@ def build_drawio_xml(interfaces: list, layout: str = "layered") -> str:
         cols = max(1, min(4, len(system_names)))
         positions = grid_positions(system_names, cols=cols)
 
-    # Stable IDs
-    base     = 10
-    sys_ids  = {name: base + i for i, name in enumerate(system_names)}
+    # Assign stable integer IDs
+    base = 10
+    sys_ids: dict[str, int] = {name: base + i for i, name in enumerate(system_names)}
     edge_base = base + len(system_names)
-    note_base = edge_base + len(interfaces)
-    conn_base = note_base + len(interfaces)  # connectors from notes → edges
 
     cells = []
 
-    # ── System nodes ──────────────────────────────────────────────────────────
+    # --- system nodes ---
     for name, sys_type in systems.items():
-        sid  = sys_ids[name]
-        x, y = positions.get(name, (60, 60))
-
-        src_info = next(
-            (i["source"] for i in interfaces if i["source"]["system"] == name),
-            next((i["target"] for i in interfaces if i["target"]["system"] == name), {})
-        )
-        env  = src_info.get("environment", "")
-        host = src_info.get("host", "")
-
-        label = _system_label(name, sys_type, env, host)
+        sid   = sys_ids[name]
+        x, y  = positions.get(name, (60, 60))
         style = _style_for_system(sys_type)
-        cells.append(_mxcell(sid, label, style, vertex=True,
-                              x=x, y=y, width=160, height=60))
+        label = f"<b>{_esc(name)}</b><br/><i>{_esc(sys_type)}</i>"
+        cells.append(
+            f'    <mxCell id="{sid}" value="{label}" style="{style}" '
+            f'vertex="1" parent="1">\n'
+            f'      <mxGeometry x="{x}" y="{y}" width="160" height="60" as="geometry"/>\n'
+            f'    </mxCell>'
+        )
 
-    # ── Interface edges + optional permission notes ────────────────────────────
-    # First pass: assign ref symbols only to interfaces that have permissions
-    ref_map = {}   # interface index → symbol
-    sym_counter = 0
+    # --- interface edges ---
     for i, iface in enumerate(interfaces):
-        authz = iface.get("security", {}).get("authorization", {})
-        perms = authz.get("permissions", [])
-        roles = authz.get("roles", [])
-        if perms or roles:
-            ref_map[i] = _ref_symbol(sym_counter)
-            sym_counter += 1
+        eid      = edge_base + i
+        src_id   = sys_ids[iface["source"]["system"]]
+        tgt_id   = sys_ids[iface["target"]["system"]]
+        t        = iface.get("transport", {})
+        protocol = t.get("protocol", "default")
+        direction= t.get("direction", "unidirectional")
+        style    = _style_for_edge(protocol, direction)
+        label    = _edge_label(iface)
 
-    # Determine a good Y offset for notes (below all system nodes)
-    max_y = max((pos[1] for pos in positions.values()), default=60)
-    note_y_base = max_y + 160   # place notes below the diagram
+        cells.append(
+            f'    <mxCell id="{eid}" value="{label}" style="{style}" '
+            f'edge="1" source="{src_id}" target="{tgt_id}" parent="1">\n'
+            f'      <mxGeometry relative="1" as="geometry"/>\n'
+            f'    </mxCell>'
+        )
 
-    for i, iface in enumerate(interfaces):
-        eid       = edge_base + i
-        src_id    = sys_ids[iface["source"]["system"]]
-        tgt_id    = sys_ids[iface["target"]["system"]]
-        t         = iface.get("transport", {})
-        protocol  = t.get("protocol", "default")
-        direction = t.get("direction", "unidirectional")
-        status    = iface.get("status", "active").lower()
-        ref_sym   = ref_map.get(i, "")
+    cells_xml = "\n".join(cells)
 
-        style = _style_for_edge(protocol, direction, status)
-        label = _edge_label(iface, ref_sym)
-        cells.append(_mxcell(eid, label, style, edge=True,
-                              source=src_id, target=tgt_id, relative=True))
-
-        # Permission note for this interface (if any)
-        if ref_sym:
-            nid     = note_base + i
-            note_x  = 60 + (i * 220)
-            note_w  = 200
-            note_h  = 80 + len(
-                iface.get("security", {}).get("authorization", {}).get("permissions", [])
-            ) * 14
-
-            note_label = _note_label(iface, ref_sym)
-            cells.append(_mxcell(nid, note_label, NOTE_STYLE, vertex=True,
-                                  x=note_x, y=note_y_base,
-                                  width=note_w, height=note_h))
-
-            # Dashed connector: note → edge
-            cid = conn_base + i
-            cells.append(_mxcell(cid, "", NOTE_CONNECTOR_STYLE,
-                                  edge=True, source=nid, target=eid, relative=True))
-
-    # ── Legend ───────────────────────────────────────────────────────────────
-    # Place legend to the right of the rightmost system node
-    max_x = max((pos[0] for pos in positions.values()), default=60)
-    legend_x = max_x + 220
-    legend_y = min((pos[1] for pos in positions.values()), default=60)
-    legend_id_base = conn_base + len(interfaces) + 100
-    cells.extend(_build_legend(legend_x, legend_y, legend_id_base))
-
-    # Build compact single-line XML — draw.io rejects leading whitespace on tags
-    inner = "".join(cells)
-    body = (
-        '<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1"'
-        ' tooltips="1" connect="1" arrows="1" fold="1" page="1"'
-        ' pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">'
-        "<root>"
-        '<mxCell id="0"/>'
-        '<mxCell id="1" parent="0"/>'
-        + inner +
-        "</root>"
-        "</mxGraphModel>"
-    )
-    xml = '<?xml version="1.0" encoding="UTF-8"?>' + body
-    return _clean_xml(xml)
+    return textwrap.dedent(f"""\
+        <?xml version="1.0" encoding="UTF-8"?>
+        <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1"
+                      tooltips="1" connect="1" arrows="1" fold="1" page="1"
+                      pageScale="1" pageWidth="1654" pageHeight="1169"
+                      math="0" shadow="0">
+          <root>
+            <mxCell id="0"/>
+            <mxCell id="1" parent="0"/>
+        {cells_xml}
+          </root>
+        </mxGraphModel>
+        """)
 
 
 # ---------------------------------------------------------------------------
-# Summary report
+# Legend page
 # ---------------------------------------------------------------------------
 
-def print_summary(interfaces: list) -> None:
+def build_legend_xml() -> str:
+    items = list(PALETTE.items())
+    legend_cells = []
+    lid_base = 1000
+    for i, (sys_type, colors) in enumerate(items):
+        y = 20 + i * 50
+        style = (f"rounded=1;whiteSpace=wrap;html=1;"
+                 f"fillColor={colors['fill']};strokeColor={colors['stroke']};"
+                 f"fontStyle=1;fontSize=10;")
+        legend_cells.append(
+            f'    <mxCell id="{lid_base + i}" value="{_esc(sys_type)}" '
+            f'style="{style}" vertex="1" parent="1">\n'
+            f'      <mxGeometry x="20" y="{y}" width="160" height="34" as="geometry"/>\n'
+            f'    </mxCell>'
+        )
+
+    p_base = lid_base + len(items)
+    for j, (proto, color) in enumerate(PROTOCOL_COLORS.items()):
+        if proto == "default":
+            continue
+        y = 20 + j * 50
+        style = (f"edgeStyle=orthogonalEdgeStyle;strokeColor={color};"
+                 f"strokeWidth=2;endArrow=block;fontStyle=0;fontSize=10;")
+        # just a label box for legend purposes
+        label = f"🔌 {_esc(proto)}"
+        legend_cells.append(
+            f'    <mxCell id="{p_base + j}" value="{label}" '
+            f'style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;" '
+            f'vertex="1" parent="1">\n'
+            f'      <mxGeometry x="200" y="{y}" width="120" height="34" as="geometry"/>\n'
+            f'    </mxCell>'
+        )
+
+    cells_xml = "\n".join(legend_cells)
+    return textwrap.dedent(f"""\
+        <?xml version="1.0" encoding="UTF-8"?>
+        <mxGraphModel>
+          <root>
+            <mxCell id="0"/>
+            <mxCell id="1" parent="0"/>
+        {cells_xml}
+          </root>
+        </mxGraphModel>
+        """)
+
+
+# ---------------------------------------------------------------------------
+# Summary report (plain text)
+# ---------------------------------------------------------------------------
+
+def print_summary(interfaces: list[dict]) -> None:
     print("\n" + "=" * 60)
     print(f"  Interface Summary  ({len(interfaces)} interface(s))")
     print("=" * 60)
@@ -593,23 +303,15 @@ def print_summary(interfaces: list) -> None:
         tgt   = iface["target"]["system"]
         t     = iface.get("transport", {})
         proto = t.get("protocol", "?")
-        port  = t.get("port")
+        port  = t.get("port", "")
         auth  = iface.get("security", {}).get("authentication", {}).get("method", "None")
         fmt   = iface.get("data", {}).get("format", "-")
         freq  = iface.get("scheduling", {}).get("frequency", "-")
         ctr   = iface.get("execution", {}).get("container", "-")
-        authz = iface.get("security", {}).get("authorization", {})
-        perms = authz.get("permissions", [])
-
-        port_str = f":{port}" if port is not None else ""
-        status   = iface.get("status", "active").lower()
-        st_icon  = STATUS_STYLES.get(status, STATUS_DEFAULT)["summary_icon"]
-        print(f"\n  {st_icon} [{iid}] {name}  [{status.upper()}]")
-        print(f"    {src}  ──{proto}{port_str}──▶  {tgt}")
+        print(f"\n  [{iid}] {name}")
+        print(f"    {src}  ──{proto}{(':' + str(port)) if port else ''}──▶  {tgt}")
         print(f"    Auth: {auth}   Format: {fmt}   Frequency: {freq}")
         print(f"    Container: {ctr}")
-        if perms:
-            print(f"    Permissions: {', '.join(str(p) for p in perms)}")
     print()
 
 
@@ -621,7 +323,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Convert a system-interface YAML file to a draw.io diagram."
     )
-    parser.add_argument("yaml_file", help="Path to the interfaces YAML file.")
+    parser.add_argument("yaml_file",
+                        help="Path to the interfaces YAML file.")
     parser.add_argument("--output", "-o", default=None,
                         help="Output .drawio file path (default: <yaml_name>.drawio)")
     parser.add_argument("--layout", choices=["auto", "grid", "layered"],
@@ -649,31 +352,15 @@ def main() -> None:
 
     output_path = Path(args.output) if args.output else yaml_path.with_suffix(".drawio")
 
-    layout      = args.layout if args.layout != "auto" else "layered"
+    layout = args.layout if args.layout != "auto" else "layered"
     diagram_xml = build_drawio_xml(interfaces, layout=layout)
 
-    # Apply _clean_xml a second time as a final gate so no tabs,
-    # newlines or inter-tag whitespace can survive into the file.
-    # Write binary to prevent platform \r\n injection.
-    with open(output_path, "wb") as fh:
-        fh.write(_clean_xml(diagram_xml).encode("utf-8"))
+    with open(output_path, "w", encoding="utf-8") as fh:
+        fh.write(diagram_xml)
 
     print(f"✅  Diagram written to: {output_path}")
-    print(f"    Systems   : {len({i['source']['system'] for i in interfaces} | {i['target']['system'] for i in interfaces})}")
+    print(f"    Systems  : {len({i['source']['system'] for i in interfaces} | {i['target']['system'] for i in interfaces})}")
     print(f"    Interfaces: {len(interfaces)}")
-
-    for s_val in ("active", "inactive", "broken"):
-        count = sum(1 for i in interfaces if i.get("status", "active").lower() == s_val)
-        if count:
-            icon = STATUS_STYLES[s_val]["summary_icon"]
-            print(f"      {icon} {s_val}: {count}")
-    notes_count = sum(
-        1 for i in interfaces
-        if i.get("security", {}).get("authorization", {}).get("permissions") or
-           i.get("security", {}).get("authorization", {}).get("roles")
-    )
-    if notes_count:
-        print(f"    Permission notes: {notes_count}")
     print(f"\nOpen in draw.io desktop or https://app.diagrams.net  ➜  File ▶ Open")
 
 
