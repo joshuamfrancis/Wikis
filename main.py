@@ -97,6 +97,46 @@ def _clean_xml(xml):
     xml = re.sub(r">\s+<", "><", xml)
     return xml
 
+def _pretty_xml(xml, indent="  "):
+    """Pretty-print XML with space indentation (no tabs)."""
+    minified = _clean_xml(xml)
+    out = []
+    depth = 0
+    i = 0
+    n = len(minified)
+    while i < n:
+        if minified[i] == "<":
+            j = minified.index(">", i)
+            tag = minified[i:j + 1]
+            if tag.startswith("<?") or tag.startswith("<!"):
+                out.append(tag)
+                out.append("\n")
+            elif tag.startswith("</"):
+                depth -= 1
+                out.append(indent * depth)
+                out.append(tag)
+                out.append("\n")
+            elif tag.endswith("/>"):
+                out.append(indent * depth)
+                out.append(tag)
+                out.append("\n")
+            else:
+                out.append(indent * depth)
+                out.append(tag)
+                out.append("\n")
+                depth += 1
+            i = j + 1
+        else:
+            j = minified.index("<", i)
+            text = minified[i:j]
+            if text.strip():
+                if out and out[-1] == "\n":
+                    out.pop()
+                out.append(text)
+                out.append("\n")
+            i = j
+    return "".join(out)
+
 # ---------------------------------------------------------------------------
 # Layout
 # ---------------------------------------------------------------------------
@@ -129,7 +169,8 @@ def layered_positions(interfaces, x_gap=280, y_gap=160, x_off=60, y_off=60):
 # ---------------------------------------------------------------------------
 def _mxcell(cell_id, value, style, vertex=None, edge=None,
             source=None, target=None, x=None, y=None,
-            width=None, height=None, relative=False):
+            width=None, height=None, relative=False, parent="1",
+            source_point=None, target_point=None):
     attrs = 'id="' + str(cell_id) + '" value="' + str(value) + '" style="' + str(style) + '"'
     if vertex:
         attrs += ' vertex="1"'
@@ -139,9 +180,19 @@ def _mxcell(cell_id, value, style, vertex=None, edge=None,
         attrs += ' source="' + str(source) + '"'
     if target is not None:
         attrs += ' target="' + str(target) + '"'
-    attrs += ' parent="1"'
+    attrs += ' parent="' + str(parent) + '"'
     if relative:
-        geo = '<mxGeometry relative="1" as="geometry"/>'
+        if source_point is not None or target_point is not None:
+            geo = '<mxGeometry relative="1" as="geometry">'
+            if source_point is not None:
+                geo += ('<mxPoint x="' + str(source_point[0]) + '" y="' +
+                        str(source_point[1]) + '" as="sourcePoint"/>')
+            if target_point is not None:
+                geo += ('<mxPoint x="' + str(target_point[0]) + '" y="' +
+                        str(target_point[1]) + '" as="targetPoint"/>')
+            geo += '</mxGeometry>'
+        else:
+            geo = '<mxGeometry relative="1" as="geometry"/>'
     else:
         geo = ('<mxGeometry x="' + str(x) + '" y="' + str(y) +
                '" width="' + str(width) + '" height="' + str(height) + '" as="geometry"/>')
@@ -248,31 +299,50 @@ def _note_label(iface, ref_symbol):
 # ---------------------------------------------------------------------------
 def _build_legend(legend_x, legend_y, id_base):
     cells = []
-    cid   = id_base
-    box_w = 240
-    row_h = 26
-    sw    = 28
-    lx    = legend_x + sw + 8
-    lw    = box_w - sw - 20
+    cid_holder = [id_base]
+
+    def next_id():
+        v = cid_holder[0]
+        cid_holder[0] = v + 1
+        return v
+
+    box_w        = 240
+    row_h        = 26
+    sw           = 28
+    title_h      = 26
+    bottom_pad   = 6
+    label_x      = sw + 16
+    label_w      = box_w - label_x - 8
 
     lbl_style = ("text;html=0;strokeColor=none;fillColor=none;"
                  "align=left;verticalAlign=middle;fontSize=9;")
-    grp_style = ("rounded=1;whiteSpace=wrap;html=0;"
-                 "fillColor=#ffffff;strokeColor=#aaaaaa;"
-                 "verticalAlign=top;align=left;fontStyle=1;fontSize=9;")
+    container_style = ("rounded=1;whiteSpace=wrap;html=0;"
+                       "fillColor=#ffffff;strokeColor=#aaaaaa;"
+                       "verticalAlign=top;align=left;fontStyle=1;fontSize=9;"
+                       "container=1;collapsible=0;")
 
-    def add_group_box(title, group_y, end_y):
-        nonlocal cid
-        cells.append(_mxcell(cid, title, grp_style, vertex=True,
-                             x=legend_x, y=group_y,
-                             width=box_w, height=end_y - group_y + 6))
-        cid += 1
+    # Title bar (drawn first, sits above first group)
+    cells.append(_mxcell(next_id(), "LEGEND",
+                         ("rounded=1;whiteSpace=wrap;html=0;"
+                          "fillColor=#dae8fc;strokeColor=#6c8ebf;"
+                          "fontStyle=1;fontSize=11;verticalAlign=middle;align=center;"),
+                         vertex=True,
+                         x=legend_x, y=legend_y - 34, width=box_w, height=28))
 
     row_y = legend_y
 
+    def open_container(title, item_count):
+        nonlocal row_y
+        box_id = next_id()
+        box_y  = row_y
+        box_h  = title_h + item_count * row_h + bottom_pad
+        cells.append(_mxcell(box_id, title, container_style, vertex=True,
+                             x=legend_x, y=box_y,
+                             width=box_w, height=box_h))
+        row_y = box_y + box_h + 10
+        return box_id
+
     # ── Group 1: System / Node types ─────────────────────────────────────────
-    g1_y  = row_y
-    row_y += 26
     sys_types = [
         ("SaaS",            PALETTE["SaaS"]),
         ("Cloud Database",  PALETTE["Cloud Database"]),
@@ -282,40 +352,35 @@ def _build_legend(legend_x, legend_y, id_base):
         ("Shared Drive",    PALETTE["Shared Drive"]),
         ("Other",           PALETTE["default"]),
     ]
+    box_id = open_container("System / Node types", len(sys_types))
+    inner_y = title_h
     for lbl, c in sys_types:
         sw_style = ("rounded=1;whiteSpace=wrap;html=0;"
                     "fillColor=" + c["fill"] + ";strokeColor=" + c["stroke"] + ";fontSize=8;")
-        cells.append(_mxcell(cid, "", sw_style, vertex=True,
-                             x=legend_x + 8, y=row_y, width=sw, height=row_h - 4))
-        cid += 1
-        cells.append(_mxcell(cid, lbl, lbl_style, vertex=True,
-                             x=lx, y=row_y, width=lw, height=row_h - 4))
-        cid += 1
-        row_y += row_h
-    add_group_box("System / Node types", g1_y, row_y)
-    row_y += 10
+        cells.append(_mxcell(next_id(), "", sw_style, vertex=True, parent=box_id,
+                             x=8, y=inner_y, width=sw, height=row_h - 4))
+        cells.append(_mxcell(next_id(), lbl, lbl_style, vertex=True, parent=box_id,
+                             x=label_x, y=inner_y, width=label_w, height=row_h - 4))
+        inner_y += row_h
 
     # ── Group 2: Interface status ─────────────────────────────────────────────
-    g2_y  = row_y
-    row_y += 26
-    for key, st in STATUS_STYLES.items():
+    statuses = list(STATUS_STYLES.items())
+    box_id = open_container("Interface status", len(statuses))
+    inner_y = title_h
+    for key, st in statuses:
         ls = ("endArrow=block;startArrow=none;html=0;"
               "strokeColor=" + st["color"] + ";strokeWidth=3;"
               + ("dashed=1;" if st["dashed"] else ""))
-        cells.append(_mxcell(cid, "", ls, edge=True, relative=True,
-                             x=legend_x + 8, y=row_y + 10, width=sw, height=4))
-        cid += 1
-        cells.append(_mxcell(cid, st["icon"] + " " + key.capitalize(),
-                             lbl_style, vertex=True,
-                             x=lx, y=row_y, width=lw, height=row_h - 4))
-        cid += 1
-        row_y += row_h
-    add_group_box("Interface status", g2_y, row_y)
-    row_y += 10
+        line_y = inner_y + (row_h - 4) // 2
+        cells.append(_mxcell(next_id(), "", ls, edge=True, relative=True, parent=box_id,
+                             source_point=(8, line_y),
+                             target_point=(8 + sw, line_y)))
+        cells.append(_mxcell(next_id(), st["icon"] + " " + key.capitalize(),
+                             lbl_style, vertex=True, parent=box_id,
+                             x=label_x, y=inner_y, width=label_w, height=row_h - 4))
+        inner_y += row_h
 
     # ── Group 3: Protocol / Interface types ───────────────────────────────────
-    g3_y  = row_y
-    row_y += 26
     proto_items = [
         ("HTTPS / HTTP",  PROTOCOL_COLORS["HTTPS"]),
         ("AMQP / MQTT",   PROTOCOL_COLORS["AMQP"]),
@@ -327,22 +392,20 @@ def _build_legend(legend_x, legend_y, id_base):
         ("SMB / NFS",     PROTOCOL_COLORS["SMB"]),
         ("File polling",  PROTOCOL_COLORS["File"]),
     ]
+    box_id = open_container("Interface / Protocol types", len(proto_items))
+    inner_y = title_h
     for lbl, color in proto_items:
         ls = ("endArrow=block;startArrow=none;html=0;"
               "strokeColor=" + color + ";strokeWidth=2;")
-        cells.append(_mxcell(cid, "", ls, edge=True, relative=True,
-                             x=legend_x + 8, y=row_y + 10, width=sw, height=4))
-        cid += 1
-        cells.append(_mxcell(cid, lbl, lbl_style, vertex=True,
-                             x=lx, y=row_y, width=lw, height=row_h - 4))
-        cid += 1
-        row_y += row_h
-    add_group_box("Interface / Protocol types", g3_y, row_y)
-    row_y += 10
+        line_y = inner_y + (row_h - 4) // 2
+        cells.append(_mxcell(next_id(), "", ls, edge=True, relative=True, parent=box_id,
+                             source_point=(8, line_y),
+                             target_point=(8 + sw, line_y)))
+        cells.append(_mxcell(next_id(), lbl, lbl_style, vertex=True, parent=box_id,
+                             x=label_x, y=inner_y, width=label_w, height=row_h - 4))
+        inner_y += row_h
 
     # ── Group 4: Connector field icons ────────────────────────────────────────
-    g4_y  = row_y
-    row_y += 26
     field_icons = [
         (ICON_PROTOCOL, "Protocol / Port"),
         (ICON_AUTH,     "Authentication"),
@@ -351,24 +414,14 @@ def _build_legend(legend_x, legend_y, id_base):
         (ICON_EXEC,     "Execution environment"),
         (ICON_POLL,     "File polling"),
     ]
+    box_id = open_container("Connector field icons", len(field_icons))
+    inner_y = title_h
     for icon, desc in field_icons:
-        cells.append(_mxcell(cid, icon, lbl_style, vertex=True,
-                             x=legend_x + 8, y=row_y, width=sw, height=row_h - 4))
-        cid += 1
-        cells.append(_mxcell(cid, desc, lbl_style, vertex=True,
-                             x=lx, y=row_y, width=lw, height=row_h - 4))
-        cid += 1
-        row_y += row_h
-    add_group_box("Connector field icons", g4_y, row_y)
-
-    # ── Title bar ─────────────────────────────────────────────────────────────
-    cells.append(_mxcell(cid, "LEGEND",
-                         ("rounded=1;whiteSpace=wrap;html=0;"
-                          "fillColor=#dae8fc;strokeColor=#6c8ebf;"
-                          "fontStyle=1;fontSize=11;verticalAlign=middle;align=center;"),
-                         vertex=True,
-                         x=legend_x, y=legend_y - 34, width=box_w, height=28))
-    cid += 1
+        cells.append(_mxcell(next_id(), icon, lbl_style, vertex=True, parent=box_id,
+                             x=8, y=inner_y, width=sw, height=row_h - 4))
+        cells.append(_mxcell(next_id(), desc, lbl_style, vertex=True, parent=box_id,
+                             x=label_x, y=inner_y, width=label_w, height=row_h - 4))
+        inner_y += row_h
 
     return cells
 
@@ -518,7 +571,7 @@ def main():
     diagram_xml = build_drawio_xml(interfaces, layout=layout)
 
     with open(output_path, "wb") as fh:
-        fh.write(_clean_xml(diagram_xml).encode("utf-8"))
+        fh.write(_pretty_xml(diagram_xml).encode("utf-8"))
 
     print("Done: " + str(output_path))
     print("  Systems   : " + str(len({i["source"]["system"] for i in interfaces} | {i["target"]["system"] for i in interfaces})))
