@@ -84,7 +84,7 @@ interfaces:
       # environment and host omitted — optional
 
     transport:
-      protocol: "AMQP"
+      protocol: "JDBC/ODBC"
       # port omitted — optional
       direction: "unidirectional"
       broker: "RabbitMQ"

@@ -24,7 +24,7 @@
     <mxCell id="16" value="&lt;b&gt;IF-001: CRM to Data Warehouse ETL&#160;&#160;①&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#00a854&quot;&gt;● ACTIVE&lt;/font&gt;&lt;br&gt;Protocol: HTTPS:443&lt;br&gt;AuthN: OAuth2&lt;br&gt;AuthZ: RBAC&lt;br&gt;Format: JSON&lt;br&gt;Schedule: scheduled&lt;br&gt;Execution: etl-salesforce-dwh / Docker" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#007bff;strokeWidth=2;startArrow=none;endArrow=block;fontStyle=0;fontSize=9;align=left;verticalAlign=middle;" edge="1" source="10" target="11" parent="1">
       <mxGeometry relative="1" as="geometry"/>
     </mxCell>
-    <mxCell id="17" value="&lt;b&gt;IF-002: Order Service to Notification Service&#160;&#160;②&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#00a854&quot;&gt;● ACTIVE&lt;/font&gt;&lt;br&gt;Protocol: AMQP&lt;br&gt;AuthN: API_Key&lt;br&gt;AuthZ: ACL&lt;br&gt;Format: JSON&lt;br&gt;Schedule: realtime&lt;br&gt;Execution: order-service / Kubernetes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#fd7e14;strokeWidth=2;startArrow=none;endArrow=block;fontStyle=0;fontSize=9;align=left;verticalAlign=middle;" edge="1" source="12" target="13" parent="1">
+    <mxCell id="17" value="&lt;b&gt;IF-002: Order Service to Notification Service&#160;&#160;②&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#00a854&quot;&gt;● ACTIVE&lt;/font&gt;&lt;br&gt;Protocol: JDBC/ODBC&lt;br&gt;AuthN: API_Key&lt;br&gt;AuthZ: ACL&lt;br&gt;Format: JSON&lt;br&gt;Schedule: realtime&lt;br&gt;Execution: order-service / Kubernetes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#28a745;strokeWidth=2;startArrow=none;endArrow=block;fontStyle=0;fontSize=9;align=left;verticalAlign=middle;" edge="1" source="12" target="13" parent="1">
       <mxGeometry relative="1" as="geometry"/>
     </mxCell>
     <mxCell id="18" value="&lt;b&gt;IF-003: ERP to Reporting Portal&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#00a854&quot;&gt;● ACTIVE&lt;/font&gt;&lt;br&gt;Protocol: SFTP:22&lt;br&gt;AuthN: Certificate&lt;br&gt;AuthZ: ACL&lt;br&gt;Format: CSV&lt;br&gt;Schedule: scheduled&lt;br&gt;Execution: sap-sftp-exporter / Docker" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6f42c1;strokeWidth=2;startArrow=none;endArrow=block;fontStyle=0;fontSize=9;align=left;verticalAlign=middle;" edge="1" source="14" target="15" parent="1">
@@ -93,22 +93,22 @@
     <mxCell id="137" value="HTTPS / HTTP" style="text;html=0;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=9;" vertex="1" parent="135">
       <mxGeometry x="44" y="26" width="188" height="22" as="geometry"/>
     </mxCell>
-    <mxCell id="138" value="" style="endArrow=block;startArrow=none;html=0;strokeColor=#fd7e14;strokeWidth=2;" edge="1" parent="135">
+    <mxCell id="138" value="" style="endArrow=block;startArrow=none;html=0;strokeColor=#6f42c1;strokeWidth=2;" edge="1" parent="135">
       <mxGeometry relative="1" as="geometry">
         <mxPoint x="8" y="63" as="sourcePoint"/>
         <mxPoint x="36" y="63" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="139" value="AMQP / MQTT" style="text;html=0;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=9;" vertex="1" parent="135">
+    <mxCell id="139" value="SFTP" style="text;html=0;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=9;" vertex="1" parent="135">
       <mxGeometry x="44" y="52" width="188" height="22" as="geometry"/>
     </mxCell>
-    <mxCell id="140" value="" style="endArrow=block;startArrow=none;html=0;strokeColor=#6f42c1;strokeWidth=2;" edge="1" parent="135">
+    <mxCell id="140" value="" style="endArrow=block;startArrow=none;html=0;strokeColor=#28a745;strokeWidth=2;" edge="1" parent="135">
       <mxGeometry relative="1" as="geometry">
         <mxPoint x="8" y="89" as="sourcePoint"/>
         <mxPoint x="36" y="89" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="141" value="SFTP" style="text;html=0;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=9;" vertex="1" parent="135">
+    <mxCell id="141" value="JDBC / ODBC" style="text;html=0;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=9;" vertex="1" parent="135">
       <mxGeometry x="44" y="78" width="188" height="22" as="geometry"/>
     </mxCell>
   </root>
