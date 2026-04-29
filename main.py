@@ -136,13 +136,44 @@ def layered_positions(interfaces, x_gap=280, y_gap=160, x_off=60, y_off=60):
     only_src = sorted(sources - targets)
     only_tgt = sorted(targets - sources)
     both     = sorted(sources & targets)
+
+    neighbors = {}
+    for iface in interfaces:
+        s = iface["source"]["system"]
+        t = iface["target"]["system"]
+        neighbors.setdefault(s, []).append(t)
+        neighbors.setdefault(t, []).append(s)
+
+    def to_rows(names):
+        return {n: i for i, n in enumerate(names)}
+
+    left_rows  = to_rows(only_src)
+    mid_rows   = to_rows(both)
+    right_rows = to_rows(only_tgt)
+
+    def barycenter_sort(names, neighbor_rows, current_rows):
+        def key(name):
+            ns = [neighbor_rows[n] for n in neighbors.get(name, []) if n in neighbor_rows]
+            return (sum(ns) / len(ns)) if ns else current_rows.get(name, 0)
+        return sorted(names, key=key)
+
+    # Sweep until ordering stabilises (or 6 passes max).
+    for _ in range(6):
+        prev = (tuple(left_rows), tuple(mid_rows), tuple(right_rows))
+        combined  = {**left_rows, **right_rows}
+        mid_rows   = to_rows(barycenter_sort(list(mid_rows), combined, mid_rows))
+        left_rows  = to_rows(barycenter_sort(list(left_rows), mid_rows, left_rows))
+        right_rows = to_rows(barycenter_sort(list(right_rows), mid_rows, right_rows))
+        if (tuple(left_rows), tuple(mid_rows), tuple(right_rows)) == prev:
+            break
+
     positions = {}
-    for row, name in enumerate(only_src):
-        positions[name] = (x_off, y_off + row * y_gap)
-    for row, name in enumerate(both):
-        positions[name] = (x_off + x_gap, y_off + row * y_gap)
-    for row, name in enumerate(only_tgt):
-        positions[name] = (x_off + x_gap * 2, y_off + row * y_gap)
+    for n, r in left_rows.items():
+        positions[n] = (x_off, y_off + r * y_gap)
+    for n, r in mid_rows.items():
+        positions[n] = (x_off + x_gap, y_off + r * y_gap)
+    for n, r in right_rows.items():
+        positions[n] = (x_off + x_gap * 2, y_off + r * y_gap)
     missed = sorted((sources | targets) - set(positions.keys()))
     for row, name in enumerate(missed):
         positions[name] = (x_off + x_gap * 3, y_off + row * y_gap)
@@ -191,14 +222,37 @@ def _style_for_system(sys_type):
             "fillColor=" + c["fill"] + ";strokeColor=" + c["stroke"] + ";"
             "fontStyle=1;fontSize=11;")
 
-def _style_for_edge(protocol, direction):
+def _style_for_edge(protocol, direction, exit_xy=None, entry_xy=None):
     proto_color = PROTOCOL_COLORS.get(protocol, PROTOCOL_COLORS["default"])
     start_arrow = "block" if direction == "bidirectional" else "none"
-    return ("edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;"
-            "jettySize=auto;html=1;"
-            "strokeColor=" + proto_color + ";strokeWidth=2;"
-            "startArrow=" + start_arrow + ";endArrow=block;"
-            "fontStyle=0;fontSize=9;align=left;verticalAlign=middle;")
+    style = ("edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;"
+             "jettySize=auto;html=1;"
+             "strokeColor=" + proto_color + ";strokeWidth=2;"
+             "startArrow=" + start_arrow + ";endArrow=block;"
+             "fontStyle=0;fontSize=9;align=left;verticalAlign=middle;")
+    if exit_xy is not None:
+        style += ("exitX=" + str(exit_xy[0]) + ";exitY=" + str(exit_xy[1]) +
+                  ";exitDx=0;exitDy=0;")
+    if entry_xy is not None:
+        style += ("entryX=" + str(entry_xy[0]) + ";entryY=" + str(entry_xy[1]) +
+                  ";entryDx=0;entryDy=0;")
+    return style
+
+
+def _edge_sides(src_pos, tgt_pos):
+    """Return (src_side, tgt_side) chosen so the edge runs the dominant axis: L/R/T/B."""
+    dx = tgt_pos[0] - src_pos[0]
+    dy = tgt_pos[1] - src_pos[1]
+    if abs(dx) >= abs(dy):
+        return ("R", "L") if dx >= 0 else ("L", "R")
+    return ("B", "T") if dy >= 0 else ("T", "B")
+
+
+def _side_to_xy(side, slot):
+    if side == "R": return (1.0, slot)
+    if side == "L": return (0.0, slot)
+    if side == "B": return (slot, 1.0)
+    return (slot, 0.0)  # "T"
 
 # ---------------------------------------------------------------------------
 # Label builders
@@ -440,6 +494,38 @@ def build_drawio_xml(interfaces, layout="layered"):
     max_y       = max((pos[1] for pos in positions.values()), default=60)
     note_y_base = max_y + 160
 
+    # Per-edge side selection, then per-side bucketing so every edge leaving the same
+    # side of a node gets a unique slot (sorted by the other endpoint's perpendicular axis).
+    edge_sides = []  # list of (src_side, tgt_side)
+    for iface in interfaces:
+        src_pos = positions.get(iface["source"]["system"], (0, 0))
+        tgt_pos = positions.get(iface["target"]["system"], (0, 0))
+        edge_sides.append(_edge_sides(src_pos, tgt_pos))
+
+    src_buckets = {}
+    tgt_buckets = {}
+    for i, iface in enumerate(interfaces):
+        s_side, t_side = edge_sides[i]
+        src_buckets.setdefault((iface["source"]["system"], s_side), []).append(i)
+        tgt_buckets.setdefault((iface["target"]["system"], t_side), []).append(i)
+
+    def _perp(side, pos):
+        return pos[1] if side in ("L", "R") else pos[0]
+
+    def _assign_slots(buckets, other_endpoint):
+        slots = {}
+        for key, idxs in buckets.items():
+            side = key[1]
+            ordered = sorted(idxs,
+                             key=lambda j: _perp(side, positions.get(interfaces[j][other_endpoint]["system"], (0, 0))))
+            n = len(ordered)
+            for k, j in enumerate(ordered):
+                slots[j] = (k + 1) / (n + 1)
+        return slots
+
+    src_slot = _assign_slots(src_buckets, "target")
+    tgt_slot = _assign_slots(tgt_buckets, "source")
+
     for i, iface in enumerate(interfaces):
         eid       = edge_base + i
         src_id    = sys_ids[iface["source"]["system"]]
@@ -449,8 +535,12 @@ def build_drawio_xml(interfaces, layout="layered"):
         direction = t.get("direction", "unidirectional")
         ref_sym   = ref_map.get(i, "")
 
+        s_side, t_side = edge_sides[i]
+        exit_xy  = _side_to_xy(s_side, src_slot[i])
+        entry_xy = _side_to_xy(t_side, tgt_slot[i])
+
         cells.append(_mxcell(eid, _edge_label(iface, ref_sym),
-                             _style_for_edge(protocol, direction),
+                             _style_for_edge(protocol, direction, exit_xy, entry_xy),
                              edge=True, source=src_id, target=tgt_id, relative=True))
 
     notes_lines = ["Notes"]
