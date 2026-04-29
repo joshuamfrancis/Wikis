@@ -258,7 +258,8 @@ def _edge_label(iface, ref_symbol=""):
 # ---------------------------------------------------------------------------
 # Legend
 # ---------------------------------------------------------------------------
-def _build_legend(legend_x, legend_y, id_base):
+def _build_legend(legend_x, legend_y, id_base,
+                  used_system_types=None, used_statuses=None, used_protocols=None):
     cells = []
     cid_holder = [id_base]
 
@@ -311,68 +312,85 @@ def _build_legend(legend_x, legend_y, id_base):
         return box_id
 
     # ── Group 1: System / Node types ─────────────────────────────────────────
-    sys_types = [
-        ("SaaS",            PALETTE["SaaS"]),
-        ("Database",        PALETTE["Database"]),
-        ("Microservice",    PALETTE["Microservice"]),
-        ("On-Premise",      PALETTE["On-Premise"]),
-        ("Web Application", PALETTE["Web Application"]),
-        ("Shared Drive",    PALETTE["Shared Drive"]),
-        ("Other",           PALETTE["default"]),
+    sys_types_all = [
+        ("SaaS",            PALETTE["SaaS"],            "SaaS"),
+        ("Database",        PALETTE["Database"],        "Database"),
+        ("Microservice",    PALETTE["Microservice"],    "Microservice"),
+        ("On-Premise",      PALETTE["On-Premise"],      "On-Premise"),
+        ("Web Application", PALETTE["Web Application"], "Web Application"),
+        ("Shared Drive",    PALETTE["Shared Drive"],    "Shared Drive"),
     ]
-    box_id = open_container("System / Node types", len(sys_types))
-    inner_y = title_h
-    for lbl, c in sys_types:
-        sw_style = ("rounded=1;whiteSpace=wrap;html=0;"
-                    "fillColor=" + c["fill"] + ";strokeColor=" + c["stroke"] + ";fontSize=8;")
-        cells.append(_mxcell(next_id(), "", sw_style, vertex=True, parent=box_id,
-                             x=8, y=inner_y, width=sw, height=row_h - 4))
-        cells.append(_mxcell(next_id(), lbl, lbl_style, vertex=True, parent=box_id,
-                             x=label_x, y=inner_y, width=label_w, height=row_h - 4))
-        inner_y += row_h
+    if used_system_types is None:
+        sys_types = [(lbl, c) for lbl, c, _ in sys_types_all]
+        sys_types.append(("Other", PALETTE["default"]))
+    else:
+        sys_types = [(lbl, c) for lbl, c, key in sys_types_all if key in used_system_types]
+        known_keys = {key for _, _, key in sys_types_all}
+        if used_system_types - known_keys:
+            sys_types.append(("Other", PALETTE["default"]))
+    if sys_types:
+        box_id = open_container("System / Node types", len(sys_types))
+        inner_y = title_h
+        for lbl, c in sys_types:
+            sw_style = ("rounded=1;whiteSpace=wrap;html=0;"
+                        "fillColor=" + c["fill"] + ";strokeColor=" + c["stroke"] + ";fontSize=8;")
+            cells.append(_mxcell(next_id(), "", sw_style, vertex=True, parent=box_id,
+                                 x=8, y=inner_y, width=sw, height=row_h - 4))
+            cells.append(_mxcell(next_id(), lbl, lbl_style, vertex=True, parent=box_id,
+                                 x=label_x, y=inner_y, width=label_w, height=row_h - 4))
+            inner_y += row_h
 
     # ── Group 2: Interface status ─────────────────────────────────────────────
-    statuses = list(STATUS_STYLES.items())
-    box_id = open_container("Interface status", len(statuses))
-    inner_y = title_h
-    for key, st in statuses:
-        sym_style = ("text;html=0;strokeColor=none;fillColor=none;"
-                     "align=center;verticalAlign=middle;fontSize=11;fontStyle=1;"
-                     "fontColor=" + st["html_color"] + ";")
-        cells.append(_mxcell(next_id(), st["summary_icon"], sym_style,
-                             vertex=True, parent=box_id,
-                             x=8, y=inner_y, width=sw, height=row_h - 4))
-        cells.append(_mxcell(next_id(), key.capitalize(),
-                             lbl_style, vertex=True, parent=box_id,
-                             x=label_x, y=inner_y, width=label_w, height=row_h - 4))
-        inner_y += row_h
+    if used_statuses is None:
+        statuses = list(STATUS_STYLES.items())
+    else:
+        statuses = [(k, st) for k, st in STATUS_STYLES.items() if k in used_statuses]
+    if statuses:
+        box_id = open_container("Interface status", len(statuses))
+        inner_y = title_h
+        for key, st in statuses:
+            sym_style = ("text;html=0;strokeColor=none;fillColor=none;"
+                         "align=center;verticalAlign=middle;fontSize=11;fontStyle=1;"
+                         "fontColor=" + st["html_color"] + ";")
+            cells.append(_mxcell(next_id(), st["summary_icon"], sym_style,
+                                 vertex=True, parent=box_id,
+                                 x=8, y=inner_y, width=sw, height=row_h - 4))
+            cells.append(_mxcell(next_id(), key.capitalize(),
+                                 lbl_style, vertex=True, parent=box_id,
+                                 x=label_x, y=inner_y, width=label_w, height=row_h - 4))
+            inner_y += row_h
 
     # ── Group 3: Protocol / Interface types ───────────────────────────────────
-    proto_items = [
-        ("HTTPS / HTTP",  PROTOCOL_COLORS["HTTPS"]),
-        ("AMQP / MQTT",   PROTOCOL_COLORS["AMQP"]),
-        ("SFTP",          PROTOCOL_COLORS["SFTP"]),
-        ("Kafka",         PROTOCOL_COLORS["Kafka"]),
-        ("gRPC",          PROTOCOL_COLORS["gRPC"]),
-        ("JDBC",          PROTOCOL_COLORS["JDBC"]),
-        ("S3",            PROTOCOL_COLORS["S3"]),
-        ("SMB / NFS",     PROTOCOL_COLORS["SMB"]),
-        ("File polling",  PROTOCOL_COLORS["File"]),
+    proto_items_all = [
+        ("HTTPS / HTTP",  PROTOCOL_COLORS["HTTPS"], {"HTTPS", "HTTP"}),
+        ("AMQP / MQTT",   PROTOCOL_COLORS["AMQP"],  {"AMQP", "MQTT"}),
+        ("SFTP",          PROTOCOL_COLORS["SFTP"],  {"SFTP"}),
+        ("Kafka",         PROTOCOL_COLORS["Kafka"], {"Kafka"}),
+        ("gRPC",          PROTOCOL_COLORS["gRPC"],  {"gRPC"}),
+        ("JDBC",          PROTOCOL_COLORS["JDBC"],  {"JDBC"}),
+        ("S3",            PROTOCOL_COLORS["S3"],    {"S3"}),
+        ("SMB / NFS",     PROTOCOL_COLORS["SMB"],   {"SMB", "NFS"}),
+        ("File polling",  PROTOCOL_COLORS["File"],  {"File"}),
     ]
-    box_id = open_container("Interface / Protocol types", len(proto_items))
-    inner_y = title_h
-    for lbl, color in proto_items:
-        ls = ("endArrow=block;startArrow=none;html=0;"
-              "strokeColor=" + color + ";strokeWidth=2;")
-        line_y = inner_y + (row_h - 4) // 2
-        cells.append(_mxcell(next_id(), "", ls, edge=True, relative=True, parent=box_id,
-                             source_point=(8, line_y),
-                             target_point=(8 + sw, line_y)))
-        cells.append(_mxcell(next_id(), lbl, lbl_style, vertex=True, parent=box_id,
-                             x=label_x, y=inner_y, width=label_w, height=row_h - 4))
-        inner_y += row_h
+    if used_protocols is None:
+        proto_items = [(lbl, c) for lbl, c, _ in proto_items_all]
+    else:
+        proto_items = [(lbl, c) for lbl, c, keys in proto_items_all if keys & used_protocols]
+    if proto_items:
+        box_id = open_container("Interface / Protocol types", len(proto_items))
+        inner_y = title_h
+        for lbl, color in proto_items:
+            ls = ("endArrow=block;startArrow=none;html=0;"
+                  "strokeColor=" + color + ";strokeWidth=2;")
+            line_y = inner_y + (row_h - 4) // 2
+            cells.append(_mxcell(next_id(), "", ls, edge=True, relative=True, parent=box_id,
+                                 source_point=(8, line_y),
+                                 target_point=(8 + sw, line_y)))
+            cells.append(_mxcell(next_id(), lbl, lbl_style, vertex=True, parent=box_id,
+                                 x=label_x, y=inner_y, width=label_w, height=row_h - 4))
+            inner_y += row_h
 
-    total_h = row_y - 10  # last open_container added a trailing 10px gap
+    total_h = max(row_y - 10, title_bar_h)  # last open_container adds a trailing 10px gap
     cells.insert(0, _mxcell(outer_id, "", outer_style, vertex=True,
                             x=legend_x, y=legend_y - title_bar_h - title_bar_gap,
                             width=box_w, height=total_h))
@@ -449,12 +467,21 @@ def build_drawio_xml(interfaces, layout="layered"):
         cells.append(_mxcell(note_id, label, NOTE_STYLE, vertex=True,
                              x=60, y=note_y_base, width=note_w, height=note_h))
 
+    used_system_types = set(systems.values())
+    used_statuses     = {iface.get("status", "active").lower() for iface in interfaces}
+    used_protocols    = {iface.get("transport", {}).get("protocol")
+                         for iface in interfaces
+                         if iface.get("transport", {}).get("protocol")}
+
     max_x    = max((pos[0] for pos in positions.values()), default=60)
     min_y    = min((pos[1] for pos in positions.values()), default=60)
     legend_x = max_x + 220
     legend_y = min_y + 34
     leg_id   = note_id + 100
-    cells.extend(_build_legend(legend_x, legend_y, leg_id))
+    cells.extend(_build_legend(legend_x, legend_y, leg_id,
+                               used_system_types=used_system_types,
+                               used_statuses=used_statuses,
+                               used_protocols=used_protocols))
 
     inner = "".join(cells)
     body  = ('<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1"'
