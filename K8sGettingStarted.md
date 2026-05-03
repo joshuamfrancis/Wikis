@@ -23,7 +23,7 @@
 | Block 1 | ~1.5 hrs | Concepts + cluster installation |
 | Block 2 | ~1 hr | Namespaces, deployments, services, load balancer |
 | Block 3 | ~45 min | Secrets & ConfigMaps |
-| Block 4 | ~45 min | Manual deploy workflow |
+| Block 4 | ~1.5 hrs | Local dev, validation, manual deploy workflow |
 | Block 5 | ~1 hr | Automated deployment (GitHub Actions CI/CD) |
 | Block 6 | ~30 min | Validation, troubleshooting, next steps |
 
@@ -559,25 +559,75 @@ Files will appear at `/etc/secrets/DB_PASSWORD` and `/etc/secrets/API_KEY`.
 
 ---
 
-## Block 4 — Manual Deployment Workflow (~45 min)
+## Block 4 — Manual Deployment Workflow (~1.5 hrs)
 
-This block covers the complete lifecycle of manually deploying a new version of your own application.
+This block covers the complete lifecycle: write code → test locally → containerise → validate container → push → deploy to Kubernetes. Never skip the local validation steps — catching problems early saves significant debugging time in the cluster.
 
-### 4.1 Create Your Own Docker Image
+---
 
-Create a minimal Python REST API for this exercise:
+### 4.1 Install Local Prerequisites
+
+Before writing any application code, ensure your desktop has the required tools.
+
+```bash
+# Install Python 3.12 and pip
+sudo apt-get update
+sudo apt-get install -y python3.12 python3.12-venv python3-pip
+
+# Verify
+python3.12 --version
+pip3 --version
+
+# Install Docker (if not already installed)
+sudo apt-get install -y ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+# Add your user to the docker group (avoids needing sudo for docker commands)
+sudo usermod -aG docker $USER
+newgrp docker
+
+# Verify Docker
+docker --version
+docker compose version
+```
+
+---
+
+### 4.2 Create the Project Structure
 
 ```bash
 mkdir ~/k8s-demo-api && cd ~/k8s-demo-api
+
+# Create the directory structure
+mkdir -p tests
+
+# Verify structure
+ls -la
+# Should show: main.py  requirements.txt  requirements-dev.txt  Dockerfile  docker-compose.yml  tests/
 ```
 
-`main.py`:
+---
+
+### 4.3 Write the Application
+
+Create each file below exactly as shown.
+
+**`main.py`:**
 
 ```python
 from fastapi import FastAPI
 import os
 
-app = FastAPI()
+app = FastAPI(title="K8s Demo API", version="1.0.0")
 
 @app.get("/")
 def root():
@@ -591,52 +641,326 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+@app.get("/info")
+def info():
+    return {
+        "app_env": os.getenv("APP_ENV", "not set"),
+        "log_level": os.getenv("LOG_LEVEL", "not set"),
+        "version": os.getenv("APP_VERSION", "1.0.0")
+    }
 ```
 
-`requirements.txt`:
+**`requirements.txt`** (production dependencies only):
 
 ```
 fastapi==0.111.0
 uvicorn==0.29.0
 ```
 
-`Dockerfile`:
+**`requirements-dev.txt`** (local development extras):
+
+```
+fastapi==0.111.0
+uvicorn==0.29.0
+httpx==0.27.0
+pytest==8.2.0
+pytest-asyncio==0.23.6
+```
+
+**`Dockerfile`:**
 
 ```dockerfile
 FROM python:3.12-slim
 
 WORKDIR /app
 
+# Copy and install dependencies first (layer caching — only re-runs if requirements.txt changes)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy application code
 COPY main.py .
 
 EXPOSE 8000
 
+# Run as non-root user for security
+RUN adduser --disabled-password --gecos '' appuser
+USER appuser
+
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+**`docker-compose.yml`** (for local testing only — not used in Kubernetes):
+
+```yaml
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_VERSION=1.0.0
+      - APP_ENV=local
+      - LOG_LEVEL=debug
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+```
+
+**`tests/test_api.py`:**
+
+```python
+import pytest
+from httpx import AsyncClient, ASGITransport
+from main import app
+
+@pytest.mark.asyncio
+async def test_root():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get("/")
+    assert response.status_code == 200
+    data = response.json()
+    assert "message" in data
+    assert "version" in data
+    assert "env" in data
+    assert "pod" in data
+
+@pytest.mark.asyncio
+async def test_health():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+@pytest.mark.asyncio
+async def test_info():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get("/info")
+    assert response.status_code == 200
+    data = response.json()
+    assert "app_env" in data
+    assert "log_level" in data
 ```
 
 ---
 
-### 4.2 Build and Push to Docker Hub
+### 4.4 Step 1 — Run and Validate Locally (Raw Python)
+
+Always validate the app runs correctly in plain Python before touching Docker.
+
+```bash
+cd ~/k8s-demo-api
+
+# Create and activate a virtual environment
+python3.12 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements-dev.txt
+
+# Verify installed packages
+pip list
+
+# Run the app locally
+APP_VERSION=1.0.0 APP_ENV=local uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Open a second terminal and validate each endpoint:
+
+```bash
+# Test root endpoint
+curl -s http://localhost:8000/ | python3 -m json.tool
+# Expected:
+# {
+#     "message": "Hello from Kubernetes!",
+#     "version": "1.0.0",
+#     "env": "local",
+#     "pod": "<your-hostname>"
+# }
+
+# Test health endpoint
+curl -s http://localhost:8000/health | python3 -m json.tool
+# Expected: {"status": "ok"}
+
+# Test info endpoint
+curl -s http://localhost:8000/info | python3 -m json.tool
+# Expected:
+# {
+#     "app_env": "local",
+#     "log_level": "not set",
+#     "version": "1.0.0"
+# }
+
+# View the auto-generated API docs (open in browser)
+curl -s http://localhost:8000/docs
+# Or open http://localhost:8000/docs in your browser — FastAPI generates this automatically
+```
+
+Stop the server with `Ctrl+C` once validated.
+
+---
+
+### 4.5 Step 2 — Run Unit Tests
+
+```bash
+cd ~/k8s-demo-api
+source venv/bin/activate
+
+# Run all tests with verbose output
+pytest tests/ -v
+
+# Expected output:
+# tests/test_api.py::test_root PASSED
+# tests/test_api.py::test_health PASSED
+# tests/test_api.py::test_info PASSED
+# 3 passed in 0.XXs
+```
+
+If any test fails, fix the issue in `main.py` before proceeding. Do not move forward with a failing test suite.
+
+---
+
+### 4.6 Step 3 — Build and Validate the Docker Image
+
+```bash
+cd ~/k8s-demo-api
+
+# Build the image
+docker build -t yourusername/k8s-demo-api:1.0.0 .
+
+# Verify the image was created
+docker images | grep k8s-demo-api
+# Should show:
+# yourusername/k8s-demo-api   1.0.0   <id>   <seconds ago>   <size>
+
+# Inspect the image layers (useful for understanding build caching)
+docker history yourusername/k8s-demo-api:1.0.0
+```
+
+---
+
+### 4.7 Step 4 — Run and Validate the Container Locally
+
+This step confirms the app behaves correctly inside a container before pushing to Docker Hub. Environment variables here mirror what Kubernetes will inject.
+
+```bash
+# Run the container, passing env vars the same way Kubernetes will
+docker run -d \
+  --name k8s-demo-api-test \
+  -p 8000:8000 \
+  -e APP_VERSION=1.0.0 \
+  -e APP_ENV=local \
+  -e LOG_LEVEL=debug \
+  yourusername/k8s-demo-api:1.0.0
+
+# Verify the container is running
+docker ps
+# Should show k8s-demo-api-test with status 'Up'
+
+# Check container logs (look for uvicorn startup message)
+docker logs k8s-demo-api-test
+# Expected: INFO:     Application startup complete.
+
+# Validate all endpoints
+curl -s http://localhost:8000/ | python3 -m json.tool
+curl -s http://localhost:8000/health | python3 -m json.tool
+curl -s http://localhost:8000/info | python3 -m json.tool
+
+# Verify the healthcheck passes
+docker inspect k8s-demo-api-test --format='{{.State.Health.Status}}'
+# Expected: healthy  (may take ~15 seconds to show 'healthy' on first run)
+
+# Check healthcheck history
+docker inspect k8s-demo-api-test --format='{{json .State.Health}}' | python3 -m json.tool
+```
+
+Test that env vars are correctly injected:
+
+```bash
+# The /info endpoint should show your env vars
+curl -s http://localhost:8000/info | python3 -m json.tool
+# Expected:
+# {
+#     "app_env": "local",
+#     "log_level": "debug",
+#     "version": "1.0.0"
+# }
+
+# Exec into the running container to inspect manually
+docker exec -it k8s-demo-api-test /bin/sh
+  # Inside container:
+  env | grep -E "APP|LOG"       # Verify env vars
+  ps aux                         # Verify uvicorn process
+  exit
+```
+
+Clean up the test container:
+
+```bash
+docker stop k8s-demo-api-test
+docker rm k8s-demo-api-test
+```
+
+---
+
+### 4.8 Step 5 — Validate with Docker Compose
+
+Docker Compose lets you test the full container stack locally with a single command. It also validates your `docker-compose.yml` syntax.
+
+```bash
+cd ~/k8s-demo-api
+
+# Start the stack
+docker compose up -d
+
+# Verify all services are healthy
+docker compose ps
+# Expected: api  running (healthy)
+
+# View logs
+docker compose logs -f api
+
+# Run the same endpoint tests
+curl -s http://localhost:8000/ | python3 -m json.tool
+curl -s http://localhost:8000/health | python3 -m json.tool
+curl -s http://localhost:8000/info | python3 -m json.tool
+
+# Tear down
+docker compose down
+```
+
+**✅ Checkpoint:** If all three steps above pass (raw Python, container, Compose), the application is validated and ready to push.
+
+---
+
+### 4.9 Step 6 — Tag and Push to Docker Hub
 
 ```bash
 # Log in to Docker Hub
 docker login
+# Enter your Docker Hub username and password/token when prompted
 
-# Build (replace 'yourusername' with your Docker Hub username)
-docker build -t yourusername/k8s-demo-api:1.0.0 .
+# Tag for latest
 docker tag yourusername/k8s-demo-api:1.0.0 yourusername/k8s-demo-api:latest
 
-# Push
+# Push both tags
 docker push yourusername/k8s-demo-api:1.0.0
 docker push yourusername/k8s-demo-api:latest
+
+# Verify the push succeeded — pull it back to confirm
+docker pull yourusername/k8s-demo-api:1.0.0
+# Should say "Status: Image is up to date" or re-download and succeed
 ```
+
+Verify on Docker Hub: open `https://hub.docker.com/r/yourusername/k8s-demo-api` in a browser and confirm the `1.0.0` and `latest` tags are listed.
 
 ---
 
-### 4.3 Deploy Your Own Image
+### 4.10 Deploy Your Own Image to Kubernetes
 
 Create `my-api-deployment.yaml`:
 
@@ -726,15 +1050,63 @@ curl http://<EXTERNAL-IP>/
 
 ---
 
-### 4.4 Manual Rolling Update (New Version)
+### 4.11 Manual Rolling Update (New Version)
 
-Simulate a code change — edit `main.py` to return `"version": "2.0.0"` in the message, then:
+Simulate a code change — add a new field to the root response in `main.py`:
+
+```python
+@app.get("/")
+def root():
+    return {
+        "message": "Hello from Kubernetes!",
+        "version": os.getenv("APP_VERSION", "2.0.0"),
+        "env": os.getenv("APP_ENV", "unknown"),
+        "pod": os.getenv("HOSTNAME", "unknown"),
+        "updated": True                            # <-- new field in v2
+    }
+```
+
+**Validate locally before building:**
 
 ```bash
-# Build and push new version
+cd ~/k8s-demo-api
+source venv/bin/activate
+
+# Run tests to confirm the change doesn't break anything
+pytest tests/ -v
+# All 3 tests should still pass
+
+# Quick local sanity check
+APP_VERSION=2.0.0 APP_ENV=local uvicorn main:app --port 8000 &
+sleep 2
+curl -s http://localhost:8000/ | python3 -m json.tool
+# Verify "updated": true appears in response
+kill %1   # Stop the background server
+```
+
+**Build, validate container, then push:**
+
+```bash
+# Build new version
 docker build -t yourusername/k8s-demo-api:2.0.0 .
+
+# Quick container validation before pushing
+docker run -d --name api-v2-test -p 8001:8000 \
+  -e APP_VERSION=2.0.0 -e APP_ENV=local \
+  yourusername/k8s-demo-api:2.0.0
+
+sleep 3
+curl -s http://localhost:8001/ | python3 -m json.tool
+# Confirm "updated": true is present and version is "2.0.0"
+
+docker stop api-v2-test && docker rm api-v2-test
+
+# Push to Docker Hub
 docker push yourusername/k8s-demo-api:2.0.0
 
+**Deploy the update to Kubernetes:**
+
+```bash
 # Update the deployment image (imperative approach)
 kubectl set image deployment/my-api \
   api=yourusername/k8s-demo-api:2.0.0 \
@@ -744,13 +1116,13 @@ kubectl set image deployment/my-api \
 kubectl rollout status deployment/my-api -n apps
 
 # Verify new version is running
-curl http://<EXTERNAL-IP>/
-# Should show "version": "2.0.0"
+curl http://<EXTERNAL-IP>/ | python3 -m json.tool
+# Should show "version": "2.0.0" and "updated": true
 ```
 
 ---
 
-### 4.5 Rollback
+### 4.12 Rollback
 
 ```bash
 # View rollout history
@@ -764,12 +1136,13 @@ kubectl rollout undo deployment/my-api -n apps --to-revision=1
 
 # Verify
 kubectl rollout status deployment/my-api -n apps
-curl http://<EXTERNAL-IP>/
+curl http://<EXTERNAL-IP>/ | python3 -m json.tool
+# Should show version "1.0.0" again and no "updated" field
 ```
 
 ---
 
-### 4.6 Key Manual Deployment Commands Cheatsheet
+### 4.13 Key Manual Deployment Commands Cheatsheet
 
 ```bash
 # Apply / update from YAML
@@ -916,9 +1289,30 @@ env:
   IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/k8s-demo-api
 
 jobs:
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run tests
+        run: pytest tests/ -v
+
   build-and-push:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
+    needs: test                       # Only runs if tests pass
     outputs:
       image-tag: ${{ steps.meta.outputs.version }}
 
