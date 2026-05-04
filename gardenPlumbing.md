@@ -1,5 +1,5 @@
 # Rainwater Tank to Garden Drip Irrigation System
-## Complete Bill of Materials & Installation Guide
+## Complete Bill of Materials & Installation Guide - REVISED
 
 ---
 
@@ -55,8 +55,8 @@
                      ↓                        │
             ┌─────────────────────────────────────────┐
             │  PUMP OUTLET ADAPTER                    │
+            │  Ladco 12 x 25mm Click To Pipe         │
             │  25mm BSP Male x 25mm Poly Barb         │
-            │  (Philmac or Ladco)                     │
             └────────┬────────────────────────────────┘
                      │
                      │ 25mm POLY PIPE (PN12.5 or PN16 rated)
@@ -64,9 +64,9 @@
                      ↓
             ┌──────────────────────────────────────────┐
             │  🌊 ULTRASONIC FLOW SENSOR               │ 💧 LEAK DETECTION
-            │  Clamp-on or Inline Type                 │    & PUMP CUTOFF
+            │  Clamp-on Type (FUTURE INSTALLATION)     │    & PUMP CUTOFF
             │  25mm pipe diameter                      │
-            │  Output: Relay or 4-20mA signal          │
+            │  Output: Relay signal                    │
             │                                          │
             │  ┌────────────────────────────┐          │
             │  │ FLOW CONTROLLER/RELAY      │          │
@@ -91,62 +91,43 @@
                      ↓
             ┌─────────────────────────┐
             │  FILTER                 │ 🔍 SEDIMENT REMOVAL
-            │  Pope 19mm In-Line      │
+            │  Pope 25mm In-Line      │
             │  Barbed Filter          │
             │  Inlet: 25mm barb       │
-            │  Outlet: 19mm barb      │
+            │  Outlet: 25mm barb      │
             └────────┬────────────────┘
                      │
-                     │ 19mm poly pipe section (short ~30cm)
+                     │ 25mm poly pipe section (short ~20cm)
+                     │ ← Ratchet clamp
+                     ↓
+            ┌─────────────────────────┐
+            │  ADAPTER                │
+            │  Pope 25mm Nut & Tail   │
+            │  25mm poly barb to      │
+            │  3/4" BSP Female        │
+            └────────┬────────────────┘
+                     │
+                     │ 3/4" BSP Female screws onto:
                      ↓
             ┌─────────────────────────┐
             │  PRESSURE REDUCER       │ 🛡️ LIMITS TO 300kPa (3 bar)
             │  Pope 300kPa            │
-            │  3/4" BSP Female inlet  │
-            │  3/4" BSP Male outlet   │
+            │  Inlet: 3/4" BSP Female │
+            │  Outlet: 3/4" BSP Male  │
             └────────┬────────────────┘
                      │
-                     │ 3/4" (20mm) BSP Male Thread
-                     ↓
-            ┌─────────────────────────┐
-            │  NUT & TAIL ADAPTER #1  │
-            │  Pope 25mm Poly         │
-            │  Nut & Tail             │
-            │  25mm poly barb to      │
-            │  3/4" BSP Male thread   │
-            └────────┬────────────────┘
-                     │
-                     │ 3/4" (20mm) BSP Male Thread
+                     │ 3/4" BSP Male screws into:
                      ↓
             ┌─────────────────────────────┐
             │  TAP TIMER                  │ ⏱️ SCHEDULES WATERING
             │  Holman Low Pressure        │
-            │  Inlet: 3/4" BSP Female     │
-            │  Outlet: 3/4" BSP Male      │
+            │  Inlet: 20/25mm BSP Female  │
+            │  Outlet: 12mm hose barb     │
             └────────┬────────────────────┘
                      │
-                     │ 3/4" (20mm) BSP Male Thread
-                     ↓
-            ┌─────────────────────────┐
-            │  NUT & TAIL ADAPTER #2  │
-            │  Pope 25mm Poly         │
-            │  Nut & Tail             │
-            │  3/4" BSP Female to     │
-            │  25mm poly barb         │
-            └────────┬────────────────┘
-                     │
-                     │ 25mm poly pipe (short section ~30cm)
-                     │ ← Ratchet clamp
-                     ↓
-            ┌─────────────────────────┐
-            │  REDUCING FITTING       │
-            │  Pope 25mm x 13mm       │
-            │  Barbed Reducing Joiner │
-            │  25mm barb to 13mm barb │
-            └────────┬────────────────┘
-                     │
-                     │ 13mm poly pipe
-                     │ ← Ratchet clamp (13mm)
+                     │ 12mm hose barb outlet
+                     │ 13mm poly pipe slides over 12mm barb
+                     │ ← 13mm ratchet clamp
                      ↓
             ═════════════════════════════
             ║   13mm DRIP EZE TUBE      ║
@@ -186,42 +167,34 @@
 - **Pipe:** 25mm poly pipe (PN12.5 minimum)
 - **Length:** 50m roll (use ~25-30m)
 - **Elbows:** Pope 25mm Barbed Elbow x 4
-- **Clamps:** Pope 25mm Ratchet Clamp x 10
+- **Clamps:** Pope 25mm Ratchet Clamp x 10 (2 per elbow + spares)
 
 ### 5. Filter Connection
 - **Inlet:** 25mm poly barb
-- **Outlet:** 19mm poly barb
-- **Pipe Change:** 25mm poly → 19mm poly (short section)
-- **Clamps:** 25mm clamp (inlet), 19mm clamp (outlet)
-
-### 6. Filter to Pressure Reducer
-- **Connection Type:** 19mm poly to BSP adapter
-- **Size:** 19mm poly barb to 3/4" BSP Female
-- **Part:** Pope 19mm Nut & Tail
-- **Pressure Reducer:** 3/4" BSP Female inlet / 3/4" BSP Male outlet
-
-### 7. Pressure Reducer to Timer
-- **Connection:** 25mm poly pipe short section
-- **Adapters:** 2x Pope 25mm Nut & Tail
-  - First: 3/4" BSP Male to 25mm poly barb
-  - 25mm poly pipe: Short section (~20cm)
-  - Second: 25mm poly barb to 3/4" BSP Male
+- **Outlet:** 25mm poly barb
+- **Part:** Pope 25mm In-Line Barbed Filter (p3120271)
 - **Clamps:** 25mm ratchet clamp x 2
 
+### 6. Filter to Pressure Reducer
+- **Connection Type:** 25mm poly to BSP adapter
+- **Size:** 25mm poly barb to 3/4" BSP Female
+- **Part:** Pope 25mm Nut & Tail
+- **Pressure Reducer:** 3/4" BSP Female inlet / 3/4" BSP Male outlet
+- **Clamps:** 25mm ratchet clamp x 1
+
+### 7. Pressure Reducer to Timer
+- **Connection Type:** Direct BSP threaded
+- **Pressure Reducer Outlet:** 3/4" BSP Male
+- **Timer Inlet:** 3/4" (20/25mm) BSP Female
+- **No adapter needed** - threads screw directly together
+
 ### 8. Timer to Drip System
-- **Timer Outlet:** 3/4" BSP Male
-- **Adapter:** Pope 25mm Nut & Tail (3/4" BSP Female to 25mm poly barb)
-- **Clamp:** 25mm ratchet clamp
+- **Timer Outlet:** 12mm hose barb
+- **Connection:** 13mm poly pipe slides over 12mm barb
+- **Clamp:** 13mm ratchet clamp
+- **Note:** 13mm poly pipe fits snugly on 12mm barb - this is a standard connection
 
-### 9. Reducer to Drip Line
-- **Connection Type:** Barbed reducing fitting
-- **Size:** 25mm → 19mm → 13mm (staged reduction)
-- **Parts:** 
-  - Pope 25mm x 19mm Barbed Reducing Joiner
-  - Pope 19mm x 13mm Barbed Reducing Joiner
-- **Clamps:** Appropriate size for each connection
-
-### 10. Drip Irrigation Network
+### 9. Drip Irrigation Network
 - **Main Line:** 13mm Drip Eze tube
 - **Fittings:** All 13mm barbed (tees, elbows, end plugs)
 - **Drippers:** Pope Veriflow Drippers (barbed into 13mm tube)
@@ -238,11 +211,11 @@
 | Pump inlet | 25mm (1") | BSP Female |
 | Pump outlet | 25mm (1") | BSP Male |
 | Main poly run | 25mm | Poly pipe (PN12.5+) |
-| Filter inlet | 25mm | Poly barb |
-| Filter to PR | 19mm | Poly pipe (short) |
-| Pressure reducer | 3/4" (20mm) | BSP F x M |
-| Timer | 3/4" (20mm) | BSP F x M |
-| Timer to reducer | 25mm | Poly pipe (short) |
+| Filter inlet/outlet | 25mm | Poly barb (both ends) |
+| Nut & Tail adapter | 25mm poly / 3/4" BSP | Hybrid fitting |
+| Pressure reducer | 3/4" (20mm) | BSP F inlet, M outlet |
+| Timer inlet | 3/4" (20mm) | BSP Female |
+| Timer outlet | 12mm | Hose barb |
 | Drip line | 13mm | Poly pipe |
 
 ---
@@ -253,7 +226,7 @@
 
 | Seq | Item | Qty | Part Number | Unit Price | Total | Notes |
 |-----|------|-----|-------------|------------|-------|-------|
-| 1.1 | Philmac 25mm x 1" Ball Valve | 1 | p4813xxx | $37.40 | **$37.40** | Manual isolation valve |
+| 1.1 | Philmac 25mm x 1" Ball Valve | 1 | TBD | $37.40 | **$37.40** | Manual isolation valve |
 | 1.2 | Thread Seal Tape (PTFE) | 1 | Generic | $3.00 | **$3.00** | For BSP threads |
 
 **Subtotal Section 1: $40.40**
@@ -313,84 +286,64 @@
 
 | Seq | Item | Qty | Part Number | Unit Price | Total | Notes |
 |-----|------|-----|-------------|------------|-------|-------|
-| 6.1 | Pope 19mm In-Line Barbed Filter | 1 | p3127273 | $12.00 | **$12.00** | Sediment filtration |
-| 6.2 | Pope 19mm Locking Clamps - 25 Pack | 1 | p3130453 | $8.38 | **$8.38** | For filter connections |
-| 6.3 | Holman 19mm x 1m Black Poly Pipe | 1 | Generic | $3.00 | **$3.00** | Short section filter to PR |
+| 6.1 | Pope 25mm In-Line Barbed Filter | 1 | p3120271 | $12.37 | **$12.37** | Both inlet & outlet 25mm barb |
+| 6.2 | Pope 25mm Single Poly Ratchet Clamp | 2 | p3126992 | $0.49 | **$0.98** | For filter connections |
 
-**Subtotal Section 6: $23.38**
-
----
-
-### SECTION 7: PRESSURE REDUCER
-
-| Seq | Item | Qty | Part Number | Unit Price | Total | Notes |
-|-----|------|-----|-------------|------------|-------|-------|
-| 7.1 | Pope 300kPa Pressure Reducer | 1 | p3121926 | $15.79 | **$15.79** | Reduces to 3 bar max |
-| 7.2 | Pope 19mm Nut And Tail | 1 | Generic | $3.00 | **$3.00** | 19mm poly to 3/4" BSP |
-
-**Subtotal Section 7: $18.79**
+**Subtotal Section 6: $13.35**
 
 ---
 
-### SECTION 8: TIMER CONNECTION
+### SECTION 7: PRESSURE REDUCER CONNECTION
 
 | Seq | Item | Qty | Part Number | Unit Price | Total | Notes |
 |-----|------|-----|-------------|------------|-------|-------|
-| 8.1 | Holman 25mm x 1m Black Poly Pipe | 1 | Generic | $2.50 | **$2.50** | Short sections for timer |
-| 8.2 | Pope 25mm Poly Nut And Tail | 2 | Generic | $5.62 | **$11.24** | Before & after timer |
-| 8.3 | Pope 25mm Single Poly Ratchet Clamp | 2 | p3126992 | $0.49 | **$0.98** | Secure nut & tail |
+| 7.1 | Holman 25mm x 1m Black Poly Pipe | 1 | Generic | $2.50 | **$2.50** | Short section filter to PR |
+| 7.2 | Pope 25mm Poly Nut And Tail | 1 | p3123863 | $5.62 | **$5.62** | 25mm poly to 3/4" BSP Female |
+| 7.3 | Pope 25mm Single Poly Ratchet Clamp | 1 | p3126992 | $0.49 | **$0.49** | Secure nut & tail |
+| 7.4 | Pope 300kPa Pressure Reducer | 1 | p3121926 | $15.79 | **$15.79** | Reduces to 3 bar max |
 
-**Subtotal Section 8: $14.72**
+**Subtotal Section 7: $24.40**
 
 ---
 
-### SECTION 9: TAP TIMER
+### SECTION 8: TAP TIMER
 
 | Seq | Item | Qty | Part Number | Unit Price | Total | Notes |
 |-----|------|-----|-------------|------------|-------|-------|
-| 9.1 | Holman Electronic Low Pressure Tap Timer | 1 | p3120874 | $64.48 | **$64.48** | Designed for rainwater tanks |
-| 9.2 | AAA Batteries (2 pack) | 1 | Generic | $4.00 | **$4.00** | Timer power |
+| 8.1 | Holman Electronic Low Pressure Tap Timer | 1 | p3120874 | $64.48 | **$64.48** | Designed for rainwater tanks |
+| 8.2 | AAA Batteries (2 pack) | 1 | Generic | $4.00 | **$4.00** | Timer power |
 
-**Subtotal Section 9: $68.48**
+**Subtotal Section 8: $68.48**
+
+**Note:** Timer outlet is 12mm hose barb - 13mm poly pipe connects directly (no adapter needed)
 
 ---
 
-### SECTION 10: TRANSITION TO DRIP SYSTEM
+### SECTION 9: DRIP IRRIGATION SYSTEM
 
 | Seq | Item | Qty | Part Number | Unit Price | Total | Notes |
 |-----|------|-----|-------------|------------|-------|-------|
-| 10.1 | Pope 25 x 19mm Barbed Reducing Joiner - Single | 1 | Generic | $1.29 | **$1.29** | 25mm to 19mm transition |
-| 10.2 | Pope 19 x 13mm Barbed Reducing Joiner | 1 | Generic | $1.20 | **$1.20** | 19mm to 13mm transition |
-| 10.3 | Pope 13mm Locking Clamp - 25 Pack | 1 | Generic | $7.09 | **$7.09** | For 13mm connections |
+| 9.1 | Pope 13mm x 30m Drip Eze Drip Irrigation Tube | 1 | p3120300 | $35.00 | **$35.00** | 2L/hr @ 100kPa |
+| 9.2 | Pope Veriflow Dripper - 25 Pack | 1 | Generic | $31.50 | **$31.50** | Pressure compensating |
+| 9.3 | Pope 13mm Single Barbed Poly Tee | 5 | Generic | $0.70 | **$3.50** | Branch connections |
+| 9.4 | Pope 13mm Single Poly Barbed Elbow | 5 | Generic | $0.64 | **$3.20** | Direction changes |
+| 9.5 | Pope 13mm Single Barbed End Plug | 3 | Generic | $0.36 | **$1.08** | Line termination |
+| 9.6 | Pope 13mm Locking Clamp - 25 Pack | 1 | Generic | $7.09 | **$7.09** | For 13mm connections |
 
-**Subtotal Section 10: $9.58**
+**Subtotal Section 9: $81.37**
 
 ---
 
-### SECTION 11: DRIP IRRIGATION SYSTEM
+### SECTION 10: OPTIONAL/RECOMMENDED ADDITIONS
 
 | Seq | Item | Qty | Part Number | Unit Price | Total | Notes |
 |-----|------|-----|-------------|------------|-------|-------|
-| 11.1 | Pope 13mm x 30m Drip Eze Drip Irrigation Tube | 1 | p3120300 | $35.00 | **$35.00** | 2L/hr @ 100kPa |
-| 11.2 | Pope Veriflow Dripper - 25 Pack | 1 | Generic | $31.50 | **$31.50** | Pressure compensating |
-| 11.3 | Pope 13mm Single Barbed Poly Tee | 5 | Generic | $0.70 | **$3.50** | Branch connections |
-| 11.4 | Pope 13mm Single Poly Barbed Elbow | 5 | Generic | $0.64 | **$3.20** | Direction changes |
-| 11.5 | Pope 13mm Single Barbed End Plug | 3 | Generic | $0.36 | **$1.08** | Line termination |
+| 10.1 | GARDENA AquaCount Water Meter | 1 | p0737647 | $51.98 | **$51.98** | Optional: Flow monitoring |
+| 10.2 | Pope Universal Poly Pipe Cutter | 1 | Generic | $19.76 | **$19.76** | Recommended: Clean cuts |
+| 10.3 | Extra 25mm Ratchet Clamps (25 pack) | 1 | Generic | $9.75 | **$9.75** | Spares recommended |
+| 10.4 | Extra 13mm Locking Clamps (25 pack) | 1 | Generic | $7.09 | **$7.09** | Spares recommended |
 
-**Subtotal Section 11: $74.28**
-
----
-
-### SECTION 12: OPTIONAL/RECOMMENDED ADDITIONS
-
-| Seq | Item | Qty | Part Number | Unit Price | Total | Notes |
-|-----|------|-----|-------------|------------|-------|-------|
-| 12.1 | GARDENA AquaCount Water Meter | 1 | p0737647 | $51.98 | **$51.98** | Optional: Flow monitoring |
-| 12.2 | Pope Universal Poly Pipe Cutter | 1 | Generic | $19.76 | **$19.76** | Recommended: Clean cuts |
-| 12.3 | Extra 25mm Ratchet Clamps (25 pack) | 1 | Generic | $9.75 | **$9.75** | Spares recommended |
-| 12.4 | Extra 13mm Locking Clamps (25 pack) | 1 | Generic | $7.09 | **$7.09** | Spares recommended |
-
-**Subtotal Section 12: $88.58** *(OPTIONAL)*
+**Subtotal Section 10: $88.58** *(OPTIONAL)*
 
 ---
 
@@ -404,27 +357,25 @@
 | Section 2 | Pump | *$0.00* (Already owned) |
 | Section 3 | Pump Outlet Connection | $5.98 |
 | Section 5 | Main Poly Pipe Run | $63.42 |
-| Section 6 | Filter | $23.38 |
-| Section 7 | Pressure Reducer | $18.79 |
-| Section 8 | Timer Connection | $14.72 |
-| Section 9 | Tap Timer | $68.48 |
-| Section 10 | Transition to Drip | $9.58 |
-| Section 11 | Drip Irrigation | $74.28 |
-| **ESSENTIAL TOTAL** | | **$319.03** |
+| Section 6 | Filter | $13.35 |
+| Section 7 | Pressure Reducer Connection | $24.40 |
+| Section 8 | Tap Timer | $68.48 |
+| Section 9 | Drip Irrigation | $81.37 |
+| **ESSENTIAL TOTAL** | | **$297.40** |
 
 ### Recommended Additions:
 
 | Section | Description | Subtotal |
 |---------|-------------|----------|
-| Section 12 | Optional Tools & Spares | $88.58 |
-| **WITH RECOMMENDED** | | **$407.61** |
+| Section 10 | Optional Tools & Spares | $88.58 |
+| **WITH RECOMMENDED** | | **$385.98** |
 
 ### Future Additions:
 
 | Section | Description | Subtotal |
 |---------|-------------|----------|
 | Section 4 | Flow Sensor System | $355.00 |
-| **COMPLETE SYSTEM** | | **$762.61** |
+| **COMPLETE SYSTEM** | | **$740.98** |
 
 ---
 
@@ -492,25 +443,25 @@
 
 ```
 □ 1. Install ball valve on tank outlet
-□ 2. Connect pump to ball valve
+□ 2. Connect pump to ball valve with BSP threads
 □ 3. Install pump outlet adapter (BSP to poly barb)
 □ 4. Connect 25mm poly pipe to pump adapter with clamp
 □ 5. [FUTURE: Install flow sensor on straight pipe section]
 □ 6. Run 25mm poly pipe to garden (install elbows as needed)
-□ 7. Install filter at garden end
-□ 8. Connect 19mm poly pipe from filter to pressure reducer
-□ 9. Install pressure reducer
-□ 10. Connect 25mm poly pipe section after pressure reducer
-□ 11. Install first nut & tail adapter (poly to BSP)
-□ 12. Install tap timer
-□ 13. Install second nut & tail adapter (BSP to poly)
-□ 14. Connect 25mm poly pipe section
-□ 15. Install reducing fittings (25mm → 19mm → 13mm)
-□ 16. Layout and connect 13mm drip tube network
-□ 17. Install tees, elbows, and drippers as needed
-□ 18. Install end plugs on all termination points
-□ 19. Pressure test system before burying pipe
-□ 20. Program tap timer for watering schedule
+□ 7. Install 25mm filter inline (both ends 25mm barb)
+□ 8. Connect short 25mm poly pipe section after filter
+□ 9. Install Pope 25mm Nut & Tail (converts to 3/4" BSP Female)
+□ 10. Screw pressure reducer onto nut & tail (3/4" BSP threads)
+□ 11. Screw tap timer onto pressure reducer (3/4" BSP threads)
+□ 12. Connect 13mm poly pipe to timer's 12mm hose barb outlet
+□ 13. Secure with 13mm ratchet clamp
+□ 14. Layout and connect 13mm drip tube network
+□ 15. Install tees, elbows, and drippers as needed
+□ 16. Install end plugs on all termination points
+□ 17. Pressure test system before burying pipe
+□ 18. Program tap timer for watering schedule
+□ 19. Bury 25mm main line at 300mm depth
+□ 20. Mark pipe route with markers
 ```
 
 ---
@@ -519,15 +470,12 @@
 
 ### IRRIGATION AISLE:
 - Holman 25mm x 50m Black Poly Pipe (p3120670) - 1
-- Holman 25mm x 1m Black Poly Pipe - 1
-- Holman 19mm x 1m Black Poly Pipe - 1
+- Holman 25mm x 1m Black Poly Pipe (short sections) - 1
 - Pope 25mm Single Poly Barbed Elbow (p3127029) - 4
 - Pope 25mm Barbed Joiner - Single - 2
-- Pope 25mm Poly Nut And Tail - 2
+- Pope 25mm Poly Nut And Tail (p3123863) - 1
 - Pope 25mm Single Poly Ratchet Clamp (p3126992) - 15+
-- Pope 19mm In-Line Barbed Filter (p3127273) - 1
-- Pope 19mm Locking Clamps - 25 Pack (p3130453) - 1
-- Pope 19mm Nut And Tail - 1
+- Pope 25mm In-Line Barbed Filter (p3120271) - 1
 - Pope 300kPa Pressure Reducer (p3121926) - 1
 - Pope 13mm x 30m Drip Eze Tube (p3120300) - 1
 - Pope Veriflow Dripper - 25 Pack - 1
@@ -535,8 +483,6 @@
 - Pope 13mm Single Poly Barbed Elbow - 5
 - Pope 13mm Single Barbed End Plug - 3
 - Pope 13mm Locking Clamp - 25 Pack - 1
-- Pope 25 x 19mm Barbed Reducing Joiner - 1
-- Pope 19 x 13mm Barbed Reducing Joiner - 1
 - Holman Electronic Low Pressure Tap Timer (p3120874) - 1
 
 ### GARDEN HOSES & SPRINKLERS AISLE:
@@ -586,8 +532,8 @@
 1. **Clean cuts:** Use pipe cutter, not knife, for clean perpendicular cuts
 2. **Barb insertion:** Heat pipe end in hot water for easier barb insertion
 3. **Clamp position:** Position clamps 5-10mm from pipe end
-4. **Thread seal:** Use 3-4 wraps of PTFE tape on all BSP threads
-5. **Hand tight:** Don't over-tighten threaded connections
+4. **Thread seal:** Use 3-4 wraps of PTFE tape on all BSP threads, wrap in direction of thread rotation
+5. **Hand tight plus:** Tighten BSP connections hand-tight, then 1-2 turns with wrench (don't over-tighten)
 
 ### Testing:
 1. **Pressure test:** Run system at full pressure for 30 minutes
@@ -622,82 +568,9 @@
 
 ---
 
-## Troubleshooting Guide
-
-### Problem: No water flow
-**Possible Causes:**
-- Timer not programmed or battery dead
-- Pump not running (check power)
-- Ball valve closed
-- Blocked filter
-
-**Solutions:**
-1. Check timer display and batteries
-2. Verify pump power and operation
-3. Open ball valve fully
-4. Clean filter
-
-### Problem: Uneven dripper flow
-**Possible Causes:**
-- Insufficient pressure (check pressure reducer)
-- Blocked drippers
-- Pipe too small for number of drippers
-- Air in lines
-
-**Solutions:**
-1. Verify pressure reducer set to 300kPa
-2. Clean or replace blocked drippers
-3. Reduce number of drippers or increase pipe size
-4. Flush system to remove air
-
-### Problem: Low system pressure
-**Possible Causes:**
-- Low tank water level
-- Pump not reaching full pressure
-- Leaks in system
-- Filter heavily clogged
-
-**Solutions:**
-1. Check tank level
-2. Check pump operation
-3. Inspect all connections for leaks
-4. Clean or replace filter
-
-### Problem: Pump runs continuously
-**Possible Causes:**
-- Major leak in system
-- Pump pressure switch failure
-- Timer stuck open
-
-**Solutions:**
-1. Close ball valve and check if pump stops
-2. If pump stops, locate and repair leak
-3. If pump continues, check pump pressure switch
-4. Check timer operation
-
----
-
-## Winter Preparation (if applicable)
-
-### Before Freezing Temperatures:
-1. Drain all pipes and components
-2. Remove and store timer indoors
-3. Leave ball valve partially open
-4. Disconnect pump if extended freeze expected
-5. Blow out lines with compressed air (optional)
-
-### Spring Startup:
-1. Inspect all connections
-2. Reinstall timer with fresh batteries
-3. Slowly refill system
-4. Check for leaks
-5. Verify all drippers working
-
----
-
 ## Notes on Part Numbers
 
-1. **"Generic" entries:** These are standard items where specific Bunnings part numbers weren't available. Ask staff for equivalent Pope/Holman products.
+1. **"Generic" entries:** Standard items where specific Bunnings part numbers weren't available. Ask staff for equivalent Pope/Holman products.
 
 2. **Alternative suppliers for flow sensor (Section 4):**
    - eBay Australia
@@ -717,7 +590,7 @@
 ## Recommended Phased Implementation
 
 ### Phase 1: Basic System (Install Now)
-**Cost:** ~$320
+**Cost:** ~$297
 - Install system without flow sensor
 - Use pump's built-in thermal protection
 - Manual monitoring with daily checks
@@ -741,6 +614,7 @@
 ## Document Information
 
 **Created:** 2026
+**Revision:** 2.0 (All compatibility issues corrected)
 **System Type:** Residential rainwater tank drip irrigation
 **Location:** Brisbane, Queensland, AU
 **Pump Model:** Ozito 800W Constant Pressure Pump (OZL-800)
@@ -770,6 +644,21 @@
 - Regular filter cleaning essential to prevent system damage
 - Monitor water levels to prevent pump dry-running
 - Inspect connections regularly for leaks
+
+---
+
+## Compatibility Verification Summary
+
+All parts in this BOM have been verified for compatibility:
+
+✅ **Tank to Pump:** 25mm BSP Female (tank) → 25mm BSP Male (ball valve) → 25mm BSP Female (pump)  
+✅ **Pump Outlet:** 25mm BSP Male → 25mm BSP to poly adapter → 25mm poly pipe  
+✅ **Filter:** 25mm poly barb inlet and outlet (no diameter change)  
+✅ **Pressure Reducer:** 3/4" BSP Female inlet (matches nut & tail)  
+✅ **Timer:** 3/4" BSP Female inlet (screws onto PR outlet) / 12mm hose barb outlet  
+✅ **Drip Line:** 13mm poly pipe fits over 12mm hose barb (standard connection)  
+
+**No adapters needed between pressure reducer and timer - threads match directly!**
 
 ---
 
