@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Security Hub – Nested Landing Zone Aggregation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg:        #0a0d14;
+    --surface:   #111520;
+    --border:    #1e2535;
+    --org-blue:  #1a6fff;
+    --lz-amber:  #f59e0b;
+    --hub-teal:  #0fd6b0;
+    --event-purple: #a855f7;
+    --lambda-orange: #fb923c;
+    --s3-green:  #22c55e;
+    --dim:       #4a5568;
+    --text:      #e2e8f0;
+    --muted:     #718096;
+    --accent:    #1a6fff;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    padding: 32px 24px 48px;
+    overflow-x: hidden;
+  }
+
+  /* ── header ── */
+  header {
+    max-width: 1080px;
+    margin: 0 auto 40px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 24px;
+  }
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.25rem, 3vw, 1.75rem);
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.02em;
+  }
+  header p {
+    margin-top: 6px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .badge {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(26,111,255,0.15);
+    color: var(--org-blue);
+    border: 1px solid rgba(26,111,255,0.3);
+  }
+
+  /* ── main canvas ── */
+  .canvas {
+    max-width: 1080px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ── zone containers ── */
+  .zone {
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 18px 20px 20px;
+    position: relative;
+  }
+  .zone-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .zone-label::before {
+    content: '';
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 2px;
+  }
+
+  .zone-org    { border-color: rgba(26,111,255,0.35); }
+  .zone-org .zone-label { color: var(--org-blue); }
+  .zone-org .zone-label::before { background: var(--org-blue); }
+
+  .zone-nlz    { border-color: rgba(245,158,11,0.35); background: #0f1118; }
+  .zone-nlz .zone-label { color: var(--lz-amber); }
+  .zone-nlz .zone-label::before { background: var(--lz-amber); }
+
+  .zone-hub-account {
+    border-color: rgba(15,214,176,0.3);
+    background: #0a0f10;
+  }
+  .zone-hub-account .zone-label { color: var(--hub-teal); }
+  .zone-hub-account .zone-label::before { background: var(--hub-teal); }
+
+  /* ── row of accounts ── */
+  .accounts-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* ── account card ── */
+  .account {
+    flex: 1;
+    min-width: 160px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+    background: #0d1017;
+  }
+  .account-title {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .dot {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  }
+
+  /* ── service chip ── */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    border-radius: 4px;
+    font-size: 0.62rem;
+    font-weight: 600;
+    margin: 3px 3px 3px 0;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .chip-sh  { background: rgba(15,214,176,0.1);  color: var(--hub-teal);      border-color: rgba(15,214,176,0.25); }
+  .chip-eb  { background: rgba(168,85,247,0.1);  color: var(--event-purple);  border-color: rgba(168,85,247,0.25); }
+  .chip-lam { background: rgba(251,146,60,0.1);  color: var(--lambda-orange); border-color: rgba(251,146,60,0.25); }
+  .chip-s3  { background: rgba(34,197,94,0.1);   color: var(--s3-green);      border-color: rgba(34,197,94,0.25); }
+  .chip-iam { background: rgba(99,102,241,0.1);  color: #818cf8;              border-color: rgba(99,102,241,0.25); }
+  .chip-kdf { background: rgba(245,158,11,0.1);  color: var(--lz-amber);      border-color: rgba(245,158,11,0.25); }
+
+  /* ── arrow connectors ── */
+  .flow-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 4px 0;
+    flex-wrap: wrap;
+  }
+  .flow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .flow-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+  .flow-label {
+    font-size: 0.58rem;
+    color: var(--muted);
+    text-align: center;
+    max-width: 80px;
+  }
+  .flow-arrow {
+    font-size: 1rem;
+    color: var(--dim);
+    padding: 0 6px;
+    margin-top: -14px;
+  }
+
+  /* ── pipeline strip ── */
+  .pipeline {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .pipe-step {
+    flex: 1;
+    min-width: 110px;
+    border-radius: 5px;
+    padding: 10px 10px 8px;
+    position: relative;
+  }
+  .pipe-step + .pipe-step::before {
+    content: '→';
+    position: absolute;
+    left: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--dim);
+    font-size: 0.85rem;
+  }
+  .pipe-title {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .pipe-detail {
+    font-size: 0.58rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .ps-eb   { background: rgba(168,85,247,0.08);  border: 1px solid rgba(168,85,247,0.2); }
+  .ps-eb .pipe-title   { color: var(--event-purple); }
+
+  .ps-xacc { background: rgba(26,111,255,0.08);  border: 1px solid rgba(26,111,255,0.2); }
+  .ps-xacc .pipe-title { color: var(--org-blue); }
+
+  .ps-lam  { background: rgba(251,146,60,0.08);  border: 1px solid rgba(251,146,60,0.2); }
+  .ps-lam .pipe-title  { color: var(--lambda-orange); }
+
+  .ps-s3   { background: rgba(34,197,94,0.08);   border: 1px solid rgba(34,197,94,0.2); }
+  .ps-s3 .pipe-title   { color: var(--s3-green); }
+
+  /* ── notes box ── */
+  .notes {
+    max-width: 1080px;
+    margin: 24px auto 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .note-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+  .note-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .note-card ul {
+    list-style: none;
+    padding: 0;
+  }
+  .note-card ul li {
+    font-size: 0.63rem;
+    color: var(--muted);
+    line-height: 1.6;
+    padding-left: 12px;
+    position: relative;
+  }
+  .note-card ul li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+  }
+
+  /* ── legend ── */
+  .legend {
+    max-width: 1080px;
+    margin: 16px auto 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.62rem;
+    color: var(--muted);
+  }
+  .legend-swatch {
+    width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;
+  }
+
+  /* ── section divider ── */
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── vertical connector ── */
+  .v-connector {
+    display: flex;
+    justify-content: center;
+    padding: 2px 0;
+    color: var(--dim);
+    font-size: 1.1rem;
+    letter-spacing: -2px;
+  }
+
+  @media (max-width: 600px) {
+    .pipeline { flex-direction: column; }
+    .pipe-step + .pipe-step::before { content: '↓'; left: 50%; top: -10px; transform: translateX(-50%); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Security Hub — Nested Landing Zone Aggregation</h1>
+  <p>Option 1: EventBridge cross-account bus pattern · Org-wide Security Hub admin remains intact</p>
+  <span class="badge">AWS Architecture</span>
+</header>
+
+<div class="canvas">
+
+  <!-- ══ ORG-WIDE LAYER ══ -->
+  <div class="zone zone-org">
+    <div class="zone-label">AWS Organization — Org-Wide Security Hub</div>
+    <div class="accounts-row">
+
+      <div class="account">
+        <div class="account-title"><span class="dot" style="background:var(--org-blue)"></span>Management Account</div>
+        <div class="chip chip-iam">🔑 Delegated Admin Policy</div>
+        <div class="chip chip-sh">🛡 Security Hub (observer)</div>
+      </div>
+
+      <div class="account">
+        <div class="account-title"><span class="dot" style="background:var(--org-blue)"></span>Central Security Account</div>
+        <div class="chip chip-sh">🛡 Security Hub — Delegated Admin</div>
+        <div class="chip chip-eb">⚡ EventBridge (org bus)</div>
+        <div style="margin-top:6px;font-size:0.58rem;color:var(--muted)">Aggregates ALL org findings<br>per region</div>
+      </div>
+
+      <div class="account">
+        <div class="account-title"><span class="dot" style="background:var(--dim)"></span>Other OU Accounts (members)</div>
+        <div class="chip chip-sh">🛡 Security Hub (member)</div>
+        <div class="chip chip-eb">⚡ EventBridge (local)</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="v-connector">↕</div>
+
+  <!-- ══ NESTED LANDING ZONE ══ -->
+  <div class="zone zone-nlz">
+    <div class="zone-label">Nested Landing Zone OU — Member Accounts</div>
+    <div class="section-title">Source Accounts (findings producers)</div>
+    <div class="accounts-row">
+
+      <div class="account">
+        <div class="account-title"><span class="dot" style="background:var(--lz-amber)"></span>NLZ Workload Account A</div>
+        <div class="chip chip-sh">🛡 Security Hub (member)</div>
+        <div class="chip chip-eb">⚡ EventBridge (local bus)</div>
+        <div class="chip chip-iam">🔑 Resource Policy → Hub Acct</div>
+      </div>
+
+      <div class="account">
+        <div class="account-title"><span class="dot" style="background:var(--lz-amber)"></span>NLZ Workload Account B</div>
+        <div class="chip chip-sh">🛡 Security Hub (member)</div>
+        <div class="chip chip-eb">⚡ EventBridge (local bus)</div>
+        <div class="chip chip-iam">🔑 Resource Policy → Hub Acct</div>
+      </div>
+
+      <div class="account">
+        <div class="account-title"><span class="dot" style="background:var(--lz-amber)"></span>NLZ Workload Account N…</div>
+        <div class="chip chip-sh">🛡 Security Hub (member)</div>
+        <div class="chip chip-eb">⚡ EventBridge (local bus)</div>
+        <div class="chip chip-iam">🔑 Resource Policy → Hub Acct</div>
+      </div>
+
+    </div>
+
+    <div style="margin-top:16px">
+      <div class="section-title">Event flow from each source account</div>
+      <div class="pipeline">
+        <div class="pipe-step ps-eb">
+          <div class="pipe-title">⚡ Local EventBridge</div>
+          <div class="pipe-detail">Rule: source = "aws.securityhub"<br>detail-type = "Security Hub Findings"<br>Targets → cross-acct bus</div>
+        </div>
+        <div class="pipe-step ps-xacc">
+          <div class="pipe-title">🔀 Cross-Account Event</div>
+          <div class="pipe-detail">PutEvents to NLZ Hub Account<br>custom event bus<br>via resource-based policy</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="v-connector">↕</div>
+
+  <!-- ══ NLZ HUB ACCOUNT ══ -->
+  <div class="zone zone-hub-account">
+    <div class="zone-label">NLZ Hub Account — Custom Aggregation Layer</div>
+
+    <div class="accounts-row" style="margin-bottom:16px">
+      <div class="account" style="border-color:rgba(15,214,176,0.2)">
+        <div class="account-title"><span class="dot" style="background:var(--hub-teal)"></span>Custom EventBus "nlz-secfindings"</div>
+        <div class="chip chip-eb">⚡ Receives cross-account events</div>
+        <div class="chip chip-iam">🔑 Bus resource policy (allow NLZ accounts)</div>
+        <div style="margin-top:6px;font-size:0.58rem;color:var(--muted)">One bus per region · scoped to NLZ OU accounts only</div>
+      </div>
+    </div>
+
+    <div class="section-title">Processing pipeline</div>
+    <div class="pipeline">
+
+      <div class="pipe-step ps-eb">
+        <div class="pipe-title">⚡ EB Rule</div>
+        <div class="pipe-detail">Match all Security Hub finding events<br>on nlz-secfindings bus<br>Fan-out to targets</div>
+      </div>
+
+      <div class="pipe-step ps-lam">
+        <div class="pipe-title">λ Lambda (optional)</div>
+        <div class="pipe-detail">Enrich / transform<br>Normalize severity<br>Tag with OU path<br>Filter noise</div>
+      </div>
+
+      <div class="pipe-step ps-xacc">
+        <div class="pipe-title">🔥 Firehose (optional)</div>
+        <div class="pipe-detail">Batch & buffer<br>Parquet conversion<br>Partitioned by<br>account/date</div>
+      </div>
+
+      <div class="pipe-step ps-s3">
+        <div class="pipe-title">🪣 S3 Bucket</div>
+        <div class="pipe-detail">findings/<br>  year=YYYY/<br>  month=MM/<br>  account=&lt;id&gt;/</div>
+      </div>
+
+    </div>
+
+    <div style="margin-top:16px">
+      <div class="section-title">Optional: Athena + QuickSight for NLZ-scoped dashboards</div>
+      <div class="accounts-row">
+        <div class="account" style="min-width:auto; flex:0 0 auto; padding:8px 12px">
+          <div class="chip chip-s3">🪣 S3 (findings store)</div>
+          <div class="chip chip-sh">🔍 Glue Crawler → Athena</div>
+          <div class="chip chip-eb">📊 QuickSight dashboard</div>
+        </div>
+        <div class="account" style="font-size:0.6rem; color:var(--muted); line-height:1.7">
+          NLZ security team can query, visualize, and alert<br>
+          on findings scoped to their OU only —<br>
+          independent of the central security account's view
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /canvas -->
+
+<!-- ══ NOTES ══ -->
+<div class="notes">
+
+  <div class="note-card">
+    <h3>IAM / Resource Policies</h3>
+    <ul>
+      <li>Each NLZ source account needs an EventBridge rule targeting the hub account bus ARN</li>
+      <li>The hub account custom bus needs a resource policy allowing <code>events:PutEvents</code> from each NLZ account principal</li>
+      <li>Use <code>aws:PrincipalOrgPaths</code> condition to scope to OU — future accounts auto-inherit</li>
+    </ul>
+  </div>
+
+  <div class="note-card">
+    <h3>EventBridge Rule (source accounts)</h3>
+    <ul>
+      <li>Event pattern: <code>{"source":["aws.securityhub"]}</code></li>
+      <li>Target: custom bus ARN in NLZ Hub Account</li>
+      <li>Dead-letter queue on rule for failed deliveries</li>
+      <li>Deploy via CloudFormation StackSets scoped to NLZ OU</li>
+    </ul>
+  </div>
+
+  <div class="note-card">
+    <h3>Lambda Enrichment (optional)</h3>
+    <ul>
+      <li>Add OU path, environment tag, account alias to each finding</li>
+      <li>Normalize ASFF severity to internal tiers</li>
+      <li>Suppress known-false-positive finding types</li>
+      <li>Forward critical findings to SNS → PagerDuty</li>
+    </ul>
+  </div>
+
+  <div class="note-card">
+    <h3>S3 Partitioning</h3>
+    <ul>
+      <li><code>findings/year=/month=/account=/</code></li>
+      <li>Glue Crawler auto-discovers partitions</li>
+      <li>Athena queries stay cheap with partition pruning</li>
+      <li>Enable S3 Object Lock for compliance retention</li>
+    </ul>
+  </div>
+
+  <div class="note-card">
+    <h3>Does NOT conflict with</h3>
+    <ul>
+      <li>Org-wide Security Hub delegated admin</li>
+      <li>Central security account still aggregates everything</li>
+      <li>No separate Security Hub admin designation needed</li>
+      <li>NLZ accounts remain standard Security Hub members</li>
+    </ul>
+  </div>
+
+  <div class="note-card">
+    <h3>StackSets Deployment</h3>
+    <ul>
+      <li>Deploy EB rule + IAM role via StackSet targeting the NLZ OU</li>
+      <li>New accounts added to OU auto-get the rule</li>
+      <li>Hub account bus policy updated via automation (e.g. Control Tower lifecycle events)</li>
+      <li>CDK or Terraform for hub account pipeline resources</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ══ LEGEND ══ -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--org-blue)"></div> Org-wide / Central Security Account</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--lz-amber)"></div> Nested Landing Zone Accounts</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--hub-teal)"></div> NLZ Hub / Aggregation Account</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--event-purple)"></div> EventBridge</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--lambda-orange)"></div> Lambda</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--s3-green)"></div> S3 / Storage</div>
+</div>
+
+</body>
+</html>
