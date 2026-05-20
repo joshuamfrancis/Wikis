@@ -186,3 +186,88 @@ The server walks this tree, validates each field and operator against an allow-l
 - **Override capability:** add an `override` flag to the extension if correcting wrong source values ever becomes necessary (currently out of scope by design).
 - **ETL freshness:** revisit cadence if the source catalogue begins changing more frequently than the batch interval.
 - **Audit reporting:** the extension audit columns enable a "what changed, by whom" report if governance requires it.
+
+---
+
+## 7. Variation — Power BI as the Query Surface
+
+This variation replaces the custom-developed query UI with **Power BI**, while keeping the entire data layer (ETL, base table, extension table, unified view) unchanged. It is a strong fit because the headline requirement — filtering by combinations of attributes with `AND`/`OR` — is native Power BI functionality.
+
+### 7.1 What Power BI Covers
+
+| UI Responsibility | Power BI? | Notes |
+|---|---|---|
+| Query the catalogue | **Yes** | Slicers, filter pane, and visual-level filters give point-and-click AND/OR filtering. Complex boolean logic via DAX. No filter DSL or search endpoint needed. |
+| Authentication / SSO | **Yes** | Native integration with Entra ID (the org IdP). |
+| Update catalogue attributes | **No** | Power BI is read-only by design. Requires a separate write mechanism (see §7.3). |
+
+### 7.2 Connection to the Data Layer
+
+Power BI connects directly to the **`v_application`** view. The source-wins `COALESCE` precedence stays in the database, so Power BI sees one clean, unified table and never needs to know about the base-vs-extension split.
+
+**Connection mode matters:**
+
+- **Import mode** — caches a snapshot, fast, but refreshed on a schedule. Stacks a second layer of staleness on top of the periodic ETL; a user's edit may not appear until the next Power BI refresh.
+- **DirectQuery mode** — queries the view live, so ETL updates and edits appear immediately, at the cost of higher database load and slightly slower interactivity.
+
+For a slowly-changing catalogue, Import mode with a sensible refresh schedule is usually adequate; choose DirectQuery if "I edited it but can't see my change yet" is unacceptable.
+
+### 7.3 The Write Path (Power BI's Gap)
+
+Because Power BI cannot write back, the **update attributes** responsibility needs one of:
+
+- **Power Apps embedded in Power BI** — a Power Apps visual on the report page can write back. Most "native Microsoft stack" option, but introduces Power Platform (and likely Dataverse), its own licensing/learning curve, and sits off the preferred AWS/Python/container stack.
+- **Minimal standalone write surface** — a small FastAPI + HTMX edit form that writes **only** to the extension table. Far smaller than the original full UI (write path only, no search UI), and stays in the preferred stack.
+- **Indirect write** — edits routed through a ticketing/spreadsheet-sync process. Crude, acceptable only for low edit volume.
+
+The write boundary is unchanged from the base design: **writes target the extension table only**, never the base table (ETL would overwrite base edits).
+
+### 7.4 Impact on the Rest of the Design
+
+- **Data layer:** completely unchanged (ETL, `base_application`, `extension_attributes`, `v_application`).
+- **REST API:** the *read/search* endpoint is no longer required for the UI, since Power BI queries the view directly. Retain a **thin API for the write path** and any non-Power-BI consumer.
+- **Custom UI:** eliminated for query; reduced to (at most) a minimal edit form.
+
+### 7.5 When to Choose This Variation
+
+- **Favoured** if the org already licenses, governs, and uses Power BI — leverages existing infrastructure and offloads the hard filtering problem to a purpose-built tool.
+- **Weaker** if adopting Power BI means new licensing and a new tool for all users; in that case the original containerized app may be the lighter overall path.
+
+**Recommended shape of this variation:** Power BI (connected to `v_application`) for query/read, plus a minimal extension-table edit form for writes — keeping the clean data layer and containing custom code to the write path only.
+
+### 7.6 Architecture (Power BI Variation)
+
+```
++---------------------+        ETL         +-----------------------------+
+|  Source Catalogue   | -----------------> |   Catalogue Database        |
+|  (rigid, weak       |   (periodic,       |                             |
+|   search)           |    upsert)         |   +---------------------+   |
++---------------------+                    |   |  base_application   |   |
+                                           |   +---------------------+   |
+                                           |   +---------------------+   |
+                                           |   | extension_attributes|   |
+                                           |   +----------+----------+   |
+                                           |   +----------v----------+   |
+                                           |   |  v_application      |   |
+                                           |   |  (unified view,     |   |
+                                           |   |   source wins)      |   |
+                                           |   +----------+----------+   |
+                                           +--------+-----------+--------+
+                                                    |           |
+                              DirectQuery / Import  |           |  write (extension only)
+                                                    |           |
+                                          +---------v----+   +--v-------------------+
+                                          |   Power BI   |   |  Minimal Write Surface|
+                                          |  (query,     |   |  (FastAPI + HTMX, or  |
+                                          |   filter,    |   |   Power Apps embed)   |
+                                          |   SSO via    |   |                       |
+                                          |   Entra ID)  |   +-----------------------+
+                                          +------+-------+
+                                                 |
+                                          +------v-------+
+                                          |    Users     |
+                                          | (point-click |
+                                          |  AND/OR      |
+                                          |  filtering)  |
+                                          +--------------+
+```
