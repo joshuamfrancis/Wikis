@@ -50,6 +50,8 @@ aws route53 delete-vpc-association-authorization \
 
 At scale, drive these through Terraform / CloudFormation (`aws_route53_vpc_association_authorization` + `aws_route53_zone_association`) rather than by hand. Every new spoke VPC needs the authorize-then-associate pair for each PHZ it should see.
 
+![image](./phz.svg)
+
 ## Summary table
 
 | Flow | Mechanism | Lives in | Crosses Direct Connect? |
