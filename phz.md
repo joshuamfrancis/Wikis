@@ -1,6 +1,6 @@
 # Route 53 Private Hosted Zones in a Shared-Services Account — Centralized DNS
 
-![DNS architecture: PHZ in shared-services account](dns-shared-services.png)
+![DNS architecture: PHZ in shared-services account](dns-shared-services.svg)
 
 > The diagram is provided as both `dns-shared-services.png` (embedded above) and `dns-shared-services.svg` (vector source).
 
