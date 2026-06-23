@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 900" font-family="'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#1f2933"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#1565c0"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#e65100"/>
+    </marker>
+    <style>
+      .acct { fill:#fafafa; stroke:#9aa5b1; stroke-width:1.5; rx:10; }
+      .acctlbl { font-size:13px; font-weight:700; fill:#52606d; letter-spacing:.3px; }
+      .vpc { fill:#eef4fb; stroke:#5b8def; stroke-width:1.5; stroke-dasharray:5 3; rx:8; }
+      .vpclbl { font-size:12px; font-weight:600; fill:#2f6fb0; }
+      .box { rx:6; stroke-width:1.5; }
+      .boxlbl { font-size:11.5px; font-weight:600; }
+      .sub { font-size:10px; fill:#616e7c; }
+      .title { font-size:22px; font-weight:700; fill:#1f2933; }
+      .legend { font-size:11.5px; fill:#3e4c59; }
+    </style>
+  </defs>
+
+  <text x="40" y="42" class="title">Multi-Account Route 53 Private Hosted Zone — Centralized DNS</text>
+
+  <!-- ON-PREM -->
+  <rect x="40" y="80" width="250" height="160" rx="10" fill="#f4f1ea" stroke="#b0855b" stroke-width="1.5"/>
+  <text x="60" y="105" class="acctlbl" fill="#8a5a2b">ON-PREMISES DATA CENTER</text>
+  <rect x="70" y="125" width="190" height="55" class="box" fill="#fff" stroke="#b0855b"/>
+  <text x="90" y="148" class="boxlbl" fill="#8a5a2b">On-prem DNS server</text>
+  <text x="90" y="165" class="sub">Conditional forwarders →</text>
+  <text x="90" y="177" class="sub">aws private domains</text>
+
+  <!-- Direct Connect -->
+  <line x1="290" y1="160" x2="420" y2="160" stroke="#1f2933" stroke-width="2.5"/>
+  <text x="300" y="150" class="sub" font-weight="600">Direct Connect</text>
+
+  <!-- NETWORK ACCOUNT -->
+  <rect x="420" y="80" width="500" height="600" class="acct"/>
+  <text x="440" y="105" class="acctlbl">CENTRAL NETWORK ACCOUNT</text>
+
+  <!-- TGW -->
+  <rect x="455" y="120" width="120" height="50" class="box" fill="#ffe9d6" stroke="#e65100"/>
+  <text x="468" y="142" class="boxlbl" fill="#bf4500">Transit Gateway</text>
+  <text x="468" y="158" class="sub">shared via RAM</text>
+
+  <!-- Central Resolver VPC -->
+  <rect x="445" y="195" width="455" height="300" class="vpc"/>
+  <text x="460" y="217" class="vpclbl">Central Resolver VPC (associated with all PHZs)</text>
+
+  <!-- PHZ -->
+  <rect x="470" y="235" width="180" height="70" class="box" fill="#e3f2e8" stroke="#2e7d32"/>
+  <text x="485" y="258" class="boxlbl" fill="#1b5e20">Private Hosted Zones</text>
+  <text x="485" y="275" class="sub">app.internal, db.internal …</text>
+  <text x="485" y="292" class="sub">owned here, assoc. to spokes</text>
+
+  <!-- Inbound endpoint -->
+  <rect x="470" y="330" width="195" height="60" class="box" fill="#e3eefc" stroke="#1565c0"/>
+  <text x="485" y="352" class="boxlbl" fill="#0d47a1">Inbound Resolver Endpoint</text>
+  <text x="485" y="370" class="sub">on-prem → AWS private DNS</text>
+
+  <!-- Outbound endpoint -->
+  <rect x="685" y="330" width="195" height="60" class="box" fill="#fde7e0" stroke="#e65100"/>
+  <text x="700" y="352" class="boxlbl" fill="#bf4500">Outbound Resolver Endpoint</text>
+  <text x="700" y="370" class="sub">AWS → on-prem domains</text>
+
+  <!-- Resolver rules -->
+  <rect x="470" y="415" width="410" height="55" class="box" fill="#fff8e1" stroke="#c79100"/>
+  <text x="485" y="437" class="boxlbl" fill="#a07800">Resolver Forwarding Rules (on-prem zones)</text>
+  <text x="485" y="455" class="sub">shared to ALL accounts via AWS RAM</text>
+
+  <!-- RAM sharing band -->
+  <rect x="445" y="510" width="455" height="40" rx="6" fill="#f3e8fb" stroke="#7b3fa0" stroke-width="1.5"/>
+  <text x="460" y="535" class="boxlbl" fill="#5e2b80">AWS RAM  →  shares TGW + Resolver Rules to spoke accounts</text>
+
+  <!-- SPOKE ACCOUNT A -->
+  <rect x="960" y="120" width="240" height="250" class="acct"/>
+  <text x="978" y="145" class="acctlbl">SPOKE ACCOUNT A</text>
+  <rect x="978" y="160" width="204" height="190" class="vpc"/>
+  <text x="990" y="182" class="vpclbl">Workload VPC A</text>
+  <rect x="998" y="200" width="166" height="55" class="box" fill="#fff" stroke="#5b8def"/>
+  <text x="1012" y="222" class="boxlbl" fill="#2f6fb0">.2 Resolver</text>
+  <text x="1012" y="239" class="sub">resolves PHZ locally</text>
+  <rect x="998" y="270" width="166" height="60" class="box" fill="#e3f2e8" stroke="#2e7d32"/>
+  <text x="1012" y="291" class="sub" font-weight="600" fill="#1b5e20">PHZ association</text>
+  <text x="1012" y="307" class="sub">+ shared rule assoc.</text>
+  <text x="1012" y="322" class="sub">EC2 / EKS workloads</text>
+
+  <!-- SPOKE ACCOUNT B -->
+  <rect x="960" y="410" width="240" height="250" class="acct"/>
+  <text x="978" y="435" class="acctlbl">SPOKE ACCOUNT B</text>
+  <rect x="978" y="450" width="204" height="190" class="vpc"/>
+  <text x="990" y="472" class="vpclbl">Workload VPC B</text>
+  <rect x="998" y="490" width="166" height="55" class="box" fill="#fff" stroke="#5b8def"/>
+  <text x="1012" y="512" class="boxlbl" fill="#2f6fb0">.2 Resolver</text>
+  <text x="1012" y="529" class="sub">resolves PHZ locally</text>
+  <rect x="998" y="560" width="166" height="60" class="box" fill="#e3f2e8" stroke="#2e7d32"/>
+  <text x="1012" y="581" class="sub" font-weight="600" fill="#1b5e20">PHZ association</text>
+  <text x="1012" y="597" class="sub">+ shared rule assoc.</text>
+  <text x="1012" y="612" class="sub">EC2 / EKS workloads</text>
+
+  <!-- FLOW ARROWS -->
+  <!-- Flow 1 GREEN: spoke -> PHZ via association (logical, not TGW) -->
+  <path d="M998,290 C780,300 720,290 652,278" fill="none" stroke="#2e7d32" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <path d="M998,585 C760,560 700,400 652,300" fill="none" stroke="#2e7d32" stroke-width="2" marker-end="url(#arrowGreen)"/>
+
+  <!-- Flow 2 BLUE: on-prem -> inbound endpoint over DX -->
+  <path d="M165,180 C165,420 300,360 468,360" fill="none" stroke="#1565c0" stroke-width="2" marker-end="url(#arrowBlue)"/>
+
+  <!-- Flow 3 ORANGE: spoke .2 -> outbound rule -> on-prem -->
+  <path d="M998,228 C900,250 850,330 882,360" fill="none" stroke="#e65100" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  <path d="M780,390 C760,440 720,470 720,470" fill="none" stroke="#e65100" stroke-width="2" marker-end="url(#arrowOrange)"/>
+
+  <!-- LEGEND -->
+  <rect x="40" y="700" width="1160" height="160" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1.5"/>
+  <text x="60" y="728" class="acctlbl" fill="#1f2933">RESOLUTION FLOWS</text>
+
+  <line x1="60" y1="752" x2="100" y2="752" stroke="#2e7d32" stroke-width="3" marker-end="url(#arrowGreen)"/>
+  <text x="110" y="756" class="legend"><tspan font-weight="700">① AWS spoke → AWS private domains:</tspan> spoke VPC's .2 resolver resolves the PHZ directly. Works only because the PHZ is cross-account associated to that VPC (not via TGW).</text>
+
+  <line x1="60" y1="782" x2="100" y2="782" stroke="#1565c0" stroke-width="3" marker-end="url(#arrowBlue)"/>
+  <text x="110" y="786" class="legend"><tspan font-weight="700">② On-prem → AWS private domains:</tspan> on-prem DNS conditionally forwards over Direct Connect to the Inbound Resolver Endpoint, which resolves PHZs assoc. to the central VPC.</text>
+
+  <line x1="60" y1="812" x2="100" y2="812" stroke="#e65100" stroke-width="3" marker-end="url(#arrowOrange)"/>
+  <text x="110" y="816" class="legend"><tspan font-weight="700">③ AWS → on-prem domains:</tspan> spoke .2 applies a RAM-shared forwarding rule → Outbound Resolver Endpoint → on-prem DNS over Direct Connect.</text>
+
+  <text x="60" y="846" class="legend" fill="#7b3fa0"><tspan font-weight="700">Key point:</tspan> TGW (purple/RAM) carries IP packets only. DNS resolution is driven entirely by VPC-to-PHZ associations and shared Resolver rules — independent of TGW routing.</text>
+</svg>
