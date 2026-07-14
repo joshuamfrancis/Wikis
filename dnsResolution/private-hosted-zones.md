@@ -1,282 +1,460 @@
-# Part 2 — Private Hosted Zone Hierarchy & Subdomain Delegation
+# Part 3 — PHZ Placement, Forwarding Rules, and VPC Associations
+### Namespace with `dev` / `uat` tiers and **prod at the apex**
 
-## 1. What We're Modelling
+---
 
-A hierarchical internal namespace under a single apex:
+## 1. The Namespace Being Built
 
 ```
-cloud.internal                          ← centrally maintained (apex)
-├── dev.cloud.internal                  ← lifecycle-tier zone (dev)
-│   ├── application1.dev.cloud.internal ← per-app zone in app1 dev account
-│   └── application2.dev.cloud.internal ← per-app zone in app2 dev account
-├── test.cloud.internal                 ← lifecycle-tier zone (test)
-│   └── application1.test.cloud.internal
-└── prod.cloud.internal                 ← lifecycle-tier zone (prod)
-    └── application1.prod.cloud.internal
+cloud.internal                              ← APEX, owned by shared-service-prod
+│
+├── application1.cloud.internal             ← PROD app zone (app1-prod account)
+├── application2.cloud.internal             ← PROD app zone (app2-prod account)
+├── docs.cloud.internal / wiki...           ← records held directly in the apex zone
+│
+├── uat.cloud.internal                      ← owned by shared-service-uat
+│   ├── application1.uat.cloud.internal     ← app1-uat account
+│   └── application2.uat.cloud.internal     ← app2-uat account
+│
+└── dev.cloud.internal                      ← owned by shared-service-dev
+    ├── application1.dev.cloud.internal     ← app1-dev account
+    └── application2.dev.cloud.internal     ← app2-dev account
 ```
 
-Each application account owns the leaf zone for its own app/lifecycle combination. The tier zones (`dev|test|prod.cloud.internal`) are owned centrally per lifecycle. The apex is owned by a central shared-services account. Names must be resolvable across the appropriate accounts *within a lifecycle*, but must remain isolated *between* lifecycles because there is no network path between dev/test/prod.
+**There is no `prod.cloud.internal` zone.** Production is the apex. This is the single fact that
+drives every design decision below, because it means:
+
+> The zone that must be resolvable by **all three lifecycles** (`cloud.internal`) is also the
+> **parent of every production application zone**.
+
+If that is handled naively, a dev workload asking for `application1.cloud.internal` will follow the
+apex forwarding rule straight into the production resolver and get an answer. The mitigations for
+that are in §2 and are **mandatory**, not optional hardening.
 
 ---
 
-## 2. Key Constraint — Route 53 PHZs Do Not Natively Delegate
+## 2. The Two Rules That Preserve Lifecycle Isolation
 
-Public DNS uses NS record delegation to hand off subdomains from a parent zone to a child zone. **Route 53 Private Hosted Zones do not follow NS records for private resolution.** Delegation between PHZs — especially across accounts — is achieved instead through one of:
+### 2.1 How Route 53 Resolver actually chooses
 
-1. **Cross-account VPC associations** (share a PHZ with another account's VPC via `create-vpc-association-authorization` + `associate-vpc-with-hosted-zone`), or
-2. **Route 53 Resolver forwarding rules** targeting an **inbound endpoint** in the account that hosts the child PHZ.
+For a query from a VPC, Resolver picks the **most specific suffix match** across *both* associated
+Private Hosted Zones and associated Resolver rules. On an exact tie between a PHZ and a rule for the
+same domain, **the PHZ wins**. Anything unmatched falls to the `.` catch-all rule → on-prem DNS.
 
-For an organization of this size and shape (many accounts, org-managed, no cross-lifecycle network path, existing RAM-based pattern for the AD rule), **(2) forwarding rules shared via RAM** is the scalable, consistent choice — and matches the pattern already used elsewhere in the environment. Approach (1) is used only in one specific spot: attaching the apex zone to the resolver VPC so its records are actually resolvable when queried via the inbound endpoint.
+That gives three useful consequences:
 
-Route 53 Resolver's rule matching is **most-specific-domain wins**, which is what makes hierarchical routing work: a query for `application1.dev.cloud.internal` matches the app1 rule; `something-else.dev.cloud.internal` falls back to the dev-tier rule; `shared.cloud.internal` falls back to the apex rule; anything else falls back to the `.` catch-all from Part 1.
+| Consequence | Why it matters here |
+|---|---|
+| An app's **own** zone always resolves locally | Local PHZ association exactly matches → beats the identically-named forwarding rule → no dependency on shared services being up. |
+| A **more specific rule** beats a **less specific PHZ** | In `shared-service-prod` (which has the apex PHZ attached), a rule for `application1.cloud.internal` still wins and forwards to the app account. |
+| A **missing rule** silently degrades to the next-least-specific match | This is exactly the leak vector for prod-under-apex — see below. |
+
+### 2.2 Guardrail A — scope the prod app rules to the Prod OU only
+
+Rules for `application1.cloud.internal`, `application2.cloud.internal`, … are RAM-shared to the
+**Prod OU only**. A dev VPC therefore has no rule for that name, so the query falls back to the
+`cloud.internal` apex rule.
+
+### 2.3 Guardrail B — never associate a prod app PHZ to the apex resolver VPC
+
+The apex forwarding rule points at the inbound endpoint in `shared-service-prod`. That endpoint can
+only answer for PHZs **associated to the VPC it sits in**. So:
+
+> **The `shared-service-prod` resolver VPC must have _only_ `cloud.internal` associated to it.
+> Never associate `application1.cloud.internal` (or any other prod app zone) to that VPC.**
+
+With both guardrails in place, a dev query for `db.application1.cloud.internal` goes:
+apex rule → apex inbound endpoint → apex PHZ has no such record and no delegation → **NXDOMAIN**. Correct.
+
+Break Guardrail B and every dev/uat account can enumerate production DNS.
+
+### 2.4 Note on where forwarded traffic comes *from*
+
+A rule created in the Network account carries the Network account's **outbound endpoint**. When that
+rule is RAM-shared and associated to a dev VPC, the forwarded query egresses from the **Network
+account's outbound ENIs**, not from the dev VPC. So:
+
+* Dev/UAT VPCs need **no TGW path** to production — the "no network path across lifecycles" rule holds.
+* The **Network account** does need TGW routes to every VPC hosting an inbound endpoint (§6).
+* DNS resolution ≠ reachability. Even if a name leaked, the IP would be unroutable from dev. The
+  guardrails exist so it doesn't leak in the first place.
 
 ---
 
-## 3. Where Each Private Hosted Zone Lives
+## 3. Private Hosted Zones — What to Create, Where
 
-| Zone | Owning account | Purpose |
+| # | Private Hosted Zone | Owning account | Associated VPC(s) | Contents |
+|---|---|---|---|---|
+| 1 | `cloud.internal` | **shared-service-prod** | `ssprod-vpc` (local only) | Cross-lifecycle common records **and** prod-tier shared records. **No prod app zones.** |
+| 2 | `uat.cloud.internal` | **shared-service-uat** | `ssuat-vpc` (local only) | UAT-tier shared records (e.g. `artifact.uat.cloud.internal`) |
+| 3 | `dev.cloud.internal` | **shared-service-dev** | `ssdev-vpc` (local only) | Dev-tier shared records |
+| 4 | `application1.cloud.internal` | **app1-prod** | `app1prod-vpc` (local only) | App1 production records |
+| 5 | `application1.uat.cloud.internal` | **app1-uat** | `app1uat-vpc` (local only) | App1 UAT records |
+| 6 | `application1.dev.cloud.internal` | **app1-dev** | `app1dev-vpc` (local only) | App1 dev records |
+| 7 | `application2.cloud.internal` | **app2-prod** | `app2prod-vpc` (local only) | App2 production records |
+| 8 | `application2.uat.cloud.internal` | **app2-uat** | `app2uat-vpc` (local only) | App2 UAT records |
+| 9 | `application2.dev.cloud.internal` | **app2-dev** | `app2dev-vpc` (local only) | App2 dev records |
+| … | repeat 4–9 per application | | | |
+
+**Pattern:** every PHZ is created in, and associated only to, the VPC of the account that owns it.
+No cross-account PHZ association is used for delegation (see §5).
+
+### 3.1 Prod apps: "own" vs "use"
+
+The requirement says prod accounts *"will own or use `application1.cloud.internal`"*. Two models:
+
+* **Own (recommended, and what this document assumes).** `app1-prod` creates the PHZ
+  `application1.cloud.internal` itself. Ownership matches the account boundary, blast radius is small,
+  and it is symmetric with dev/uat. Requires an inbound endpoint in the app account.
+* **Use (lightweight alternative).** No app PHZ exists; `app1-prod`'s records are written as
+  `app1-svc.cloud.internal` *inside the apex zone* in `shared-service-prod`, via a cross-account IAM
+  role. **This is not the same namespace** — it flattens `application1.cloud.internal` into the apex
+  and it means the apex zone (which is readable by dev and uat) now contains production records.
+  **Do not mix models.** If you use this, prod app records become visible to dev/uat DNS.
+
+Pick one per application and record it in the account vending metadata. Mixed ownership within the
+same `cloud.internal` apex is where operational mistakes come from.
+
+---
+
+## 4. Resolver Endpoints
+
+### 4.1 Outbound endpoint — one, unchanged
+
+| Endpoint | Account | VPC |
 |---|---|---|
-| `cloud.internal` (apex) | **Central shared-services account** (can be the Network account or a dedicated DNS/shared-services account) | Holds cross-lifecycle common records (e.g., `docs.cloud.internal`, `wiki.cloud.internal`) |
-| `dev.cloud.internal` | **Dev shared-services account** | Holds records shared across dev applications (e.g., `artifact.dev.cloud.internal`); acts as tier apex |
-| `test.cloud.internal` | **Test shared-services account** | Same, for test tier |
-| `prod.cloud.internal` | **Prod shared-services account** | Same, for prod tier |
-| `application1.dev.cloud.internal` | **Application 1 dev account** | Application-specific records (ALBs, RDS endpoints, etc.) |
-| `application1.test.cloud.internal` | **Application 1 test account** | Same, for test |
-| `application1.prod.cloud.internal` | **Application 1 prod account** | Same, for prod |
-| … | … | … |
+| `outbound-central` | **Network** | Central Endpoint VPC (from Part 1) |
 
-The apex and each tier zone are hosted in a **shared-services account for that scope**. If separate lifecycle-shared accounts don't exist, all tier zones can be hosted in the Network account, but per-lifecycle shared accounts are cleaner because it aligns ownership with lifecycle isolation.
+Every forwarding rule in the catalog references this single outbound endpoint. Nothing else is needed.
+
+### 4.2 Inbound endpoints — one per PHZ-owning account
+
+Two ENIs across two AZs each.
+
+| Endpoint | Account | Sits in VPC | Answers for |
+|---|---|---|---|
+| `inbound-apex` | shared-service-prod | `ssprod-vpc` | `cloud.internal` **only** |
+| `inbound-uat` | shared-service-uat | `ssuat-vpc` | `uat.cloud.internal` |
+| `inbound-dev` | shared-service-dev | `ssdev-vpc` | `dev.cloud.internal` |
+| `inbound-app1-prod` | app1-prod | `app1prod-vpc` | `application1.cloud.internal` |
+| `inbound-app1-uat` | app1-uat | `app1uat-vpc` | `application1.uat.cloud.internal` |
+| `inbound-app1-dev` | app1-dev | `app1dev-vpc` | `application1.dev.cloud.internal` |
+| `inbound-app2-*` | app2-{prod,uat,dev} | respective VPCs | respective zones |
+
+**Security group on every inbound endpoint ENI:** allow TCP/UDP 53 **from the Network account's
+outbound endpoint ENI private IPs (`/32`s) or the Endpoint VPC CIDR**. Cross-account SG referencing
+does not work over Transit Gateway, so this must be IP/CIDR-based.
 
 ---
 
-## 4. Resolver Endpoints and Rules — the Delegation Wiring
+## 5. Forwarding Rules — Created in the Network Account, Shared via RAM
 
-### 4.1 Endpoints
-Each account that hosts a PHZ needs a Route 53 Resolver **inbound endpoint** in a VPC associated with that PHZ, so cross-account queries can reach it. Concretely:
+All rules are created in the **Network account** (the central rule catalog) and all use
+`outbound-central`. The RAM share scope is what enforces lifecycle isolation.
 
-| Endpoint | Account | Attached VPC associated to |
+| Rule name | Domain | Target IPs | RAM shared with |
+|---|---|---|---|
+| `rule-root` *(existing, Part 1)* | `.` | On-prem DNS servers | **All member accounts** (Dev + UAT + Prod OUs) |
+| `rule-ad` *(existing, Part 1)* | `corp.example.com` (AD domain) | On-prem domain controllers | **All member accounts** |
+| `rule-apex` | `cloud.internal` | `inbound-apex` IPs (shared-service-prod) | **All member accounts** (Dev + UAT + Prod OUs) |
+| `rule-uat-tier` | `uat.cloud.internal` | `inbound-uat` IPs | **UAT OU only** |
+| `rule-dev-tier` | `dev.cloud.internal` | `inbound-dev` IPs | **Dev OU only** |
+| `rule-app1-prod` | `application1.cloud.internal` | `inbound-app1-prod` IPs | **Prod OU only** ⚠️ |
+| `rule-app1-uat` | `application1.uat.cloud.internal` | `inbound-app1-uat` IPs | **UAT OU only** |
+| `rule-app1-dev` | `application1.dev.cloud.internal` | `inbound-app1-dev` IPs | **Dev OU only** |
+| `rule-app2-prod` | `application2.cloud.internal` | `inbound-app2-prod` IPs | **Prod OU only** ⚠️ |
+| `rule-app2-uat` | `application2.uat.cloud.internal` | `inbound-app2-uat` IPs | **UAT OU only** |
+| `rule-app2-dev` | `application2.dev.cloud.internal` | `inbound-app2-dev` IPs | **Dev OU only** |
+
+⚠️ = the rules whose RAM scope is load-bearing for isolation. A prod app rule shared beyond the Prod
+OU makes production DNS resolvable from dev/uat.
+
+**RAM shares to create (5 total):**
+
+| RAM share | Principal | Resources |
 |---|---|---|
-| Central inbound endpoint | Central shared-services account | `cloud.internal` |
-| Dev inbound endpoint | Dev shared-services account | `dev.cloud.internal` |
-| Test inbound endpoint | Test shared-services account | `test.cloud.internal` |
-| Prod inbound endpoint | Prod shared-services account | `prod.cloud.internal` |
-| App1-dev inbound endpoint | Application 1 dev account | `application1.dev.cloud.internal` |
-| App1-test inbound endpoint | Application 1 test account | `application1.test.cloud.internal` |
-| App1-prod inbound endpoint | Application 1 prod account | `application1.prod.cloud.internal` |
+| `ram-dns-all` | Org root (or Dev + UAT + Prod OUs) | `rule-root`, `rule-ad`, `rule-apex` |
+| `ram-dns-dev` | **Dev OU** | `rule-dev-tier`, `rule-app1-dev`, `rule-app2-dev`, … |
+| `ram-dns-uat` | **UAT OU** | `rule-uat-tier`, `rule-app1-uat`, `rule-app2-uat`, … |
+| `ram-dns-prod` | **Prod OU** | `rule-app1-prod`, `rule-app2-prod`, … |
+| *(no prod-tier rule — the apex rule serves that role)* | | |
 
-The **outbound endpoint** stays where it already is — in the Network account's Endpoint VPC (from Part 1). One outbound endpoint serves all rules created in the Network account. Rules can be created in the Network account regardless of where the target inbound endpoint lives, because a rule just references target IPs.
+Sharing to an **OU**, not to account IDs, means new accounts vended into an OU inherit the correct
+rule set automatically.
 
-### 4.2 Forwarding rules (all created in the Network account, shared via RAM)
+### 5.1 Which rules get associated to which VPCs
 
-| Rule domain | Target IPs | Shared with (RAM) |
+Sharing makes a rule *available*; association makes it *effective*. Associate as follows:
+
+| VPC | Rules to associate | Local PHZ |
 |---|---|---|
-| `cloud.internal` | Central inbound endpoint IPs | All member accounts (dev + test + prod OUs) |
-| `dev.cloud.internal` | Dev inbound endpoint IPs | **Dev OU only** |
-| `test.cloud.internal` | Test inbound endpoint IPs | **Test OU only** |
-| `prod.cloud.internal` | Prod inbound endpoint IPs | **Prod OU only** |
-| `application1.dev.cloud.internal` | App1-dev inbound endpoint IPs | **Dev OU only** |
-| `application1.test.cloud.internal` | App1-test inbound endpoint IPs | **Test OU only** |
-| `application1.prod.cloud.internal` | App1-prod inbound endpoint IPs | **Prod OU only** |
+| `app1dev-vpc` | `.`, AD, `cloud.internal`, `dev.cloud.internal`, `application2.dev.cloud.internal` | `application1.dev.cloud.internal` |
+| `app2dev-vpc` | `.`, AD, `cloud.internal`, `dev.cloud.internal`, `application1.dev.cloud.internal` | `application2.dev.cloud.internal` |
+| `ssdev-vpc` | `.`, AD, `cloud.internal`, `application1.dev.cloud.internal`, `application2.dev.cloud.internal` | `dev.cloud.internal` |
+| `app1uat-vpc` | `.`, AD, `cloud.internal`, `uat.cloud.internal`, `application2.uat.cloud.internal` | `application1.uat.cloud.internal` |
+| `ssuat-vpc` | `.`, AD, `cloud.internal`, `application1.uat.cloud.internal`, `application2.uat.cloud.internal` | `uat.cloud.internal` |
+| `app1prod-vpc` | `.`, AD, `cloud.internal`, `application2.cloud.internal` | `application1.cloud.internal` |
+| `app2prod-vpc` | `.`, AD, `cloud.internal`, `application1.cloud.internal` | `application2.cloud.internal` |
+| `ssprod-vpc` | `.`, AD, `application1.cloud.internal`, `application2.cloud.internal` | `cloud.internal` |
+| Network Endpoint VPC | `.`, AD, `cloud.internal` (optional) | AWS service endpoint PHZs |
 
-Rule → OU sharing is what enforces the lifecycle isolation at the DNS layer: a dev VPC simply never has any rule for `prod.cloud.internal` or its subdomains associated to it, so those names are unresolvable from dev — matching the existing network isolation.
+Notes on the edge cases in that table:
 
-### 4.3 Local PHZ associations
-
-For the application account itself, its own PHZ (e.g. `application1.dev.cloud.internal`) is **associated directly** to the local VPC. This is important:
-
-- The most-specific-match wins rule means a query from within the application's own VPC for a name in its own zone is resolved **locally via the PHZ association**, never sent through the resolver rule. This is the fast path and it also means the app can resolve its own records even if the shared inbound endpoint has an outage.
-- The forwarding rule for the same domain is still created and shared, so that **other** accounts in the same lifecycle can resolve into this zone.
-
-Similarly, each tier shared-services account associates its own tier zone to its local VPC.
-
----
-
-## 5. Should Cross-Account PHZ Associations Be Used?
-
-Only sparingly:
-
-- **Yes** — associate each PHZ with a VPC in its owning account (so records are resolvable at all when the inbound endpoint receives a query).
-- **No** — do not use cross-account PHZ associations (`create-vpc-association-authorization`) as the primary delegation mechanism. It scales poorly (per-VPC pairing, no RAM/OU semantics), it entangles ownership, and it bypasses the Network account, breaking the "central rule catalog" pattern already in use for AD.
-
-Use **forwarding rules** as the delegation mechanism; use **local PHZ associations** only to make the target zone resolvable at its inbound endpoint.
+* **`ssprod-vpc` must NOT associate `rule-apex`.** It already holds the apex PHZ locally; the rule
+  would point the VPC at its own inbound endpoint. Harmless (PHZ wins the tie) but confusing —
+  leave it off.
+* **`ssprod-vpc` associating `application1.cloud.internal`** is fine and correct: the rule is *more
+  specific* than the apex PHZ, so it wins and forwards to app1-prod. This is how the shared-services
+  account reaches production apps.
+* Associating an account's **own** rule to its own VPC (e.g. `rule-app1-dev` on `app1dev-vpc`) is
+  harmless — the exact-match local PHZ wins the tie — so blanket "associate every rule shared to me"
+  automation is safe and simpler to operate.
 
 ---
 
-## 6. Example — Resolution Flows in the Dev Lifecycle
+## 6. VPC Associations — the Direct Answer
 
-Assume a workload in **Application 2, Dev account** (`app2-dev`) queries different names. Its VPC has these Resolver rule associations (all shared via RAM to the Dev OU):
+### 6.1 PHZ ↔ VPC associations (same-account, one per zone)
 
-- `.` → on-prem DNS (from Part 1)
-- AD domain → on-prem DCs (from Part 1)
-- `cloud.internal` → central inbound endpoint
-- `dev.cloud.internal` → dev-shared inbound endpoint
-- `application1.dev.cloud.internal` → app1-dev inbound endpoint
-- `application2.dev.cloud.internal` → app2-dev inbound endpoint (harmless — most-specific match still causes the *local PHZ association* to win)
+**Every PHZ is associated only to the VPC in its own owning account.** Nine associations for the
+example set, all same-account (no `create-vpc-association-authorization` required):
 
-Plus its own PHZ `application2.dev.cloud.internal` associated locally.
+| PHZ | Associated to VPC | Account | Cross-account? |
+|---|---|---|---|
+| `cloud.internal` | `ssprod-vpc` | shared-service-prod | No |
+| `uat.cloud.internal` | `ssuat-vpc` | shared-service-uat | No |
+| `dev.cloud.internal` | `ssdev-vpc` | shared-service-dev | No |
+| `application1.cloud.internal` | `app1prod-vpc` | app1-prod | No |
+| `application1.uat.cloud.internal` | `app1uat-vpc` | app1-uat | No |
+| `application1.dev.cloud.internal` | `app1dev-vpc` | app1-dev | No |
+| `application2.cloud.internal` | `app2prod-vpc` | app2-prod | No |
+| `application2.uat.cloud.internal` | `app2uat-vpc` | app2-uat | No |
+| `application2.dev.cloud.internal` | `app2dev-vpc` | app2-dev | No |
 
-| Query | What matches | Where the answer comes from |
+**Cross-account PHZ associations required for the delegation design: none.**
+Delegation is done with forwarding rules; PHZ associations exist only so the inbound endpoint in the
+owning account can answer for its own zone.
+
+### 6.2 Cross-account VPC associations that *do* exist in this environment
+
+| Association | Source account (PHZ owner) | Target VPC(s) | Status |
+|---|---|---|---|
+| AWS service endpoint PHZs (`*.execute-api.<region>.amazonaws.com`, `.ec2.`, `.ssm.`, `.s3.` …) | **Network** (central Endpoint VPC) | **Every member VPC**, all lifecycles | **Existing** — keep. Requires `create-vpc-association-authorization` in Network + `associate-vpc-with-hosted-zone` in the member account. |
+| `cloud.internal` → app1-prod VPC | shared-service-prod | `app1prod-vpc` | **Only if** you chose the "use" model in §3.1 for that app. Never do this for a dev or uat VPC. |
+| Any app PHZ → shared-services VPC | app account | `ssprod/ssuat/ssdev-vpc` | **Only** in the consolidated variant in §9. Forbidden for prod app zones → `ssprod-vpc` under the default design (Guardrail B). |
+
+### 6.3 If an account has more than one VPC
+
+Associate the account's PHZ to **all** of its own VPCs (still same-account), and associate the
+relevant shared rules to all of its VPCs. The inbound endpoint only needs to live in one of them.
+
+---
+
+## 7. Transit Gateway and Inspection Prerequisites
+
+DNS forwarding traffic flows **Network account outbound ENIs → PHZ-owner account inbound ENIs**, so
+with `no route propagation / explicit routes only`:
+
+| Route needed | Direction |
+|---|---|
+| Central Endpoint VPC ↔ `ssprod-vpc` | both |
+| Central Endpoint VPC ↔ `ssuat-vpc` | both |
+| Central Endpoint VPC ↔ `ssdev-vpc` | both |
+| Central Endpoint VPC ↔ every app VPC hosting an inbound endpoint | both |
+
+* These are **hub-and-spoke** routes only. **No dev↔prod or uat↔prod TGW routes are introduced.**
+* Network Firewall / GWLB inspection policy must **allow TCP/UDP 53** between the outbound ENI IPs
+  and each inbound ENI IP set. This is the most common cause of a "rule is associated but nothing
+  resolves" failure — the rule looks healthy, the packets are dropped in inspection.
+* Adding the TGW route + firewall allow-list entry must be part of the **account vending pipeline**,
+  not a manual step.
+
+---
+
+## 8. Worked Resolution Examples
+
+**From `app1dev-vpc` (dev lifecycle):**
+
+| Query | Match | Result |
 |---|---|---|
-| `db.application2.dev.cloud.internal` | Local PHZ association (most specific) | Local PHZ in app2-dev — never leaves the VPC |
-| `svc.application1.dev.cloud.internal` | Rule for `application1.dev.cloud.internal` | Forwarded to app1-dev inbound endpoint → resolved from app1's PHZ |
-| `artifact.dev.cloud.internal` | Rule for `dev.cloud.internal` | Forwarded to dev-shared inbound endpoint → resolved from dev-tier PHZ |
-| `docs.cloud.internal` | Rule for `cloud.internal` | Forwarded to central inbound endpoint → resolved from apex PHZ |
-| `example.com` | Rule for `.` | Forwarded to on-prem DNS |
-| `svc.application1.prod.cloud.internal` | No rule (prod rules not shared to dev) → falls through to `.` catch-all | On-prem DNS returns NXDOMAIN (correct — dev must not resolve prod) |
+| `db.application1.dev.cloud.internal` | local PHZ (exact-suffix, tie beats rule) | Answered locally, never leaves the VPC |
+| `svc.application2.dev.cloud.internal` | `rule-app2-dev` | → outbound-central → `inbound-app2-dev` → app2 PHZ |
+| `artifact.dev.cloud.internal` | `rule-dev-tier` | → `inbound-dev` → dev tier PHZ |
+| `docs.cloud.internal` | `rule-apex` | → `inbound-apex` → apex PHZ ✔ |
+| `db.application1.cloud.internal` | **no prod app rule in dev** → falls back to `rule-apex` | → `inbound-apex` → apex PHZ has no such record → **NXDOMAIN** ✔ |
+| `example.com` | `rule-root` | → on-prem DNS → on-prem web proxy |
+
+**From `app2prod-vpc` (prod lifecycle):**
+
+| Query | Match | Result |
+|---|---|---|
+| `db.application2.cloud.internal` | local PHZ | Answered locally |
+| `api.application1.cloud.internal` | `rule-app1-prod` (more specific than apex) | → `inbound-app1-prod` → app1 PHZ ✔ |
+| `docs.cloud.internal` | `rule-apex` | → `inbound-apex` → apex PHZ ✔ |
+| `svc.application1.dev.cloud.internal` | no dev rule shared to Prod OU → `rule-root` | on-prem NXDOMAIN ✔ |
 
 ---
 
-## 7. Diagrams
+## 9. Alternative: Consolidated Resolver (fewer endpoints, lower cost)
 
-### 7.1 Ownership map
+Per-app inbound endpoints cost ~2 ENIs each (~US$180/month/account). At 30+ app accounts that adds up.
+
+**Variant:** drop the per-app inbound endpoints and per-app rules. Instead, cross-account associate
+each app PHZ to the **tier** shared-services VPC:
+
+* `application1.dev.cloud.internal` (app1-dev) → associated to `ssdev-vpc`
+* `application1.uat.cloud.internal` (app1-uat) → associated to `ssuat-vpc`
+* `application1.cloud.internal` (app1-prod) → associated to a **prod resolver VPC**
+
+Now `rule-dev-tier` (`dev.cloud.internal` → `inbound-dev`) resolves *all* dev app zones, because the
+dev tier resolver VPC has them all attached. Three rules replace 3N rules.
+
+**But** this collides head-on with Guardrail B for production, because the apex zone is what dev/uat
+query. The fix is to give `shared-service-prod` **two VPCs / two inbound endpoints**:
+
+| VPC in shared-service-prod | PHZs associated | Inbound endpoint | Used by |
+|---|---|---|---|
+| `ssprod-apex-vpc` | `cloud.internal` **only** | `inbound-apex-public` | `rule-apex-crosslifecycle` → shared to **Dev + UAT OUs** |
+| `ssprod-resolver-vpc` | `cloud.internal` + all prod app PHZs | `inbound-apex-prod` | `rule-apex-prod` → shared to **Prod OU only** |
+
+Two rules with the **same domain** (`cloud.internal`) but different targets and different RAM scopes.
+Route 53 permits this as long as only one is associated per VPC.
+
+| | Default (§3–§6) | Consolidated (§9) |
+|---|---|---|
+| Inbound endpoints | 1 per PHZ-owning account | 4 total |
+| Rules | 3N + 3 | ~4 |
+| Cross-account PHZ associations | 0 | 1 per app zone |
+| App resolves own zone if shared services down | ✔ (local PHZ) | ✔ (local PHZ) |
+| Ownership boundary | Clean | Blurred — shared services VPC holds app zones |
+| Isolation mechanism | RAM scope on rules | RAM scope on rules + strict PHZ→VPC placement |
+
+Choose the default if you have <20 app accounts or a strong ownership/blast-radius requirement;
+choose consolidated at scale, but the two-VPC split in `shared-service-prod` is then non-negotiable.
+
+---
+
+## 10. Diagrams
+
+### 10.1 Ownership and delegation map
 
 ```mermaid
 graph TB
-    subgraph CentralShared["Central Shared-Services Account"]
-        PHZ_APEX[(cloud.internal)]
-        IN_APEX[Inbound Endpoint]
+    subgraph SSPROD["shared-service-prod"]
+        PHZ_APEX[("cloud.internal<br/>APEX")]
+        IN_APEX["inbound-apex"]
         PHZ_APEX --- IN_APEX
     end
 
-    subgraph DevShared["Dev Shared-Services Account"]
-        PHZ_DEV[(dev.cloud.internal)]
-        IN_DEV[Inbound Endpoint]
+    subgraph SSUAT["shared-service-uat"]
+        PHZ_UAT[("uat.cloud.internal")]
+        IN_UAT["inbound-uat"]
+        PHZ_UAT --- IN_UAT
+    end
+
+    subgraph SSDEV["shared-service-dev"]
+        PHZ_DEV[("dev.cloud.internal")]
+        IN_DEV["inbound-dev"]
         PHZ_DEV --- IN_DEV
     end
 
-    subgraph TestShared["Test Shared-Services Account"]
-        PHZ_TEST[(test.cloud.internal)]
-        IN_TEST[Inbound Endpoint]
-        PHZ_TEST --- IN_TEST
-    end
-
-    subgraph ProdShared["Prod Shared-Services Account"]
-        PHZ_PROD[(prod.cloud.internal)]
-        IN_PROD[Inbound Endpoint]
-        PHZ_PROD --- IN_PROD
-    end
-
-    subgraph App1Dev["App1 Dev Account"]
-        PHZ_A1D[(application1.dev.cloud.internal)]
-        IN_A1D[Inbound Endpoint]
-        PHZ_A1D --- IN_A1D
-    end
-
-    subgraph App1Prod["App1 Prod Account"]
-        PHZ_A1P[(application1.prod.cloud.internal)]
-        IN_A1P[Inbound Endpoint]
+    subgraph A1P["app1-prod"]
+        PHZ_A1P[("application1.cloud.internal")]
+        IN_A1P["inbound-app1-prod"]
         PHZ_A1P --- IN_A1P
     end
 
-    PHZ_APEX -.logical parent.-> PHZ_DEV
-    PHZ_APEX -.logical parent.-> PHZ_TEST
-    PHZ_APEX -.logical parent.-> PHZ_PROD
-    PHZ_DEV -.logical parent.-> PHZ_A1D
-    PHZ_PROD -.logical parent.-> PHZ_A1P
+    subgraph A1U["app1-uat"]
+        PHZ_A1U[("application1.uat.cloud.internal")]
+        IN_A1U["inbound-app1-uat"]
+        PHZ_A1U --- IN_A1U
+    end
+
+    subgraph A1D["app1-dev"]
+        PHZ_A1D[("application1.dev.cloud.internal")]
+        IN_A1D["inbound-app1-dev"]
+        PHZ_A1D --- IN_A1D
+    end
+
+    PHZ_APEX -. logical parent .-> PHZ_UAT
+    PHZ_APEX -. logical parent .-> PHZ_DEV
+    PHZ_APEX -. "logical parent (PROD apps hang off apex)" .-> PHZ_A1P
+    PHZ_UAT  -. logical parent .-> PHZ_A1U
+    PHZ_DEV  -. logical parent .-> PHZ_A1D
 ```
 
-The "logical parent" dotted lines are **not** DNS NS delegations — they're realized as Resolver forwarding rules in the Network account (see next diagram).
+Dotted lines are **not** NS delegations. Route 53 PHZs ignore NS records for private resolution —
+each dotted line is realised as a forwarding rule in the Network account.
 
-### 7.2 Rule catalog in the Network account and RAM sharing
+### 10.2 Rule catalog and RAM scope
 
 ```mermaid
 graph LR
-    subgraph NetAcct["Network Account (rule catalog)"]
-        OUT[Outbound Endpoint]
-        R_ROOT[Rule: .]
-        R_AD[Rule: AD domain]
-        R_APEX[Rule: cloud.internal]
-        R_DEV[Rule: dev.cloud.internal]
-        R_TEST[Rule: test.cloud.internal]
-        R_PROD[Rule: prod.cloud.internal]
-        R_A1D[Rule: application1.dev.cloud.internal]
-        R_A1T[Rule: application1.test.cloud.internal]
-        R_A1P[Rule: application1.prod.cloud.internal]
+    subgraph NET["Network Account — rule catalog + outbound-central"]
+        R_ROOT["rule-root: ."]
+        R_AD["rule-ad: AD domain"]
+        R_APEX["rule-apex: cloud.internal"]
+        R_DEVT["rule-dev-tier: dev.cloud.internal"]
+        R_UATT["rule-uat-tier: uat.cloud.internal"]
+        R_A1D["rule-app1-dev"]
+        R_A1U["rule-app1-uat"]
+        R_A1P["rule-app1-prod:<br/>application1.cloud.internal"]
     end
 
-    RAM_ALL[["RAM share: all member accounts"]]
-    RAM_DEV[["RAM share: Dev OU"]]
-    RAM_TEST[["RAM share: Test OU"]]
-    RAM_PROD[["RAM share: Prod OU"]]
+    RAM_ALL[["ram-dns-all<br/>Dev + UAT + Prod OUs"]]
+    RAM_DEV[["ram-dns-dev<br/>Dev OU"]]
+    RAM_UAT[["ram-dns-uat<br/>UAT OU"]]
+    RAM_PROD[["ram-dns-prod<br/>Prod OU"]]
 
     R_ROOT --> RAM_ALL
     R_AD --> RAM_ALL
     R_APEX --> RAM_ALL
-
-    R_DEV --> RAM_DEV
+    R_DEVT --> RAM_DEV
     R_A1D --> RAM_DEV
-
-    R_TEST --> RAM_TEST
-    R_A1T --> RAM_TEST
-
-    R_PROD --> RAM_PROD
+    R_UATT --> RAM_UAT
+    R_A1U --> RAM_UAT
     R_A1P --> RAM_PROD
 ```
 
-### 7.3 Resolution flow — cross-app within the dev lifecycle
+### 10.3 The isolation mechanism, visualised
 
 ```mermaid
 sequenceDiagram
-    participant EC2 as EC2 in App2-Dev VPC
-    participant R53 as Route 53 Resolver
-    participant OUT as Outbound Endpoint (Network Acct)
-    participant IN as Inbound Endpoint (App1-Dev)
-    participant PHZ as PHZ application1.dev.cloud.internal
+    participant EC2 as EC2 in app1-dev VPC
+    participant R53 as Resolver (dev VPC)
+    participant OUT as outbound-central (Network)
+    participant IN as inbound-apex (shared-service-prod)
+    participant PHZ as PHZ cloud.internal
 
-    EC2->>R53: Query svc.application1.dev.cloud.internal
-    Note over R53: Most-specific rule match:<br/>application1.dev.cloud.internal
-    R53->>OUT: Forward via associated rule
-    OUT->>IN: Forward to App1-Dev inbound endpoint
-    IN->>PHZ: Resolve (VPC associated locally)
-    PHZ-->>IN: Record
-    IN-->>OUT: Response
-    OUT-->>R53: Response
-    R53-->>EC2: svc.application1.dev.cloud.internal = 10.x.x.x
+    EC2->>R53: db.application1.cloud.internal
+    Note over R53: No rule for application1.cloud.internal<br/>(not shared to Dev OU)<br/>Falls back to rule-apex
+    R53->>OUT: Forward (cloud.internal)
+    OUT->>IN: UDP/TCP 53 over TGW
+    IN->>PHZ: Look up
+    Note over PHZ: Apex PHZ contains only common records.<br/>Prod app zones are NOT associated to this VPC.
+    PHZ-->>IN: NXDOMAIN
+    IN-->>OUT: NXDOMAIN
+    OUT-->>R53: NXDOMAIN
+    R53-->>EC2: NXDOMAIN ✔ isolation held
 ```
 
 ---
 
-## 8. Rule-Precedence Cheat Sheet
+## 11. Build Order
 
-Given a query from a workload, Route 53 Resolver evaluates in this order and picks the first match:
+1. **shared-service-prod** — create `cloud.internal`, associate to `ssprod-vpc`, create `inbound-apex`. Record the 2 IPs.
+2. **shared-service-dev / -uat** — same for `dev.cloud.internal` / `uat.cloud.internal`.
+3. **Network account** — add TGW routes to the three shared-service VPCs; allow 53 in Network Firewall / GWLB policy.
+4. **Network account** — create `rule-apex`, `rule-dev-tier`, `rule-uat-tier` against `outbound-central`.
+5. **AWS RAM** — create `ram-dns-all` (apex), `ram-dns-dev`, `ram-dns-uat`, `ram-dns-prod`.
+6. **Member accounts** — accept (auto-accept if org-based) and associate the shared rules to each VPC per §5.1.
+7. **Per application account (vending automation)** — create app PHZ → associate to local VPC → create inbound endpoint → call Network account via cross-account role to create the forwarding rule, add TGW route, add firewall rule, and add the rule to the correct lifecycle RAM share.
+8. **Validate** — from a dev workload: apex ✔, dev tier ✔, own app ✔, sibling dev app ✔, `*.cloud.internal` prod app ✘ (must be NXDOMAIN), `*.uat.cloud.internal` ✘.
 
-1. Any **PHZ associated to this VPC** whose zone name is a suffix of the query, most-specific first.
-2. Any **Resolver rule associated to this VPC** whose domain is a suffix of the query, most-specific first.
-3. The Amazon-provided default resolver (public DNS) — which in this environment fails, since no IGW/NAT exists.
+## 12. Guardrails to Enforce as Code (SCP / Config / pipeline checks)
 
-Because of (1), an app's own zone always resolves locally. Because of (2) and the RAM-scoped sharing, cross-app resolution within the same lifecycle works but cross-lifecycle resolution does not. Because of the `.` catch-all rule from Part 1, anything not otherwise matched is sent on-prem.
-
----
-
-## 9. Implementation Checklist
-
-For each new PHZ (apex / tier / application):
-
-1. **PHZ owner account**
-   - [ ] Create the Private Hosted Zone.
-   - [ ] Associate it with the account's local VPC.
-   - [ ] Create a Resolver **inbound endpoint** in that VPC (two IPs across two AZs).
-   - [ ] Security Group on inbound endpoint ENIs: allow UDP/TCP 53 from the Network account's outbound endpoint ENI security group (or the outbound endpoint's private IPs).
-   - [ ] Note the inbound endpoint's IPs.
-2. **Network account**
-   - [ ] Create a Resolver forwarding rule for the zone's domain → the inbound endpoint IPs from step 1.
-   - [ ] Verify Network-account VPC route table has an explicit TGW route to the PHZ-owner account's VPC CIDR.
-3. **AWS RAM**
-   - [ ] Share the forwarding rule to the correct OU (all OUs for the apex; single lifecycle OU otherwise).
-4. **Member accounts (in scope)**
-   - [ ] Auto-accept (if Organizations-based sharing) or explicitly accept.
-   - [ ] Associate the shared rule with each local VPC.
-5. **TGW**
-   - [ ] Confirm explicit TGW routes exist between the Network account VPC (where the outbound endpoint lives) and each PHZ-owner account VPC (where the inbound endpoint lives), in both directions. This is the only network-routing prerequisite for cross-account DNS delegation via forwarding.
-6. **Validate**
-   - [ ] From a workload in the appropriate lifecycle, resolve: apex record, tier record, own-app record, other-app record. Confirm cross-lifecycle records do **not** resolve.
-
----
-
-## 10. Notes and Trade-offs
-
-- **Records at each level** should reflect true ownership: apex zone holds only cross-lifecycle common records; tier zones hold tier-shared records; app zones hold app records. Don't put app records in the tier zone — that defeats delegation.
-- **Automation**: application account provisioning should, as part of vending, (a) create the app PHZ, (b) create the inbound endpoint, (c) call the Network account (via a pipeline / cross-account role) to create + share the corresponding forwarding rule. CloudFormation StackSets or a custom Service Catalog product both work.
-- **TGW east-west traffic**: cross-account DNS forwarding within a lifecycle requires TGW routes between the Network account VPC and each PHZ-owner account VPC. Given "explicit routes with no propagation," these routes must be added per attachment as part of onboarding.
-- **Fault isolation**: if the central inbound endpoint is down, only `cloud.internal` apex names fail. If a tier inbound endpoint is down, only that tier's shared names fail. App zones always resolve locally within their own VPC because of the local PHZ association — this design deliberately keeps the app's own-name resolution independent of any shared-services availability.
-- **Do not add NS records** in the parent PHZ pointing at the child zone. They will be ignored by Route 53 Resolver and only cause confusion. The forwarding rule is the delegation.
+* **SCP on the Prod OU:** deny `route53:AssociateVPCWithHostedZone` where the target VPC is `ssprod-vpc` and the zone is not `cloud.internal`. (Guardrail B, §2.3.)
+* **Config rule / pipeline gate:** every RAM share containing a `*.cloud.internal` prod app rule must have Prod OU as its *only* principal.
+* **Config rule:** no PHZ other than `cloud.internal` is associated to the apex resolver VPC.
+* **SCP:** deny `route53:CreateHostedZone` for `cloud.internal`, `dev.cloud.internal`, `uat.cloud.internal` outside the three shared-service accounts — prevents shadow apexes.
+* **Never** create NS records in a parent PHZ pointing at a child PHZ. Resolver ignores them; they only mislead operators.
