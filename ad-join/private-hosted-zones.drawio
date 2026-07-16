@@ -1,0 +1,152 @@
+<mxfile host="app.diagrams.net" modified="2026-07-16T00:00:00.000Z" agent="Claude" version="24.0.0" type="device">
+  <diagram id="hybrid-dns" name="Hybrid DNS Resolution">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1650" pageHeight="1350" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ============ BACKGROUND CONTAINERS (drawn first = behind) ============ -->
+        <mxCell id="bg_onprem" value="On-Premises Network" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=14;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="560" y="40" width="480" height="210" as="geometry" />
+        </mxCell>
+        <mxCell id="bg_cloud" value="AWS Cloud (Region)" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=15;fillColor=none;strokeColor=#232F3E;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="300" width="1520" height="830" as="geometry" />
+        </mxCell>
+        <mxCell id="bg_net" value="Central Network Account" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=14;fillColor=#EAF3FB;strokeColor=#1E6FB8;" vertex="1" parent="1">
+          <mxGeometry x="80" y="360" width="880" height="740" as="geometry" />
+        </mxCell>
+        <mxCell id="bg_endvpc" value="Central Endpoint VPC" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=12;fillColor=#E6F2FF;strokeColor=#3399FF;" vertex="1" parent="1">
+          <mxGeometry x="120" y="500" width="380" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="bg_r53" value="Route 53 Resolver" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=12;fillColor=#F3E6FF;strokeColor=#9933CC;" vertex="1" parent="1">
+          <mxGeometry x="530" y="500" width="390" height="510" as="geometry" />
+        </mxCell>
+        <mxCell id="bg_memacc" value="Member Account (project: dev / test / prod)" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=14;fillColor=#FFF6EC;strokeColor=#D79B00;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="360" width="510" height="740" as="geometry" />
+        </mxCell>
+        <mxCell id="bg_memvpc" value="Member VPC" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=12;fillColor=#E6F2FF;strokeColor=#3399FF;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="470" width="430" height="580" as="geometry" />
+        </mxCell>
+
+        <!-- ============ ON-PREM NODES ============ -->
+        <mxCell id="ad_dns" value="Active Directory&#10;DNS Servers&#10;+ conditional forwarders" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="600" y="120" width="180" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="onprem_client" value="On-prem Clients&#10;(consume AWS services&#10;&amp; vanity URLs)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="820" y="120" width="190" height="110" as="geometry" />
+        </mxCell>
+
+        <!-- ============ NETWORK ACCOUNT NODES ============ -->
+        <mxCell id="tgw" value="Transit Gateway&#10;(attachments: Endpoint VPC, Member VPCs, Direct Connect)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE4CC;strokeColor=#D79B00;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="410" width="800" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="iface_ep" value="Interface Endpoints (PrivateLink)&#10;SSM · Secrets Manager · ECR · KMS&#10;⚠ Private DNS = DISABLED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DDEBF7;strokeColor=#2E75B6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="150" y="560" width="320" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="custom_phz" value="Custom Private Hosted Zones&#10;(one per service)&#10;secretsmanager.&lt;region&gt;.amazonaws.com&#10;ALIAS → endpoint ENI DNS name&#10;assoc: Endpoint VPC + member VPCs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE1F7;strokeColor=#9933CC;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="150" y="700" width="320" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="inbound_ep" value="Inbound Resolver Endpoint&#10;2 ENIs / 2 AZs&#10;On-prem → AWS DNS queries" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5EBFF;strokeColor=#9933CC;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="560" y="560" width="330" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="outbound_ep" value="Outbound Resolver Endpoint&#10;2 ENIs / 2 AZs&#10;AWS → on-prem DNS queries" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5EBFF;strokeColor=#9933CC;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="560" y="670" width="330" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="fwd_rule" value="Resolver Rule (FORWARD)&#10;corp.example.com → on-prem AD DNS IPs&#10;assoc: Endpoint VPC" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5EBFF;strokeColor=#9933CC;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="560" y="780" width="330" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="ram" value="AWS RAM&#10;shares Forwarding Rule to members&#10;(+ Route 53 Profiles for PHZ associations)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#FF9900;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="560" y="890" width="330" height="95" as="geometry" />
+        </mxCell>
+
+        <!-- ============ MEMBER ACCOUNT NODES ============ -->
+        <mxCell id="workload" value="Workload (EC2 / ECS / EKS)&#10;resolves via VPC .2 resolver" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DDEBF7;strokeColor=#2E75B6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="530" width="350" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="local_phz" value="Local Private Hosted Zone&#10;(project services) — assoc: this VPC" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE1F7;strokeColor=#9933CC;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="630" width="350" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_ephz" value="↔ Associated: Central Endpoint PHZ&#10;(cross-account association)&#10;resolves service endpoints privately" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;dashPattern=6 4;fillColor=#E8F5E9;strokeColor=#2E7D32;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="720" width="350" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_fwd" value="↔ Associated: Shared Forwarding Rule&#10;(via RAM) resolves corp AD domain" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;dashPattern=6 4;fillColor=#FFF2E0;strokeColor=#FF9900;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="835" width="350" height="95" as="geometry" />
+        </mxCell>
+
+        <!-- ============ EDGES ============ -->
+        <!-- DNS query flows (purple) -->
+        <mxCell id="e_in" value="① conditional forward:&#10;AWS private zones + vanity URLs" style="endArrow=classic;html=1;strokeColor=#9933CC;strokeWidth=2;fontColor=#6A1B9A;fontSize=10;rounded=1;" edge="1" parent="1" source="ad_dns" target="inbound_ep">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_out" value="② forward corp.example.com" style="endArrow=classic;html=1;strokeColor=#9933CC;strokeWidth=2;fontColor=#6A1B9A;fontSize=10;rounded=1;exitX=1;exitY=0.5;entryX=1;entryY=0.9;" edge="1" parent="1" source="outbound_ep" target="ad_dns">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- RAM share (orange dashed) -->
+        <mxCell id="e_ram" value="③ share Forwarding Rule (RAM)" style="endArrow=classic;html=1;strokeColor=#FF9900;strokeWidth=2;dashed=1;dashPattern=6 4;fontColor=#B25900;fontSize=10;rounded=1;" edge="1" parent="1" source="ram" target="assoc_fwd">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- PHZ association (green dashed) -->
+        <mxCell id="e_phz" value="④ cross-account PHZ association" style="endArrow=classic;html=1;strokeColor=#2E7D32;strokeWidth=2;dashed=1;dashPattern=6 4;fontColor=#1B5E20;fontSize=10;rounded=1;" edge="1" parent="1" source="custom_phz" target="assoc_ephz">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Network paths (gray) -->
+        <mxCell id="e_dx" value="Direct Connect" style="endArrow=classic;startArrow=classic;html=1;strokeColor=#888888;strokeWidth=1.5;dashed=1;fontColor=#555555;fontSize=10;" edge="1" parent="1" source="onprem_client" target="tgw">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_att1" value="VPC attachment" style="endArrow=classic;startArrow=classic;html=1;strokeColor=#888888;strokeWidth=1.5;dashed=1;fontColor=#555555;fontSize=10;" edge="1" parent="1" source="tgw" target="bg_endvpc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_att2" value="VPC attachment" style="endArrow=classic;startArrow=classic;html=1;strokeColor=#888888;strokeWidth=1.5;dashed=1;fontColor=#555555;fontSize=10;exitX=1;exitY=0.5;" edge="1" parent="1" source="tgw" target="bg_memvpc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============ LEGEND ============ -->
+        <mxCell id="bg_legend" value="Legend" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=13;fillColor=#FFFFFF;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="560" y="1160" width="600" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="lg1" style="endArrow=none;html=1;strokeColor=#9933CC;strokeWidth=3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="580" y="1200" as="sourcePoint" />
+            <mxPoint x="650" y="1200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg1t" value="DNS query flow (inbound / outbound)" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="660" y="1185" width="470" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="lg2" style="endArrow=none;html=1;strokeColor=#2E7D32;strokeWidth=3;dashed=1;dashPattern=6 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="580" y="1232" as="sourcePoint" />
+            <mxPoint x="650" y="1232" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg2t" value="Private hosted zone association (shares resolution, not network)" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="660" y="1217" width="470" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="lg3" style="endArrow=none;html=1;strokeColor=#FF9900;strokeWidth=3;dashed=1;dashPattern=6 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="580" y="1264" as="sourcePoint" />
+            <mxPoint x="650" y="1264" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg3t" value="AWS RAM share (Resolver forwarding rule)" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="660" y="1249" width="470" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="lg4" style="endArrow=none;html=1;strokeColor=#888888;strokeWidth=3;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="580" y="1296" as="sourcePoint" />
+            <mxPoint x="650" y="1296" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg4t" value="Network path (Direct Connect / Transit Gateway attachment)" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="660" y="1281" width="470" height="30" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
