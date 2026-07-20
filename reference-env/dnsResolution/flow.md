@@ -25,7 +25,7 @@ sequenceDiagram
     participant ALB as Internal ALB<br/>(member VPC)
 
     C->>AD: Query myapp.apps.au.cloud.aws
-    Note over AD: Match conditional forwarder<br/>for apps.internal.company.aws
+    Note over AD: Match conditional forwarder<br/>for myapp.apps.au.cloud.aws
     AD->>DX: Forward query to inbound endpoint IPs<br/>(UDP/TCP 53)
     DX->>IN: Route over DX → TGW to ENI
     Note over IN: SG must allow 53 from<br/>on-prem DNS server IPs
