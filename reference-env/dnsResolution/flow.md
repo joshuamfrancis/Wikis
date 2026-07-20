@@ -11,7 +11,7 @@ Two directions, two different mechanisms:
 
 ## 1) On-Premises Client → AWS (inbound)
 
-Example: `myapp.apps.internal.company.aws` (vanity URL → internal ALB in a member account).
+Example: `myapp.apps.au.cloud.aws` (vanity URL → internal ALB in a member account).
 
 ```mermaid
 sequenceDiagram
@@ -24,7 +24,7 @@ sequenceDiagram
     participant PHZ as Private Hosted Zone<br/>(member-owned, associated<br/>to central DNS VPC)
     participant ALB as Internal ALB<br/>(member VPC)
 
-    C->>AD: Query myapp.apps.internal.company.aws
+    C->>AD: Query myapp.apps.au.cloud.aws
     Note over AD: Match conditional forwarder<br/>for apps.internal.company.aws
     AD->>DX: Forward query to inbound endpoint IPs<br/>(UDP/TCP 53)
     DX->>IN: Route over DX → TGW to ENI
