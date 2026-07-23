@@ -1,0 +1,170 @@
+<mxfile host="app.diagrams.net" agent="Appian SAD generator" version="24.7.17" type="device">
+  <diagram id="Figure_1_â€”_Target_Architecture" name="Figure 1 â€” Target Architecture">
+    <mxGraphModel dx="1400" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c1" value="Appian Cloud â€” Target Solution Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=20;fontColor=#1F3A5F;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1220" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" value="Regulated environment Â· SSO Â· Email relay Â· Observability Â· CI/CD" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;fontColor=#6B7785;fontStyle=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="50" width="1220" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7FAFD;strokeColor=#C9D4E0;verticalAlign=top;align=center;fontSize=12;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="40" y="90" width="270" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="USER PERSONAS" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1F3A5F;strokeColor=none;fontColor=#FFFFFF;fontStyle=1;fontSize=13;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="90" width="270" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF4F9;strokeColor=#4A72A0;verticalAlign=top;align=center;fontSize=12;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="350" y="90" width="450" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" value="APPIAN CLOUD  (SaaS tenant)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1F3A5F;strokeColor=none;fontColor=#FFFFFF;fontStyle=1;fontSize=13;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="350" y="90" width="450" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F2F8F4;strokeColor=#3E7A55;verticalAlign=top;align=center;fontSize=12;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="880" y="90" width="380" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" value="CORPORATE ENVIRONMENT" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1F3A5F;strokeColor=none;fontColor=#FFFFFF;fontStyle=1;fontSize=13;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="880" y="90" width="380" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" value="&lt;b&gt;Platform Administrator&lt;/b&gt;&lt;br&gt;&lt;i&gt;1â€“2 users Â· whole platform&lt;/i&gt;&lt;br&gt;&lt;br&gt;Administer the platform: SSO,&lt;br&gt;environments, configuration,&lt;br&gt;deployments." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C9D4E0;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=8;fontSize=11;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="58" y="150" width="234" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" value="&lt;b&gt;Functional Administrator&lt;/b&gt;&lt;br&gt;&lt;i&gt;2â€“3 per functional area&lt;/i&gt;&lt;br&gt;&lt;br&gt;Define forms and workflows;&lt;br&gt;extract reports." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C9D4E0;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=8;fontSize=11;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="58" y="300" width="234" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c11" value="&lt;b&gt;Business Operations User&lt;/b&gt;&lt;br&gt;&lt;i&gt;few Â· whole platform&lt;/i&gt;&lt;br&gt;&lt;br&gt;Review form templates, check&lt;br&gt;for sensitive data, publish&lt;br&gt;templates." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C9D4E0;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=8;fontSize=11;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="58" y="450" width="234" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c12" value="&lt;b&gt;End User&lt;/b&gt;&lt;br&gt;&lt;i&gt;many&lt;/i&gt;&lt;br&gt;&lt;br&gt;Receive tasks;&lt;br&gt;approve / reject actions." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C9D4E0;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=8;fontSize=11;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="58" y="600" width="234" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c13" value="HTTPS 443 Â· SAML SSO Â· https://forms.corporate-domain.com" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2E5E8C;strokeColor=none;fontColor=#FFFFFF;horizontal=0;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="312" y="150" width="30" height="580" as="geometry" />
+        </mxCell>
+        <mxCell id="c14" value="&lt;b&gt;Admin Console â€” Authentication &amp;amp; Config&lt;/b&gt;&lt;br&gt;SAML SP Â· trusted IPs Â· custom domain Â· users/groups&lt;br&gt;Used by Platform Administrator" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF0F6;strokeColor=#4A72A0;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=8;fontSize=11;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="368" y="150" width="414" height="86" as="geometry" />
+        </mxCell>
+        <mxCell id="c15" value="&lt;b&gt;Application Layer&lt;/b&gt;&lt;br&gt;Forms Â· Records Â· Process models Â· Tasks Â· Reports&lt;br&gt;Built by Functional Admin; templates governed by&lt;br&gt;Business Ops; tasks actioned by End Users" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF0F6;strokeColor=#4A72A0;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=8;fontSize=11;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="368" y="256" width="414" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="c16" value="&lt;b&gt;Mail Subsystem&lt;/b&gt;&lt;br&gt;Task / approval notifications â†’ custom SMTP relay" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF0F6;strokeColor=#4A72A0;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=8;fontSize=11;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="368" y="376" width="414" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c17" value="&lt;b&gt;Deployment APIs&lt;/b&gt;&lt;br&gt;Export Â· Inspect Â· Import  (drives CI/CD promotion)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF0F6;strokeColor=#4A72A0;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=8;fontSize=11;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="368" y="466" width="414" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c18" value="&lt;b&gt;Log Streaming&lt;/b&gt;&lt;br&gt;Real-time push of platform &amp;amp; audit logs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF0F6;strokeColor=#4A72A0;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=8;fontSize=11;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="368" y="556" width="414" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c19" value="&lt;b&gt;Corporate Identity Provider&lt;/b&gt;&lt;br&gt;SAML 2.0 Â· MFA Â· conditional access&lt;br&gt;Entra ID / Okta / PingFederate / ADFS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F1EA;strokeColor=#3E7A55;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=8;fontSize=11;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="898" y="150" width="344" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="c20" value="&lt;b&gt;Corporate Email Relay&lt;/b&gt;&lt;br&gt;DLP Â· anti-malware Â· DKIM signing&lt;br&gt;journaling / archiving Â· DMARC alignment" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F1EA;strokeColor=#3E7A55;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=8;fontSize=11;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="898" y="370" width="344" height="86" as="geometry" />
+        </mxCell>
+        <mxCell id="c21" value="&lt;b&gt;GitLab&lt;/b&gt;&lt;br&gt;Source control + CI/CD pipeline (versioned packages)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F1EA;strokeColor=#3E7A55;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=8;fontSize=11;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="898" y="472" width="344" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c22" value="&lt;b&gt;Syslog / HEC â†’ Splunk&lt;/b&gt;&lt;br&gt;Dashboards Â· SLI alerting&lt;br&gt;Retention: 90 days searchable; archive to NAS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F1EA;strokeColor=#3E7A55;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=8;fontSize=11;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="898" y="556" width="344" height="86" as="geometry" />
+        </mxCell>
+        <mxCell id="c23" value="&lt;b&gt;Recipient Mailboxes&lt;/b&gt;&lt;br&gt;Internal / external (per policy)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C9D4E0;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=8;fontSize=11;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="898" y="660" width="344" height="66" as="geometry" />
+        </mxCell>
+        <mxCell id="e24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2E5E8C;strokeWidth=2;dashed=0;endArrow=block;endFill=1;fontSize=10;fontColor=#2E5E8C;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="c9" target="c13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e25" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2E5E8C;strokeWidth=2;dashed=0;endArrow=block;endFill=1;fontSize=10;fontColor=#2E5E8C;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="c12" target="c13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e26" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2E5E8C;strokeWidth=2;dashed=0;endArrow=block;endFill=1;fontSize=10;fontColor=#2E5E8C;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="c13" target="c14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e27" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2E5E8C;strokeWidth=2;dashed=0;endArrow=block;endFill=1;fontSize=10;fontColor=#2E5E8C;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="c13" target="c15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e28" value="SAML 2.0 SSO (HTTPS)" style="html=1;strokeColor=#2E5E8C;strokeWidth=2;dashed=0;endArrow=block;endFill=1;fontSize=10;fontColor=#2E5E8C;labelBackgroundColor=#FFFFFF;startArrow=block;startFill=1;" edge="1" parent="1" source="c14" target="c19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e29" value="SMTP / TLS Â· over VPN" style="html=1;strokeColor=#3E7A55;strokeWidth=2;dashed=0;endArrow=block;endFill=1;fontSize=10;fontColor=#3E7A55;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="c16" target="c20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e30" value="Deploy API Â· API key / mTLS" style="html=1;strokeColor=#B0472B;strokeWidth=2;dashed=0;endArrow=block;endFill=1;fontSize=10;fontColor=#B0472B;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="c21" target="c17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e31" value="Syslog / TLS Â· over VPN" style="html=1;strokeColor=#3E7A55;strokeWidth=2;dashed=0;endArrow=block;endFill=1;fontSize=10;fontColor=#3E7A55;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="c18" target="c22">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e32" value="DKIM-signed mail" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#3E7A55;strokeWidth=2;dashed=0;endArrow=block;endFill=1;fontSize=10;fontColor=#3E7A55;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="c20" target="c23">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c33" value="" style="line;html=1;strokeColor=#C9D4E0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="806" width="1220" height="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c34" value="â†’  HTTPS / application traffic   (blue)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor=#43505E;fontStyle=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="814" width="400" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="c35" value="â†’  over site-to-site IPSec VPN   (green)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor=#3E7A55;fontStyle=0;" vertex="1" parent="1">
+          <mxGeometry x="450" y="814" width="400" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="c36" value="â†’  CI/CD deployment GitLab â†’ Appian   (red)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor=#B0472B;fontStyle=0;" vertex="1" parent="1">
+          <mxGeometry x="870" y="814" width="390" height="22" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="Figure_2_â€”_Customer-hosted_receiver" name="Figure 2 â€” Customer-hosted receiver">
+    <mxGraphModel dx="1400" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="620" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c1" value="Customer-hosted receiver â€” capture once, fan out to Splunk (90 days) and the NAS archive" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=17;fontColor=#1F3A5F;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="20" width="1140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" value="&lt;b&gt;Appian Cloud&lt;/b&gt;&lt;br&gt;&lt;br&gt;Log Streaming (syslog)&lt;br&gt;+ optional HEC events" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF0F6;strokeColor=#4A72A0;strokeWidth=1;align=center;verticalAlign=middle;fontSize=11;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="180" width="240" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="&lt;b&gt;Customer-hosted receiver&lt;/b&gt;&lt;br&gt;&lt;br&gt;rsyslog Â· syslog-ng Â· SC4S Â· Cribl Â· Vector&lt;br&gt;buffer / persistent queue&lt;br&gt;fan out to two destinations&lt;br&gt;&lt;br&gt;&lt;i&gt;Deploy on a VM (e.g. VMware), physical&lt;/i&gt;&lt;br&gt;&lt;i&gt;host, or container&lt;/i&gt;&lt;br&gt;&lt;i&gt;HA: redundant receivers behind a shared VIP&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F1EA;strokeColor=#3E7A55;strokeWidth=2.5;align=center;verticalAlign=middle;fontSize=11;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="360" y="130" width="360" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="&lt;b&gt;Splunk â€” searchable 90 days&lt;/b&gt;&lt;br&gt;dashboards Â· alerts Â· SLIs&lt;br&gt;&lt;i&gt;no long-term archive held here&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF4F9;strokeColor=#2E5E8C;strokeWidth=1;align=center;verticalAlign=middle;fontSize=11;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="810" y="140" width="350" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="&lt;b&gt;Network drive / NAS&lt;/b&gt;&lt;br&gt;long-term archive â€” system of record&lt;br&gt;compressed Â· hashed / signed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F1EA;strokeColor=#3E7A55;strokeWidth=1;align=center;verticalAlign=middle;fontSize=11;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="810" y="270" width="350" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="TLS syslog Â· TCP Â· over VPN" style="html=1;strokeColor=#2E5E8C;strokeWidth=2;dashed=0;endArrow=block;endFill=1;fontSize=10;fontColor=#2E5E8C;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="c2" target="c3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="HEC (behind VIP)" style="html=1;strokeColor=#2E5E8C;strokeWidth=2;dashed=0;endArrow=block;endFill=1;fontSize=10;fontColor=#2E5E8C;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="c3" target="c4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" value="raw archive" style="html=1;strokeColor=#3E7A55;strokeWidth=2;dashed=0;endArrow=block;endFill=1;fontSize=10;fontColor=#3E7A55;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="c3" target="c5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" value="" style="line;html=1;strokeColor=#C9D4E0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="420" width="1120" height="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" value="&lt;b&gt;Role:&lt;/b&gt; terminate TLS syslog from Appian, buffer the stream (capture gaps are unrecoverable), and fan out to Splunk (90-day) and the NAS (long-term)." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=none;align=left;verticalAlign=middle;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="432" width="1120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c11" value="&lt;b&gt;Transport:&lt;/b&gt; TCP + TLS (ideally mTLS) over the VPN â€” avoid UDP.   &lt;b&gt;Reliability:&lt;/b&gt; disk-assisted queues; redundant receivers behind a VIP; monitor for gaps." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=none;align=left;verticalAlign=middle;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="472" width="1120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c12" value="&lt;b&gt;VIP&lt;/b&gt; = virtual IP: one stable address fronting several receivers, so failover is invisible to Appian. Syslog has no application-level ACK, so HA is &#x27;mostly available&#x27; â€” a few in-flight events can still be lost at failover." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FBEEE9;strokeColor=#B0472B;align=left;verticalAlign=middle;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="516" width="1120" height="44" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="Figure_3_â€”_SPF,_DKIM,_DMARC" name="Figure 3 â€” SPF, DKIM, DMARC">
+    <mxGraphModel dx="1400" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c1" value="How SPF, DKIM and DMARC protect mail sent via the relay" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=17;fontColor=#1F3A5F;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="20" width="1140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" value="&lt;b&gt;Appian Clou
