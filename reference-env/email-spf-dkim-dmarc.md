@@ -30,19 +30,24 @@ When a SaaS app (e.g., a marketing platform) sends email "from" a domain like `y
 
 ```mermaid
 sequenceDiagram
-    participant Corp as Corporate Domain Owner<br/>(yourcompany.com DNS admin)
+    participant Corp as Corporate Domain Owner
     participant SaaS as SaaS Application
-    participant DNS as Public DNS<br/>(yourcompany.com zone)
+    participant DNS as Public DNS Zone
 
-    Note over SaaS: SaaS generates DKIM keypair<br/>(private key stays on SaaS servers)
-    SaaS->>Corp: Provides DKIM public key + selector<br/>e.g. selector=saas1
-    SaaS->>Corp: Provides list of sending IPs / SPF include string
+    Note over SaaS: SaaS generates DKIM keypair. Private key stays on SaaS servers
+    SaaS->>Corp: Provide DKIM public key and selector, e.g. selector saas1
+    SaaS->>Corp: Provide list of sending IPs and SPF include string
 
-    Corp->>DNS: Publish SPF TXT record<br/>"v=spf1 include:spf.saasapp.com ~all"
-    Corp->>DNS: Publish DKIM TXT record<br/>saas1._domainkey.yourcompany.com<br/>"v=DKIM1; p=<public key>"
-    Corp->>DNS: Publish DMARC TXT record<br/>_dmarc.yourcompany.com<br/>"v=DMARC1; p=quarantine; rua=mailto:..."
+    Corp->>DNS: Publish SPF TXT record at yourcompany.com
+    Note right of DNS: v equals spf1 include spf.saasapp.com all
 
-    Note over SaaS,DNS: Setup complete — SaaS can now send<br/>authenticated mail as yourcompany.com
+    Corp->>DNS: Publish DKIM TXT record at saas1._domainkey.yourcompany.com
+    Note right of DNS: v equals DKIM1, p equals public key value
+
+    Corp->>DNS: Publish DMARC TXT record at _dmarc.yourcompany.com
+    Note right of DNS: v equals DMARC1, p equals quarantine, rua equals report address
+
+    Note over SaaS,DNS: Setup complete. SaaS can now send authenticated mail as yourcompany.com
 ```
 
 ---
