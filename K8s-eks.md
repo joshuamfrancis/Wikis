@@ -14,15 +14,26 @@ into it. Idle cost target is **$0.00/day**.
 
 ## Host requirements
 
-| | Minimum | Comfortable |
+**Target host: Ubuntu 26.04 LTS Desktop, 24 GB RAM.** Desktop edition, because
+you need VS Code, a browser for the AWS console and Grafana, and `localhost:8080`
+for the kind Ingress mapping on the same machine.
+
+| | Minimum | This host |
 |---|---|---|
 | CPU | 4 cores | 8 cores |
-| RAM | 8 GB | 16 GB |
+| RAM | 8 GB | **24 GB** |
 | Disk | 40 GB free | 100 GB free (SSD) |
 
-8 GB is enough for a three-node kind cluster and an app. It is *not* enough once
-you add kube-prometheus-stack and ArgoCD in Modules 09–10; on 8 GB, drop to a
-two-node kind config for those modules or run them only on EKS.
+24 GB removes memory as a constraint. GNOME 50 on Wayland holds ~2.5 GB, leaving
+~21 GB — enough for a three-node kind cluster running kube-prometheus-stack
+(~3 GB), ArgoCD (~1 GB), and your own workloads at the same time, with headroom
+for a second kind cluster.
+
+**Disk is now the binding constraint, not RAM.** Node images, Prometheus volumes,
+and your own builds accumulate quickly. Check `docker system df` at the end of
+each module and run `docker system prune -a --volumes` between phases. If `/` has
+less than 100 GB free, move Docker's data root to a larger volume via
+`/etc/docker/daemon.json` (`{"data-root": "/path/to/docker"}`) before you start.
 
 Confirm before starting:
 
@@ -291,7 +302,10 @@ useful — Ingress resources become reachable at `http://localhost:8080` with no
 tunnelling, which is the closest local analogue to the ALB you will meet in
 Module 06.
 
-On an 8 GB host, drop to one worker for Modules 09–10.
+At 24 GB you can run two named clusters side by side — copy the config to
+`local/kind/cluster-staging.yaml` with `name: staging` and different `hostPort`
+values (8081/8443). Module 09 uses this for ArgoCD multi-cluster registration
+without paying for a second EKS control plane.
 
 ### Option B (once, for understanding) — kubeadm single-node
 
@@ -363,11 +377,22 @@ are as in the original plan. The essentials:
 | 06 | **AWS Load Balancer Controller** — NLB Service, then ALB Ingress | EKS |
 | 07 | **EBS CSI** + StatefulSet Postgres; PVC reclaim behaviour | EKS |
 | 08 | **Karpenter**, HPA, PodDisruptionBudget, spot interruption | EKS |
-| 09 | GitHub Actions → Docker Hub → **ArgoCD** auto-sync and self-heal | EKS |
-| 10 | Prometheus/Grafana, audit logs, network policies, then rebuild with private subnets + NAT and compare cost | EKS |
+| 09 | GitHub Actions → Docker Hub → **ArgoCD** auto-sync, self-heal, Kustomize overlays | **kind first**, then one short EKS session for ALB-fronted ArgoCD |
+| 10 | Prometheus/Grafana, network policies, `trivy k8s` | **kind** |
+| 10b | EKS audit logging, then rebuild with private subnets + NAT and compare cost | EKS |
 
 Rehearse in kind first wherever possible. Helm chart authoring, manifest
 debugging, and RBAC experiments cost nothing locally and cost $0.10/hr on EKS.
+
+**With 24 GB, Modules 09 and 10 move mostly local.** ArgoCD reconciliation,
+Prometheus scraping, Grafana dashboards, and network policies are plain
+Kubernetes — none of it is EKS-specific. Build the full GitOps loop against
+`kind-lab` and `kind-staging`, then spend one 90-minute EKS session proving it
+works against a real cluster with an ALB in front of ArgoCD.
+
+The genuinely un-fakeable modules are 05 (IRSA), 06 (ALB controller), 07 (EBS
+CSI), and 08 (Karpenter node provisioning). Those stay paid. Everything else
+should be working locally before you `up.sh`.
 
 ---
 
@@ -406,9 +431,9 @@ they look similar at 11pm.
 | 4 | Module 06 | 1–2 | ~$0.70 |
 | 5 | Module 07 | 1–2 | ~$0.60 |
 | 6 | Module 08 | 2 | ~$1.00 |
-| 7 | Module 09 | 2 | ~$1.20 |
-| 8 | Module 10 | 2 | ~$1.50 |
-| | | | **≈ $6–10** |
+| 7 | Module 09 — build in kind, verify on EKS | 1 | ~$0.50 |
+| 8 | Module 10 in kind + Module 10b on EKS | 1 | ~$0.60 |
+| | | **8–10 total** | **≈ $4–6** |
 
 ---
 
@@ -423,8 +448,12 @@ they look similar at 11pm.
   auto-restart cleanly; recreate with `local-up.sh`. Keep all state in Git.
 - **Port 8080 already in use** — something else on the host has it. Change
   `hostPort` in the kind config rather than fighting it.
-- **Host swaps and freezes during Module 09** — kube-prometheus-stack on 8 GB.
-  Drop to a single worker node or run that module on EKS only.
+- **`no space left on device` mid-module** — the likely failure at 24 GB RAM, since
+  disk fills long before memory does. `docker system df`, then
+  `docker system prune -a --volumes`. Deleting a kind cluster does not reclaim
+  its images.
+- **Two kind clusters fighting over ports** — each needs distinct `hostPort`
+  values and a distinct `name:` in its config.
 - **`eksctl delete cluster` hangs** — stuck ALB or attached ENI. Read the
   CloudFormation stack events for the blocking resource, delete it in the
   console, retry.
