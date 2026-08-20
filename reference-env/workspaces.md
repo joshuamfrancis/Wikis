@@ -14,7 +14,7 @@
 | Can access be routed through Entra ID PIM? | **Partially, and indirectly.** Entra PIM has no native integration with AWS WorkSpaces. The workable pattern is **PIM for Groups** → group drives (a) SAML app assignment for WorkSpaces login and (b) group writeback into on-prem AD to drive Windows logon rights on the WorkSpace and the target VMs. PIM gates *entitlement*, not the session. |
 | AlwaysOn vs AutoStop | **AutoStop** for almost every jump server. Break-even vs AlwaysOn is roughly 80 connected hours/month. Keep at most one AlwaysOn break-glass desktop in production if cold-start latency (~90–120s) is unacceptable during an incident. |
 | Cost Optimizer for WorkSpaces | Useful at scale (dozens+ of desktops). For 1–3 desktops per account it usually costs more (Fargate, S3, cross-account roles, and a network path it can't easily get in your no-egress environment) than it saves. Set AutoStop manually instead. |
-| Pools vs Personal | **Pools is the better conceptual fit for JIT privileged access** (non-persistent, floating, native SAML/Entra auth, nothing left on the desktop). **Personal is the safer fit for your network constraints and per-account isolation model today.** See §7 for the decision matrix. |
+| Pools vs Personal | **Obsolete question — WorkSpaces Pools closed to new customers on 31 July 2026 (existing customers supported to 31 Dec 2027).** Personal is the only WorkSpaces option available to you. See §8 and the EC2 comparison addendum. |
 
 > ⚠️ **The biggest risk in this design is not identity — it is egress.** WorkSpaces desktops need outbound access to a documented set of AWS public endpoints from their VPC ENI, and AWS does not support an HTTP proxy for the WorkSpaces agent. Your "no IGW, no NAT" rule will need a controlled exception. See §5.
 
@@ -254,4 +254,4 @@ Your existing Resolver design covers this cleanly: the shared forwarding rule re
 | Network | The default template deploys its own VPC **with a NAT gateway**. In your environment you'd deploy into an existing VPC and supply VPC endpoints (ECR, ECS, CloudWatch, S3, STS) — or route it via the controlled egress VPC from §5.2. Plan for this; it is the most common deployment failure. |
 | Permissions | Needs a cross-account role in every account holding WorkSpaces. That's N roles to deploy and govern — fits fine into your existing account-baseline pipeline. |
 | Value threshold | The solution earns its keep when you have enough desktops that manual mode management is error-prone. With 1–3 WorkSpaces per account, **the savings are ~zero because you'd set AutoStop on day one and never change it.** |
-| Alternative | A small scheduled 
+| Alternative | A small scheduled Lambda in the shared services account that (a) repo
