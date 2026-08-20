@@ -49,6 +49,8 @@ This **removes the per-account AD Connector cost objection** in §2 of the desig
 
 ## 4. WorkSpaces Pools — AD is genuinely optional
 
+> ⚠️ **Pools closed to new customers on 31 July 2026** (existing customers supported to 31 Dec 2027). This section is retained for context and for anyone evaluating the successor product, WorkSpaces Applications, where similar identity trade-offs apply.
+
 <cite index="12-1">You can join Windows WorkSpaces in Pools to Microsoft Active Directory domains — cloud-based or on-premises — or use AWS Managed Microsoft AD. Doing so lets users reach AD resources such as printers and file shares from streaming sessions, apply Group Policy from the GPMC, stream applications requiring AD credential authentication, and apply enterprise compliance and security policies.</cite> <cite index="6-1">Domain join is explicitly optional in the pool configuration.</cite>
 
 ### The catch that matters for your PIM design
