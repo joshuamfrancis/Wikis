@@ -50,7 +50,7 @@ flowchart LR
     subgraph DEV["Developer workstation (Win11 + Git Bash / Ubuntu)"]
         HOST["AI host<br/>(Claude Desktop, VS Code, Claude Code)"]
         LOCAL["Local MCP server<br/>docker run -i --rm<br/>read-only, no network"]
-        HOST -- "stdio (JSON-RPC)" --> LOCAL
+        HOST -->|"stdio (JSON-RPC)"| LOCAL
     end
 
     subgraph AGENTS["Server-side agents"]
@@ -67,16 +67,16 @@ flowchart LR
             GW --> S2["mcp-data<br/>(FastMCP)"]
             GW --> S3["mcp-ops<br/>(Java SDK)"]
         end
-        S1 -.IRSA.-> SM["Secrets Manager"]
-        S2 -.IRSA.-> DB[("RDS / S3")]
-        S3 -.IRSA.-> BR["Amazon Bedrock<br/>(replaces Sampling)"]
+        S1 -.->|IRSA| SM["Secrets Manager"]
+        S2 -.->|IRSA| DB[("RDS / S3")]
+        S3 -.->|IRSA| BR["Amazon Bedrock<br/>(replaces Sampling)"]
         EKS --> OTEL["OTel Collector →<br/>CloudWatch / X-Ray"]
     end
 
-    HOST -- "Streamable HTTP + Bearer" --> WAF
-    AGENT -- "Streamable HTTP + Bearer" --> WAF
-    HOST -. "OAuth 2.1 auth code + PKCE" .-> IDP
-    GW -. "validate iss, aud (RFC 8707), scopes" .-> IDP
+    HOST -->|"Streamable HTTP + Bearer"| WAF
+    AGENT -->|"Streamable HTTP + Bearer"| WAF
+    HOST -.->|"OAuth 2.1 auth code + PKCE"| IDP
+    GW -.->|"validate iss, aud (RFC 8707), scopes"| IDP
 ```
 
 ### 4.1 Components
@@ -92,6 +92,189 @@ flowchart LR
 | **Secrets Manager** | Downstream API credentials. | Fetched at runtime via IRSA. Never in `mcp.json`, images or env files committed to Git. |
 | **Amazon Bedrock** | LLM calls a server needs internally. | Replaces client Sampling. The server holds its own model access, so no implicit trust in the host. |
 | **Observability** | Logs, traces, metrics. | stderr → Fluent Bit → CloudWatch. OTel traces propagated via the spec's `_meta` trace keys. PII redaction before export. |
+
+### 4.2 Identity and authentication flows
+
+**Goal:** the user signs in once. Their identity then travels with every tool call, in signed tokens only, all the way to the core system. That system applies its own object-level access controls, exactly as it does for the user in its normal UI.
+
+#### Identities and tokens
+
+| Token / credential | Issued by | Audience | Held by | Lifetime | Carries |
+|---|---|---|---|---|---|
+| IdP SSO session | Corporate IdP | IdP | User's browser | Per IdP policy (MFA, conditional access) | Corporate identity |
+| **Gateway access token** | Authorization server (Cognito / corporate IdP) | Gateway resource URI | AI host | 5–15 min | `sub`, `iss`, `aud`, scopes, `client_id` |
+| Refresh token | Authorization server | Authorization server | AI host (OS keychain) | Hours–days, rotated on use | – |
+| **Internal token** | MCP Gateway (token exchange) | One MCP server | MCP server, per request | ≤ 5 min | `sub`, backend principal (e.g. `employee_id`), groups, scopes, `act` (acting agent/client) |
+| **Backend credential** | Credential broker | One core system | MCP server, per request | Per backend (ticket, assertion, proxy session) | The user, in the form that backend understands |
+
+**Rules that hold in every flow**
+
+* **Identity comes only from verified tokens.** It never comes from tool arguments or `x-mcp-header` values, because the model writes both of those and a prompt injection can change them.
+* **The user's token never leaves the gateway.** Each server receives its own internal token whose audience is that server, so a token stolen from one server can't be replayed at another (SC-06, SC-07).
+* **Agents get the overlap, not more.** An agent's effective permission is what the user may do in the core system *and* what the token's scopes allow, so an agent can be held to read-only even for a user with write access.
+* **Local stdio servers sit outside these flows.** There, identity is the OS user running Docker, and credentials reach the container through `--env-file` (§5.1, SC-12). Anything that needs the user's enterprise identity is a remote server.
+
+#### Flow A – First sign-in (OAuth 2.1 authorization code + PKCE, with discovery)
+
+The host discovers how to authenticate from the gateway itself (RFC 9728). It then runs a standard browser sign-in, so MFA and conditional access from the corporate IdP apply unchanged.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant H as AI host (MCP client)
+    participant B as Browser
+    participant GW as MCP Gateway
+    participant AS as Authorization server / IdP
+
+    H->>GW: POST /mcp (no token)
+    GW-->>H: 401 + WWW-Authenticate with resource_metadata URL
+    H->>GW: GET /.well-known/oauth-protected-resource
+    GW-->>H: resource URI, authorization_servers, scopes_supported
+    H->>AS: GET authorization server metadata
+    AS-->>H: authorize and token endpoints
+    H->>H: generate code_verifier and S256 code_challenge
+    H->>B: open /authorize with code_challenge, resource=gateway URI (RFC 8707), scope
+    B->>AS: /authorize
+    AS->>U: corporate SSO sign-in, MFA, conditional access
+    U-->>AS: authenticated
+    AS-->>B: redirect to host with code, iss (RFC 9207)
+    B-->>H: code + iss
+    H->>H: check iss matches the expected issuer
+    H->>AS: POST /token with code + code_verifier + resource
+    AS-->>H: access token (aud = gateway) + rotating refresh token
+    H->>H: store tokens keyed by issuer + resource (OS keychain)
+```
+
+Because every remote MCP server sits behind the one gateway resource, **this happens once**, not once per server. Clients identify themselves with Client ID Metadata Documents rather than Dynamic Client Registration, which is deprecated in `2026-07-28`.
+
+#### Flow B – Tool call with identity propagated to the core system
+
+This is the path behind every `tools/call`. The core system receives the actual user, not a shared identity, so its object-level access controls decide what comes back.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant H as AI host
+    participant GW as MCP Gateway
+    participant S as MCP server
+    participant CB as Credential broker
+    participant SM as Secrets Manager / STS / KDC
+    participant BE as Core system (object ACLs)
+
+    H->>GW: tools/call contracts.get_contract + Bearer access token
+    GW->>GW: validate signature, iss, aud = gateway, expiry
+    GW->>GW: per-tool authorization from scopes, check pinned tool hash
+    GW->>GW: mint internal token with aud = contracts server, sub, employee_id, groups, act = client
+    GW->>S: tools/call + internal token
+    S->>S: verify internal token, read identity from request context
+    S->>CB: backend session for this user
+    alt Pattern 1 – full delegation
+        CB->>SM: Kerberos ticket, SAML assertion or PassTicket for the user
+        SM-->>CB: user credential
+    else Pattern 2 – trusted service account acting as the user
+        CB->>SM: fetch service account secret (IRSA)
+        SM-->>CB: service credential
+        CB->>CB: open proxy session for the user, e.g. Oracle proxy or SET ROLE
+    end
+    CB-->>S: backend session bound to the user
+    S->>BE: read contract 4711 as the user
+    BE->>BE: apply object-level ACL for the user
+    BE-->>S: contract, or not authorized
+    S->>CB: release session and reset its user context
+    S-->>GW: result
+    GW->>GW: audit sub, act, tool, argument hash, result size
+    GW-->>H: result
+```
+
+**Choosing the backend pattern**
+
+| Pattern | Backend sees | Use when | Watch for |
+|---|---|---|---|
+| **1. Full delegation** (Kerberos constrained delegation, SAML from an STS, mainframe PassTickets) | The user, authenticated normally | The backend supports it. This is the best match with existing access controls and audit. | Kerberos delegation from EKS needs a dedicated service identity and careful SPN scoping. |
+| **2. Trusted service account acting as the user** (Oracle proxy auth, `EXECUTE AS USER`, PostgreSQL `SET ROLE` / row-level security, SAP trusted RFC, "act as" APIs) | The service account plus the user it's acting for, with the user's ACLs applied | The most common case for core systems. | Restrict the account to the MCP servers' network/identity and alert on other use. **Reset the user context on every pooled-connection checkout and return**, since a skipped reset leaks one user's access to the next. |
+| **3. MCP server enforces access itself** (calls the backend's access-check API) | The service account only | Last resort, when the backend has neither of the above. | Duplicated logic that can drift. A bug exposes everything the service account can reach. |
+
+#### Flow C – Linking a per-user backend credential (URL-mode elicitation)
+
+Some core systems only accept the user's own credential, such as a per-user API key or a separate login. The credential must never pass through the host or the model. The server sends the user to a broker page in their browser instead. In `2026-07-28` this request arrives as an `InputRequiredResult` (Multi Round-Trip Requests); older clients receive `elicitation/create` in URL mode.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant H as AI host
+    participant GW as MCP Gateway
+    participant S as MCP server
+    participant CB as Credential broker link page
+    participant V as Vault (Secrets Manager)
+    participant BE as Core system
+
+    H->>GW: tools/call + Bearer token
+    GW->>S: tools/call + internal token (sub = alice)
+    S->>V: credential for alice on this backend?
+    V-->>S: none
+    S-->>GW: InputRequiredResult, URL mode, link to broker page
+    GW-->>H: input required
+    H->>U: show the link and explain why it is needed
+    U->>CB: open link in browser
+    CB->>U: corporate SSO sign-in
+    CB->>CB: check signed-in sub equals the sub the link was issued for
+    U->>CB: sign in to the core system or enter its credential
+    CB->>BE: verify credential
+    BE-->>CB: valid
+    CB->>V: store credential keyed by sub and backend, KMS-encrypted
+    CB-->>U: linked, return to your assistant
+    H->>GW: retry tools/call with inputResponses
+    GW->>S: retry + internal token
+    S->>V: credential for alice
+    V-->>S: credential
+    S->>BE: request as alice
+    BE-->>S: result filtered by alice's ACLs
+    S-->>H: result via gateway
+```
+
+The check in step 11 (signed-in `sub` equals the link's `sub`) stops a link being phished or forwarded so that someone else's credential ends up attached to Alice's identity.
+
+#### Flow D – Single sign-on across clients with Enterprise-Managed Authorization (target state)
+
+The `io.modelcontextprotocol/enterprise-managed-authorization` extension lets the corporate IdP decide which MCP servers each employee may use, with no per-server consent prompts. It is opt-in and client support varies. Adopt it once our hosts support it; Flow A remains the fallback.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant H as AI host
+    participant IdP as Corporate IdP
+    participant AS as Gateway authorization server
+    participant GW as MCP Gateway
+
+    H->>IdP: sign in to the host with corporate SSO
+    U-->>IdP: authenticate, MFA
+    IdP-->>H: ID token
+    H->>IdP: token exchange, ID token for ID-JAG, audience = gateway AS
+    IdP->>IdP: evaluate policy, group membership, conditional access
+    IdP-->>H: ID-JAG
+    H->>AS: JWT bearer grant with ID-JAG
+    AS->>AS: validate ID-JAG signature, iss, aud, expiry
+    AS-->>H: gateway access token
+    H->>GW: tools/call + Bearer token
+    Note over GW: from here, identical to Flow B
+```
+
+Revoking an employee's access in the IdP stops new ID-JAGs, and the short token lifetimes end any existing access within minutes.
+
+#### Token refresh, revocation and unattended runs
+
+| Event | Behaviour |
+|---|---|
+| Access token expires | The host uses its rotating refresh token. Reuse of an old refresh token revokes the whole token family. |
+| User disabled or access removed | Disable at the IdP and revoke refresh tokens. Access tokens stop working within their 5–15 min lifetime. For immediate cut-off, the gateway also checks a deny-list fed by IdP events. |
+| Linked backend credential revoked | The vault entry is deleted. The next call goes through Flow C again. |
+| Scheduled or unattended agent run | No interactive user, so no fresh sign-in. Use either a refresh token limited to that single task and revocable, or a service identity explicitly granted to that job. Never reuse the last interactive user's token. |
+| Shared conversation (e.g. a team channel) | The agent fetches with the asking user's permissions, but everyone present sees the answer. Use a service identity limited to what that audience may see, or reply privately. |
+
+**Verification:** each core system gets a two-user contract test in CI. Two test users with different object permissions call the same tool, and the test asserts that each receives only their own objects and the other gets "not authorized". This proves object-level access control works end to end, including connection-pool resets.
 
 ## 5. Transport strategy and rationale
 
@@ -176,12 +359,12 @@ sequenceDiagram
 
     Dev->>CI: PR changes a tool's description or schema
     CI->>CI: start server, call tools/list,<br/>diff against tools.lock.json, run metadata lint
-    CI-->>Dev: fail on suspicious text;<br/>lock-file change needs security CODEOWNER
+    CI-->>Dev: fail on suspicious text,<br/>lock-file change needs security CODEOWNER
     CI->>GW: deploy approved tool hashes (Helm values)
     H->>GW: tools/list (Bearer token)
     GW->>S: tools/list
     S-->>GW: tool definitions
-    GW->>GW: hash each tool; drop unknown or drifted;<br/>namespace names; filter by caller's scopes
+    GW->>GW: hash each tool, drop unknown or drifted,<br/>namespace names, filter by caller scopes
     GW-->>H: approved, scoped tools only
     GW-->>GW: alarm on any drift
 ```
