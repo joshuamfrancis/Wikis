@@ -103,7 +103,7 @@ Attacks therefore chain: a poisoned description (prompt) → a privileged tool c
 
 **What:** A token minted for server A and replayed against server B works if B doesn't check audience. A client talking to several authorization servers can be tricked into sending a code or credentials to the wrong one.
 
-**Mitigations:** RFC 8707 resource indicators, with `aud` validated on every request. RFC 9728 protected-resource metadata. Validate the RFC 9207 `iss` parameter (a MUST for clients in `2026-07-28` when present). Key client credentials by issuer. Use short token lifetimes.
+**Mitigations:** RFC 8707 resource indicators, with `aud` validated on every request. RFC 9728 protected-resource metadata. Validate the RFC 9207 `iss` parameter (a MUST for clients in `2026-07-28` when present). Key client credentials by issuer. Use short token lifetimes. For SAML-secured core systems, apply the same rules to assertions: audience-restricted to the core system's entity ID, ≤ 5 min validity, replay cache on `ID`, holder-of-key where supported, and validation hardened against XML signature wrapping (architecture §4.2, Flow B3).
 
 ### SC-15 – DNS rebinding against local HTTP servers
 > **How the architecture addresses this:** [mcp-architecture.md §6.1 – SC-15](mcp-architecture.md#sc-15-dns-rebinding-against-local-http-servers)

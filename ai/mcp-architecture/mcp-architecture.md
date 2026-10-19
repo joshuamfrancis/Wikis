@@ -129,6 +129,7 @@ flowchart LR
 | Refresh token | Authorization server | Authorization server | AI host (OS keychain) | Hours–days, rotated on use | – |
 | **Internal token** | MCP Gateway (token exchange) | One MCP server | MCP server, per request | ≤ 5 min | `sub`, backend principal (e.g. `employee_id`), groups, scopes, `act` (acting agent/client) |
 | **Core-system JWT** (JWT-secured REST APIs) | Corporate IdP via token exchange (Flow B2) | One core system's API | Gateway → MCP server, per request | ≤ 5 min | `sub`, core-system user key, groups, down-scoped `scope`, `act` |
+| **Core-system SAML assertion** (SAML-secured systems) | IdP / STS via token exchange or WS-Trust (Flow B3) | One core system's SAML entity ID | Gateway → MCP server, per request | ≤ 5 min | NameID (core-system user key), group attributes, `actor` attribute |
 | **Backend credential** | Credential broker | One core system | MCP server, per request | Per backend (ticket, assertion, proxy session) | The user, in the form that backend understands |
 
 **Rules that hold in every flow**
@@ -216,7 +217,8 @@ sequenceDiagram
 | Pattern | Backend sees | Use when | Watch for |
 |---|---|---|---|
 | **JWT token exchange** (REST API that accepts JWTs) – see Flow B2 | The user, in a JWT minted for that core system | The core system's API validates JWTs. **Preferred whenever available**: it's standards-based and carries user, groups and acting agent in one signed token. | The core system must validate audience, issuer and signature, not just decode the token. |
-| **1. Full delegation** (Kerberos constrained delegation, SAML from an STS, mainframe PassTickets) | The user, authenticated normally | The backend supports it. This is the best match with existing access controls and audit. | Kerberos delegation from Kubernetes needs a dedicated service identity and careful SPN scoping. |
+| **SAML assertion exchange** (SOAP/WS-Security, SAML bearer grant, SAML-only systems) – see Flow B3 | The user, as the NameID in an assertion issued for that core system | The core system trusts SAML but not JWT, e.g. SAP, SOAP/ESB services, older Java EE or .NET. | No scopes in SAML, so limiting the agent relies on the gateway. Backend must defend against XML signature wrapping. |
+| **1. Full delegation** (Kerberos constrained delegation, mainframe PassTickets) | The user, authenticated normally | The backend supports it. This is the best match with existing access controls and audit. | Kerberos delegation from Kubernetes needs a dedicated service identity and careful SPN scoping. |
 | **2. Trusted service account acting as the user** (Oracle proxy auth, `EXECUTE AS USER`, PostgreSQL `SET ROLE` / row-level security, SAP trusted RFC, "act as" APIs) | The service account plus the user it's acting for, with the user's ACLs applied | The most common case for core systems. | Restrict the account to the MCP servers' network/identity and alert on other use. **Reset the user context on every pooled-connection checkout and return**, since a skipped reset leaks one user's access to the next. |
 | **3. MCP server enforces access itself** (calls the backend's access-check API) | The service account only | Last resort, when the backend has neither of the above. | Duplicated logic that can drift. A bug exposes everything the service account can reach. |
 
@@ -276,6 +278,90 @@ sequenceDiagram
 * **Optionally bind the token to the caller.** Requiring DPoP or mTLS-bound tokens (RFC 8705) between MCP servers and the core system means a stolen JWT can't be replayed from elsewhere.
 
 **Why this is the preferred pattern:** the core system sees the real user, as with full delegation, but over standard HTTP and JWT with no Kerberos or proxy-session plumbing. Revocation is handled by short lifetimes. Expect at most 5 minutes of residual access after the IdP disables a user.
+
+#### Flow B3 – Core system secured with SAML
+
+SAML works between servers too. Browser SSO (the Web Browser SSO profile) isn't usable here, because there's no person in a browser to redirect. What works is a **SAML assertion issued on the user's behalf for one specific core system**. The host still uses OAuth 2.1 with the gateway (Flow A), so SAML appears only on the last hop, from the MCP server to the core system.
+
+**Where the assertion comes from**
+
+| Option | How | When |
+|---|---|---|
+| **A. IdP token exchange to SAML** (recommended) | The gateway calls OAuth 2.0 Token Exchange (RFC 8693) with the user's access token as subject, `requested_token_type=urn:ietf:params:oauth:token-type:saml2`, and the core system's SAML entity ID as audience. | The IdP or STS supports it. Several do, e.g. Entra ID's on-behalf-of flow, PingFederate and Keycloak; confirm for yours. |
+| **B. WS-Trust STS** | The credential broker requests a SAML token for the user from a WS-Trust endpoint (e.g. ADFS, PingFederate). | Older SOAP and .NET estates that already run an STS. |
+| **C. Gateway or broker issues assertions itself** | The core system trusts the gateway as a SAML issuer. The signing key is held in KMS/HSM. | Last resort. Whoever holds this key can impersonate any user to that system ("Golden SAML"). |
+
+**How the core system accepts it**
+
+| Backend style | Mechanism |
+|---|---|
+| SOAP services (Java EE, .NET WCF, ESB) | Assertion in the `wsse:Security` header (WS-Security SAML Token Profile). |
+| Systems with their own OAuth server (e.g. SAP S/4HANA and NetWeaver, SuccessFactors, Salesforce) | **SAML bearer grant (RFC 7522):** the MCP server exchanges the assertion for the core system's native access token, then calls its REST APIs with that token. Often the cleanest option for SAP. |
+| Product-specific | Some systems accept a base64 assertion in an HTTP header or a login API. Confirm exactly how the product validates it before relying on it. |
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant H as AI host
+    participant GW as MCP Gateway
+    participant STS as IdP / STS
+    participant S as MCP server
+    participant AS as Core system token endpoint
+    participant BE as Core system
+
+    H->>GW: tools/call sap.get_order + Bearer token (aud = gateway)
+    GW->>GW: validate token, per-tool authorization, pinned tool hash
+    GW->>STS: token exchange, subject = user token, requested type = SAML 2.0, audience = core system entity ID
+    STS->>STS: policy check, map user to core system NameID and attributes
+    STS-->>GW: signed assertion, audience-restricted, NotOnOrAfter ≤ 5 min, actor attribute
+    GW->>GW: cache per user + audience until shortly before expiry
+    GW->>S: tools/call + internal token + assertion
+    S->>S: verify internal token, identity from request context
+    alt SOAP with WS-Security
+        S->>BE: SOAP request, assertion in wsse Security header
+    else SAML bearer grant (RFC 7522)
+        S->>AS: grant_type saml2-bearer + assertion
+        AS->>AS: verify signature, audience, time window, replay
+        AS-->>S: core system access token
+        S->>BE: REST request + Bearer core system token
+    end
+    BE->>BE: verify, then apply object-level ACL for the NameID
+    BE-->>S: result, or not authorized
+    S-->>GW: result
+    GW-->>H: result
+```
+
+**What the assertion should contain**
+
+| Element | Purpose |
+|---|---|
+| `Issuer`, `ID`, `IssueInstant` | Standard validation. The core system keeps a replay cache of `ID`s. |
+| `Subject/NameID` | The core system's own user key (e.g. `employee_id` or the SAP user), mapped in the IdP, so neither the gateway nor servers do lookups. |
+| `Conditions`: `AudienceRestriction` = core system entity ID, `NotBefore` / `NotOnOrAfter` ≤ 5 min | Stops the assertion being used against another system, or later. |
+| `SubjectConfirmation` method | **Holder-of-key** where supported: the assertion is bound to the MCP server's certificate (proved over mTLS or by message signing), so a stolen assertion is useless elsewhere. **Bearer** otherwise, relying on the short lifetime and the replay cache. *Sender-vouches* (the MCP server signs the message and vouches for the user) is pattern 2, the trusted service account, expressed in SAML. |
+| `AttributeStatement`: groups/roles | Only if the core system's ACLs use them. |
+| Attribute `actor` (e.g. `mcp-gateway/<server>`) | SAML has no standard equivalent of JWT's `act` claim. This records in the core system's audit that the call came via an agent. Use the SAML delegation-restriction condition instead if your stack supports it. |
+| Optional access-level attribute (e.g. `access=read`) | See "limiting the agent" below. |
+
+**Requirements on the core system**
+
+* **Validate with a maintained SAML library.** Check signature, issuer, audience, time window and replay. Reject SHA-1, and make sure the identity is read from the element that was actually signed. **XML signature wrapping**, where signed elements are moved so a forged identity is read, is SAML's classic weakness.
+* **Authorize from the assertion.** Take the user from `NameID`, never from request parameters, and apply object ACLs per request.
+
+**Differences from the JWT flow**
+
+* **Limiting the agent.** SAML has no scopes, so the assertion can't be down-scoped the way B2's `scope` claim is. Keeping an agent read-only for a user who can write therefore relies on the gateway's per-tool authorization. Optionally reinforce it with a separate read-only entity ID for the core system, or an access-level attribute the core system enforces.
+* **Signing-key protection.** The IdP/STS signing key can impersonate any user to every system that trusts it. Keep it in an HSM, rotate it, and alert on use outside the expected issuers. This is why option A or B (the IdP signs) is preferred over option C (the gateway signs).
+* **Performance.** XML signing and validation is slower and assertions are larger than JWTs, so cache assertions (and any core-system tokens obtained via RFC 7522) per user and audience until shortly before expiry.
+
+**Choosing between B2 and B3**
+
+| Core system supports | Use |
+|---|---|
+| JWT bearer tokens | Flow B2. Simplest, and allows down-scoping. |
+| OAuth with a SAML bearer grant (e.g. SAP) | Flow B3 → RFC 7522 → core system access token |
+| SOAP with WS-Security SAML | Flow B3, SAML Token Profile, holder-of-key if possible |
+| None of these | Kerberos delegation, a trusted service account (patterns 1–2), or per-user credentials (Flow C) |
 
 #### Flow C – Linking a per-user backend credential (URL-mode elicitation)
 
@@ -807,7 +893,7 @@ deploy-prod:
 ## 11. Open items
 
 * Pick the gateway implementation (build a thin FastAPI gateway vs adopt an open-source MCP gateway) and run a short spike.
-* Confirm which IdP is the authorization server, and whether it supports OAuth 2.0 Token Exchange (RFC 8693) for JWT-secured core systems (§4.2, Flow B2).
+* Confirm which IdP is the authorization server, and whether it supports OAuth 2.0 Token Exchange (RFC 8693) for JWT-secured core systems (§4.2, Flow B2), and token exchange to SAML or a WS-Trust STS for SAML-secured ones (Flow B3).
 * Confirm when Claude Desktop / VS Code clients support `2026-07-28` MRTR. Keep `elicitation/create` support for `2025-11-25` clients until then.
 * Define the tool-description lint ruleset and the approval workflow for third-party servers.
 
@@ -818,5 +904,6 @@ deploy-prod:
 * Cloud Security Alliance research note, *MCP RCE design vulnerability* (2026-04-23)
 * Docker blog, "MCP Horror Stories: The WhatsApp Data Exfiltration Attack" (Invariant Labs PoC)
 * RFC 9728 (Protected Resource Metadata), RFC 8707 (Resource Indicators), RFC 9207 (Authorization Server Issuer Identification)
-* RFC 8693 (OAuth 2.0 Token Exchange), RFC 7523 (JWT Bearer grant), RFC 8705 (mTLS-bound tokens), RFC 9449 (DPoP)
+* RFC 8693 (OAuth 2.0 Token Exchange), RFC 7523 (JWT Bearer grant), RFC 8705 (mTLS-bound tokens), RFC 9449 (DPoP), RFC 7522 (SAML 2.0 Bearer Assertion grant)
+* OASIS SAML 2.0 Core; WS-Security SAML Token Profile 1.1; WS-Trust 1.4
 * MCP Enterprise-Managed Authorization extension; SEP-1036 URL-mode elicitation
