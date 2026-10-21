@@ -244,7 +244,94 @@ flowchart LR
 
 ---
 
-## 8. Recommended next steps
+## 8. Multi-database topology and integration
+
+### 8.1 Do separate Oracle databases need separate APEX installs?
+
+APEX is installed *inside* a database. Each database that **hosts APEX apps** needs its own install; a database whose data is only **consumed** does not.
+
+| Pattern | How it works | Pros | Cons |
+|---|---|---|---|
+| **Central hub** (recommended default) | One dedicated "extensions" database runs APEX; other Oracle DBs reached via REST-enabled SQL, ORDS REST APIs or DB links | One version to patch, one SSO/governance point, isolates COTS DBs from custom code | Cross-DB latency; remote data needs API/link design |
+| **Embedded per system** | APEX installed in each system's own DB (typically EBS) | Best data locality and performance, simplest data access | More installs to upgrade; tied to each system's upgrade/patch cycle; version drift |
+| **Hybrid** | Hub for most apps, embedded only where data locality really matters | Balances governance and performance | Two patterns to operate |
+
+Notes:
+- On 19c+ multitenant, install APEX **locally in each PDB** (not CDB root) so PDBs upgrade independently.
+- One ORDS deployment can front multiple databases via multiple connection pools — the web tier doesn't multiply.
+- APEX is included in the Oracle Database licence, so extra installs carry no APEX licence cost (DB/core licensing still applies to the hub).
+- Prefer REST-enabled SQL or APIs over DB links for remote Oracle DBs: links create tight coupling and credential sprawl.
+
+### 8.2 Integration with non-Oracle systems
+
+APEX integrates well with non-Oracle systems through APIs and files:
+
+| Mechanism | Direction | Use |
+|---|---|---|
+| REST Data Sources | Inbound to APEX | Declarative reports/forms over REST endpoints (simple HTTP, ORDS, OData, Fusion) |
+| `APEX_WEB_SERVICE` | Outbound | Any REST/SOAP call from PL/SQL; OAuth2 client credentials, basic auth, custom headers (fits PingFederate-issued tokens) |
+| ORDS REST APIs | Outbound to consumers | Publish PL/SQL/tables as secured REST endpoints (OAuth2) for other systems |
+| `APEX_DATA_PARSER` / Data Load | Inbound files | CSV, XLSX, JSON, XML uploads by users or processes |
+| External tables / `UTL_FILE` | Inbound/outbound files | Server-side batch files on DB-host directories |
+| S3 integration (RDS for Oracle) / `DBMS_CLOUD` (Autonomous) | Inbound/outbound files | Object-storage file exchange on AWS/OCI |
+| Oracle AQ / TxEventQ | Async messaging | Event-driven integration; TxEventQ offers a Kafka-compatible API |
+| Database Gateway (ODBC via DB link) | Direct to non-Oracle DB | Possible but clunky — prefer APIs |
+
+Caveats:
+- No native SFTP or file-polling engine — use the enterprise integration platform or a small containerised job.
+- Outbound calls need network ACLs (`DBMS_NETWORK_ACL_ADMIN`) and a wallet holding the TLS certificates.
+- For more than a few point-to-point links, route through the enterprise integration layer rather than having APEX call every system directly.
+- Keep integration logic in PL/SQL packages (not page processes) so it is testable and reusable.
+
+### 8.3 Integration view
+
+```mermaid
+flowchart LR
+    subgraph Hub["APEX Extensions Hub DB"]
+        APEX["APEX apps"]
+        PKG["PL/SQL integration packages<br/>APEX_WEB_SERVICE, APEX_DATA_PARSER"]
+        AQ["AQ / TxEventQ"]
+    end
+
+    ORDS["ORDS<br/>multiple DB pools, OAuth2"]
+    IdP["PingFederate / PingOne<br/>SAML for users, OAuth2 tokens for APIs"]
+
+    subgraph OracleDBs["Other Oracle databases"]
+        EBS[("EBS DB<br/>optional embedded APEX")]
+        ODB[("Other Oracle COTS DBs")]
+    end
+
+    subgraph NonOracle["Non-Oracle systems"]
+        SaaS["SaaS / COTS REST APIs"]
+        SQLDB[("SQL Server / Postgres apps<br/>via their APIs")]
+        MES["Manufacturing / MES systems"]
+    end
+
+    subgraph Integration["Enterprise integration layer"]
+        IPaaS["Integration platform / API gateway"]
+        SFTP["SFTP / file drop"]
+        S3["Object storage / S3"]
+    end
+
+    Users["Users"] -->|"SAML SSO"| ORDS --> APEX
+    APEX --> PKG
+    ORDS -->|"REST-enabled SQL"| ODB
+    PKG -->|"REST / DB link - least preferred"| EBS
+    PKG -->|"REST with OAuth2"| IPaaS
+    IPaaS --> SaaS & SQLDB & MES
+    External["External consumers"] -->|"OAuth2"| ORDS
+    ORDS -->|"published REST APIs"| PKG
+    SFTP --> IPaaS --> S3
+    S3 -->|"file load"| PKG
+    PKG <--> AQ
+    AQ <-->|"events"| IPaaS
+    IdP -.-> ORDS
+    IdP -.-> IPaaS
+```
+
+---
+
+## 9. Recommended next steps
 
 1. Inventory current APEX apps (owner, users, ERP touchpoints, last change) and classify keep / refactor / retire.
 2. Upgrade to APEX 26.1.x and pilot **APEXlang + SQLcl Projects + GitHub Actions** on one app.
