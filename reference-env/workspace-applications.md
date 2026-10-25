@@ -11,7 +11,7 @@ Key design decisions:
 1. **Multi-session fleets are mandatory, not optional.** A /28 gives 11 usable IPs and each fleet instance takes one ENI, so a fleet spread over two AZs tops out at 22 instances. Packing 12 sessions on a stream.standard.2xlarge lifts one fleet to roughly 220–260 sessions.
 2. **Streaming traffic stays private.** A `com.amazonaws.ap-southeast-2.appstream.streaming` interface endpoint carries pixels, input, clipboard, USB and printing over Transit Gateway and Direct Connect. Sign-in and web assets still need internet, which users reach through the existing on-premises proxy.
 3. **The streaming endpoint lives in the workload VPC**, a deliberate exception to the central-endpoint pattern. All other AWS service endpoints (STS, S3 interface, CloudWatch, SSM, AppStream API) stay centralised in the network account.
-4. **Identity = Ping SAML 2.0 + on-prem AD.** Fleets domain-join the on-prem domain through a Directory Config over Direct Connect; AD Connector stands in as the in-VPC directory proxy per the brief. Certificate-based authentication removes the second password prompt.
+4. **Identity = SAML 2.0 sign-in with AD accounts.** Users sign in with their AD account through a SAML identity provider (Ping or AD FS). Whether fleets also domain-join depends on whether the thin-client apps need Windows/Kerberos identity, which is an open item; Option A (domain-joined) and Option B (SAML only) under [Architecture options](#architecture-options-ad-dependent-or-not) cover both answers.
 5. **Scale on user sessions.** Scheduled scaling pre-warms capacity before 07:00, target tracking on capacity utilisation absorbs the peak, and session limits let instances drain for scale-in.
 
 ## Context and assumptions
@@ -145,6 +145,37 @@ Users authenticate to Ping with SAML 2.0, land on a stack through an IAM role an
 
 **Resilience option.** If AD availability during a DX outage matters, add two self-managed domain controllers on EC2 in the shared-services account, one per AZ, in their own AD site so logons survive a DX outage (AWS Managed Microsoft AD would be a separate domain needing a trust, not extra DCs).
 
+## Architecture options: AD-dependent or not
+
+Pick **Option A** if any thin-client app needs Windows identity inside the session; otherwise pick **Option B**, which is simpler, slightly cheaper and gives single sign-on by default. Both keep the same VPC layout, streaming endpoint, multi-session fleet and scaling; only the identity and directory layer changes. SAML 2.0 is the front door in both, and AD stays the user store behind the identity provider.
+
+The deciding test, per application: does it use integrated Windows authentication or Kerberos (SQL Server, IIS, SMB shares), Group Policy, AD-secured file shares or printers, or need the AD username in OS-level audit? Any yes → Option A.
+
+| Aspect | Option A: domain-joined fleet | Option B: SAML only, no domain join |
+| --- | --- | --- |
+| When it fits | Apps use Windows/Kerberos auth, GPOs, AD-secured shares or printers | Apps have their own login (database or app credentials, web SAML) |
+| User sign-in | SAML IdP (Ping or AD FS) checks the AD password | Same |
+| Windows session identity | User's own AD account | Generic local account (`PhotonUser`); identity known to the service from SAML |
+| Password prompts | Two, or one with certificate-based authentication (AWS Private CA) | One |
+| Directory components in AWS | Directory Config, computer-object OU and service account; AD Connector per the brief | None |
+| Network to domain controllers | Fleet subnets → on-prem DCs over DX (DNS, Kerberos, LDAP, SMB, RPC) | Not needed; only IdP and core-app traffic |
+| DX outage | Stops new logons and AD-integrated apps | Stops core apps that live on-prem; nothing extra from AD |
+| Fleet types | Always-On or On-Demand (Elastic cannot domain-join) | Also Elastic, but single-session only, so multi-session still wins on /28 subnets |
+| User profile and data | Roaming via AD, plus S3 home folders | S3 home folders and app settings persistence |
+| Image build | AD join, GPO testing, OU lifecycle | Plain image; fewer moving parts |
+| Monthly cost delta (250 users) | Base case US$5,990; +~US$50 if Private CA is added for SSO | About US$5,946 (no AD Connector) |
+| Main risk | AD path over DX becomes part of every logon | An app later found to need Kerberos forces a rebuild as Option A |
+
+```mermaid
+flowchart LR
+    Q{"Any thin-client app needs<br/>Windows/Kerberos identity,<br/>GPO or AD shares?"}
+    Q -->|Yes| A["Option A<br/>Domain-joined multi-session fleet<br/>Directory Config + AD Connector<br/>DC ports over DX"]
+    Q -->|No| B["Option B<br/>Non-joined multi-session fleet<br/>SAML only, single prompt<br/>no DC dependency"]
+    Q -->|Mixed| M["Two stacks<br/>Fleet A subnets: domain-joined<br/>Fleet B subnets: non-joined"]
+```
+
+Option B removes the AD Connector from svc-az1/svc-az2 and the DC rules from the fleet security group; nothing else in the network design changes. If the answer is mixed, run two stacks: a domain-joined fleet on the Fleet A subnets for AD-dependent apps and a non-joined fleet on the Fleet B subnets for the rest, each with its own SAML role.
+
 ## Fleet design and scaling
 
 Use a Windows Server 2022, domain-joined, **On-Demand multi-session** fleet on stream.standard.2xlarge (8 vCPU, 32 GiB) with a maximum of 12 sessions per instance, scaled on user sessions. For multi-session fleets, minimum, maximum and desired capacity are all expressed in user sessions and the service works out how many instances to run.
@@ -252,20 +283,23 @@ Indicative rates were estimated from the published us-east-1 rates; confirm Sydn
 
 | Risk | Impact | Mitigation |
 | --- | --- | --- |
+| Application dependence on AD unconfirmed | Decides Option A or B: domain join, AD Connector, DC firewall rules and the DX dependency for logons | Inventory each thin-client app's authentication (Windows/Kerberos, GPO, AD shares or printers vs own login) before the build |
 | /28 subnets cap each fleet at 22 instances | Insufficient-capacity errors at peak; one AZ loss halves capacity to 132 sessions | Multi-session at 12 per instance, Fleet B pair, request a larger VPC CIDR before passing ~350 concurrent |
 | Direct Connect is a single path | Users and AD logons both stop if DX fails | Confirm DX resilience model (two connections, two locations) or a Site-to-Site VPN backup on the TGW |
-| Sign-in depends on internet | On-prem proxy or Ping outage blocks new sessions while streaming is private | Allow-list authentication domains, monitor the proxy path |
+| Sign-in depends on internet | On-prem proxy or identity-provider outage blocks new sessions while streaming is private | Allow-list authentication domains, monitor the proxy path |
 | Sessions per instance unproven | Overpacking degrades the app; underpacking breaks the IP ceiling and the cost case | Load test on the image builder before production |
 | Indicative Sydney rates | Cost estimate off by the rate error | Re-run the model with Pricing Calculator rates |
 | Cross-account streaming endpoint unvalidated | Central placement may not be supported for a stack in another account | Keep the local endpoint; raise with the AWS account team if central placement is mandated |
 
 Next steps:
 
+- [ ] Confirm whether any thin-client app depends on AD, and choose Option A or B
+- [ ] Choose the SAML identity provider (Ping or AD FS)
 - [ ] Confirm user numbers, concurrency curve and the thin-client application list
 - [ ] Load test sessions per instance on stream.standard.2xlarge
 - [ ] Raise WorkSpaces Applications instance quotas and confirm the ENI quota in the workload account
 - [ ] Agree the DX allowed-prefix change and the on-prem DNS approach with the network team
-- [ ] Decide on certificate-based authentication (AWS Private CA) for single sign-on
+- [ ] Decide on certificate-based authentication (AWS Private CA) for single sign-on (Option A only)
 - [ ] Re-cost with confirmed Sydney rates
 
 ## Sources
