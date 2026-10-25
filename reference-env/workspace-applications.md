@@ -122,7 +122,27 @@ Per fleet the hard ceiling is 22 instances; with 12 sessions per instance that i
 
 **Internet that is still needed**
 
-User sign-in and the client's web assets come from public AWS domains, and SAML from Ping. Allow the WorkSpaces Applications authentication domains on the on-prem proxy; the `*.amazonappstream.com` streaming gateway allow-listing is not needed once the endpoint name replaces it.
+Only the streaming traffic can move to a private endpoint. The streaming interface endpoint replaces just the session gateway domain (`*.amazonappstream.com`); getting a user into a session still needs AWS's public sign-in and portal services, which have no PrivateLink endpoint. This is user devices reaching a few AWS-owned names over HTTPS at sign-in, not general browsing, and fleet instances do not need it.
+
+| Purpose | Domain | Private endpoint? |
+| --- | --- | --- |
+| Portal and user authentication | `*.appstream2.ap-southeast-2.aws.amazon.com` | No |
+| SAML sign-in | `signin.aws.amazon.com`, `ap-southeast-2.signin.aws.amazon.com` | No |
+| SAML relay state | `appstream2.euc-sso.ap-southeast-2.aws.amazon.com` | No |
+| Identity provider | PingOne (SaaS) needs internet; PingFederate or AD FS on-prem does not | n/a |
+| Session gateway | `*.amazonappstream.com` (incl. `*.streaming.` and `*.dcv-streaming.ap-southeast-2.appstream2.amazonappstream.com`) | Yes: replaced by `<vpce-id>.streaming.appstream.ap-southeast-2.vpce.amazonaws.com` |
+
+Domains from AWS's [allowed domains list](https://docs.aws.amazon.com/appstream2/latest/developerguide/allowed-domains.html).
+
+**Sign-in path options**
+
+| Option | How | Trade-off |
+| --- | --- | --- |
+| Direct Connect public VIF (recommended for a fully private path) | Add a public virtual interface on the existing DX; on-prem routers prefer the AWS public prefixes it advertises for the domains above | Sign-in rides the DX circuit, not the ISP; needs public IPs for the VIF and route filtering so only the intended AWS prefixes are preferred |
+| Allow-list proxy | Keep the on-prem internet proxy; allow only the domains above, caching off for the authentication domains | Simplest; sign-in depends on the internet link and proxy |
+| Custom portal + private API endpoint | Portal calls `CreateStreamingURL` through `com.amazonaws.ap-southeast-2.appstream.api` (central endpoint) | Removes SAML from the path, but the browser still loads the session from the public portal domain; narrows, does not remove, the dependency |
+
+The closest to fully private is a DX public VIF with an on-prem identity provider (PingFederate or AD FS); the AWS public endpoints are still in the path, but none of the traffic crosses the internet.
 
 ## Identity and directory
 
@@ -295,6 +315,7 @@ Next steps:
 
 - [ ] Confirm whether any thin-client app depends on AD, and choose Option A or B
 - [ ] Choose the SAML identity provider (Ping or AD FS)
+- [ ] Choose the sign-in path: Direct Connect public VIF or allow-list proxy
 - [ ] Confirm user numbers, concurrency curve and the thin-client application list
 - [ ] Load test sessions per instance on stream.standard.2xlarge
 - [ ] Raise WorkSpaces Applications instance quotas and confirm the ENI quota in the workload account
@@ -306,6 +327,7 @@ Next steps:
 
 - [Amazon WorkSpaces Applications pricing](https://aws.amazon.com/workspaces/applications/pricing/) — fleet billing models, RDS SAL fees, multi-session billing
 - [Creating and streaming from interface VPC endpoints](https://docs.aws.amazon.com/appstream2/latest/developerguide/creating-streaming-from-interface-vpc-endpoints.html) — service name, ports, internet dependency, Windows Desktop OS limitation
+- [Allowed domains](https://docs.aws.amazon.com/appstream2/latest/developerguide/allowed-domains.html) — domains user devices must reach; what a VPC endpoint replaces
 - [VPC setup recommendations](https://docs.aws.amazon.com/appstream2/latest/developerguide/vpc-setup-recommendations.html) — ENIs per fleet, one subnet per AZ
 - [Configure a VPC for WorkSpaces Applications](https://docs.aws.amazon.com/appstream2/latest/developerguide/appstream-vpc.html) — two subnets in different AZs for fleets
 - [Fleet Auto Scaling concepts](https://docs.aws.amazon.com/appstream2/latest/developerguide/autoscaling-concepts.md) — capacity in user sessions for multi-session fleets
