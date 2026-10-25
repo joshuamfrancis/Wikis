@@ -240,7 +240,130 @@ Validate 12 sessions per instance with a load test of the real thin-client mix (
 
 **Image lifecycle**
 
-Build on a stream.standard.2xlarge image builder with the thin-client apps, AD join and the WorkSpaces Applications agent; share the image only to this account. Roll out monthly patches by building a new image, pointing Fleet B at it during the week, then moving the stack association after hours; this blue/green cut-over is the second reason for the Fleet B subnet pair.
+Images are built by the GitLab pipeline in [Image management and application deployment](#image-management-and-application-deployment) below. A new image is rolled out blue/green: Fleet B is pointed at it during the week, then the stack association moves after hours, which is the second reason for the Fleet B subnet pair.
+
+## Image management and application deployment
+
+Thin-client apps are **baked into a versioned golden image** built as code from enterprise GitLab: EC2 Image Builder produces a hardened Windows Server AMI with the apps installed, `CreateImportedImage` turns it into a WorkSpaces Applications image, and a gated GitLab deployment swaps it onto the fleet blue/green. Always-On and On-Demand fleets, which this design needs for multi-session, only run applications installed in the image; app blocks (apps mounted at launch) work only on Elastic fleets.
+
+```mermaid
+flowchart LR
+    subgraph FACTORY["Image-factory account · GitLab CI"]
+        MR["Merge request<br/>enterprise GitLab"] --> VAL["1 · Validate<br/>lint, policy, hashes"]
+        VAL --> BUILD["2 · Build AMI<br/>EC2 Image Builder"]
+        BUILD --> IMP["3 · Import<br/>CreateImportedImage"]
+    end
+    subgraph WORKLOAD["Non-prod and production workload accounts"]
+        TEST["4 · Test<br/>non-prod fleet smoke"] --> APP{"5 · Approve<br/>manual gate, CAB"}
+        APP --> DEP["6 · Deploy<br/>prod Fleet B, swap"]
+        DEP --> CLEAN["7 · Clean up<br/>keep last 3 images"]
+    end
+    IMP -->|share image| TEST
+```
+
+The image-factory account builds and imports; workload accounts only receive shared images, and nothing reaches production fleets without the manual approval.
+
+**Image strategy**
+
+| Decision | Choice | Why |
+| --- | --- | --- |
+| Apps in image vs delivered at launch | Installed in the image | Required for Always-On/On-Demand multi-session fleets; also the fastest logon |
+| One image or many | One golden image per fleet holding all thin-client apps (catalog limit 50) | The /28 IP ceiling allows only two fleets; split images only if apps conflict (for example two Java runtimes) |
+| Who sees which app | Application entitlements per stack, keyed on SAML attributes (AD group passed by the IdP) | One image, different catalogs per user group |
+| Base OS | Windows Server 2022 Full Base, x86_64 | Supported for import and for the streaming endpoint; 2025 also works but needs a UEFI/NitroTPM re-registration step |
+| Domain join | Never at build time | Option A fleets join at launch through the Directory Config; the same image serves Option B |
+| Agent version | Pinned (`CURRENT_LATEST` at import) in production | Agent changes go through the pipeline like any other change |
+| Naming | `wsa-thinclient-<yyyymmdd>-<git short SHA>` | Traces every running image to a commit |
+| Retention | Keep the last three production images | Instant rollback by pointing the fleet back |
+
+**Two ways to build an image** (the pipeline uses the first)
+
+1. **EC2 Image Builder + `CreateImportedImage` (recommended).** Fully declarative and runs headless, which suits GitLab. The source AMI must be Windows Server 2022 or 2025 Full Base, x86_64, owned by the account, **unencrypted**, with a single gp2/gp3 root volume up to 500 GB, .NET Framework 4.8+, EC2Launch v2, ports 8000, 8300 and 8443 free, and no Remote Desktop Services Session Host or Licensing roles. The import can register up to 50 catalog apps and run a runtime validation that launches a streaming instance on the intended instance type.
+2. **Image builder instance + Image Assistant CLI.** `image-assistant.exe add-application`, `create-image --dry-run`, then `create-image` on a running image builder; it returns JSON and exit codes (0 success, 1 known error, 255 retry). Scriptable, but driving commands onto an image builder from CI is less clean; keep it for one-off troubleshooting.
+
+`CreateUpdatedImage` (managed image updates) applies the latest Windows, driver and agent updates to an existing image. Use it only as an emergency patch path between pipeline runs, then let the next pipeline run supersede it.
+
+**GitLab repository layout**
+
+| Path | Holds |
+| --- | --- |
+| `components/` | EC2 Image Builder component YAML: OS hardening (CIS/STIG), WorkSpaces Applications prerequisites, one component per thin-client app |
+| `apps/<app>/` | Silent install and configure PowerShell, version pin, Pester tests for that app |
+| `catalog/app-catalog.json` | Catalog entries passed to `AppCatalogConfig` (path, display name, launch parameters, icon) |
+| `infra/` | Terraform or CloudFormation for the Image Builder pipeline, IAM roles, fleets, stacks, entitlements and scaling |
+| `.gitlab-ci.yml` | The pipeline below |
+
+Installer binaries never go in Git: they live in a versioned S3 bucket in the image-factory account (or the GitLab package registry), referenced by version and SHA-256 in each app's component. Licence keys come from Secrets Manager at build time.
+
+**Pipeline stages**
+
+| Stage | Trigger | What runs | Gate |
+| --- | --- | --- | --- |
+| 1. Validate | Every merge request | YAML and PowerShell lint (PSScriptAnalyzer), IaC lint and policy (cfn-lint or tflint, Checkov), installer checksum check | MR approval |
+| 2. Build AMI | Merge to `main`, monthly Patch Tuesday schedule | `aws imagebuilder start-image-pipeline-execution`; Image Builder installs OS updates, hardening and apps, then runs its test phase (Pester: apps launch, services, ports 8000/8300/8443 free) | Image Builder test phase passes |
+| 3. Import | AMI available | `CreateImportedImage` with `DryRun` first, then for real with `AppCatalogConfig` and `RuntimeValidationConfig` on stream.standard.2xlarge; wait for `AVAILABLE` | Image state AVAILABLE, no image errors |
+| 4. Test | Image imported | Share to the non-prod account, update the test fleet, run scripted smoke tests (logon, each app launches, core-app connectivity, domain join for Option A) | Smoke tests pass |
+| 5. Promote | Manual approval (change ticket) | Share image to the production account (`UpdateImagePermissions`), tag `release=<version>` | CAB / product-owner approval |
+| 6. Deploy | After approval, after hours | Point Fleet B at the new image, start it, move the stack association from Fleet A to Fleet B; next release swaps back | Post-deploy health check; rollback = re-associate the previous fleet |
+| 7. Clean up | After a successful deploy | Deregister source AMIs and snapshots, keep last three WorkSpaces Applications images | — |
+
+Skeleton of the GitLab pipeline:
+
+```yaml
+stages: [validate, build, import, test, promote, deploy, cleanup]
+
+default:
+  id_tokens:
+    AWS_ID_TOKEN:
+      aud: sts.amazonaws.com   # exchanged for a per-account role with assume-role-with-web-identity
+
+validate:
+  stage: validate
+  script: [./ci/lint.ps1, ./ci/checkov.sh, ./ci/verify-installer-hashes.sh]
+  rules: [{ if: $CI_PIPELINE_SOURCE == "merge_request_event" }]
+
+build-ami:
+  stage: build
+  script: [./ci/start-imagebuilder.sh]       # start-image-pipeline-execution, wait, export AMI ID
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_PIPELINE_SOURCE == "schedule"   # monthly Patch Tuesday rebuild
+
+import-image:
+  stage: import
+  script: [./ci/import-image.sh]             # CreateImportedImage: dry run, then real, wait for AVAILABLE
+
+smoke-test:
+  stage: test
+  environment: nonprod
+  script: [./ci/deploy-fleet.sh nonprod, ./ci/smoke-tests.ps1]
+
+promote:
+  stage: promote
+  when: manual                               # CAB approval
+  environment: production
+  script: [./ci/share-image.sh production]
+
+deploy-prod:
+  stage: deploy
+  needs: [promote]
+  environment: production
+  script: [./ci/blue-green-swap.sh]          # update idle fleet, start, re-associate stack
+
+cleanup:
+  stage: cleanup
+  needs: [deploy-prod]
+  script: [./ci/prune-images.sh --keep 3]
+```
+
+**Accounts and access**
+
+- **Image-factory account** (shared services): EC2 Image Builder, the installer bucket, the import step. The import needs an unencrypted AMI, so EBS default encryption is turned off in this account only; the resulting WorkSpaces Applications image is then managed by the service. Record this as a guardrail exception.
+- **Non-prod and production workload accounts** receive images by sharing (same Region only) and never build them.
+- **GitLab to AWS:** CI jobs assume a deploy role per account through GitLab's OIDC `id_tokens`. AWS STS must reach the GitLab issuer URL to fetch its keys; if the enterprise GitLab is not internet-reachable, run a GitLab runner in the image-factory account instead and use its instance role.
+- Production deploy roles can change fleets and stacks but cannot build images; image-factory roles cannot touch production fleets.
+
+The build costs little: Image Builder itself is free, a build uses a Windows EC2 instance for roughly an hour or two, plus AMI snapshot storage.
 
 ## Security controls
 
@@ -307,6 +430,9 @@ Indicative rates were estimated from the published us-east-1 rates; confirm Sydn
 | /28 subnets cap each fleet at 22 instances | Insufficient-capacity errors at peak; one AZ loss halves capacity to 132 sessions | Multi-session at 12 per instance, Fleet B pair, request a larger VPC CIDR before passing ~350 concurrent |
 | Direct Connect is a single path | Users and AD logons both stop if DX fails | Confirm DX resilience model (two connections, two locations) or a Site-to-Site VPN backup on the TGW |
 | Sign-in depends on internet | On-prem proxy or identity-provider outage blocks new sessions while streaming is private | Allow-list authentication domains, monitor the proxy path |
+| Image import needs an unencrypted AMI | Conflicts with landing-zone EBS default encryption | Dedicated image-factory account with a documented guardrail exception; no data on build instances |
+| Thin-client apps not silently installable | Image cannot be built headless from GitLab | Packaging review per app; fall back to the Image Assistant CLI path for any app that needs manual steps |
+| Enterprise GitLab not reachable by AWS STS | GitLab OIDC federation to AWS fails | Self-managed GitLab runner in the image-factory account using its instance role |
 | Sessions per instance unproven | Overpacking degrades the app; underpacking breaks the IP ceiling and the cost case | Load test on the image builder before production |
 | Indicative Sydney rates | Cost estimate off by the rate error | Re-run the model with Pricing Calculator rates |
 | Cross-account streaming endpoint unvalidated | Central placement may not be supported for a stack in another account | Keep the local endpoint; raise with the AWS account team if central placement is mandated |
@@ -317,6 +443,9 @@ Next steps:
 - [ ] Choose the SAML identity provider (Ping or AD FS)
 - [ ] Choose the sign-in path: Direct Connect public VIF or allow-list proxy
 - [ ] Confirm user numbers, concurrency curve and the thin-client application list
+- [ ] Package each thin-client app for silent install and pin its version and runtime
+- [ ] Create the image-factory account and agree the EBS default-encryption exception
+- [ ] Confirm GitLab-to-AWS authentication (OIDC or runner in AWS)
 - [ ] Load test sessions per instance on stream.standard.2xlarge
 - [ ] Raise WorkSpaces Applications instance quotas and confirm the ENI quota in the workload account
 - [ ] Agree the DX allowed-prefix change and the on-prem DNS approach with the network team
@@ -332,6 +461,11 @@ Next steps:
 - [Configure a VPC for WorkSpaces Applications](https://docs.aws.amazon.com/appstream2/latest/developerguide/appstream-vpc.html) — two subnets in different AZs for fleets
 - [Fleet Auto Scaling concepts](https://docs.aws.amazon.com/appstream2/latest/developerguide/autoscaling-concepts.md) — capacity in user sessions for multi-session fleets
 - [Getting started: maximum sessions per instance](https://docs.aws.amazon.com/appstream2/latest/developerguide/getting-started.html) — range 2–50
+- [Fleet types](https://docs.aws.amazon.com/appstream2/latest/developerguide/fleet-type.html) — apps in images for Always-On/On-Demand; app blocks only for Elastic
+- [CreateImportedImage API](https://docs.aws.amazon.com/appstream2/latest/APIReference/API_CreateImportedImage.html) — importing an AMI, app catalog, runtime validation, dry run
+- [Image Assistant CLI operations](https://docs.aws.amazon.com/en_us/appstream2/latest/developerguide/cli-operations-managing-creating-image-image-assistant.html) — scripted image creation on an image builder
+- [CreateUpdatedImage API](https://docs.aws.amazon.com/appstream2/latest/APIReference/API_CreateUpdatedImage.html) — managed image updates
+- [Automating image builds with EC2 Image Builder (Cevo)](https://cevo.com.au/post/how-to-automate-workspaces-applications-appstream-2-0-image-builds-with-ec2-image-builder/) — import prerequisites, unencrypted AMI, WS2025 TPM step
 - [Using Active Directory with WorkSpaces Applications](https://docs.aws.amazon.com/appstream2/latest/developerguide/active-directory.html) — on-prem domain join, two-way trusts, Elastic fleets cannot join
 - [Scaling Optimizer Tool](https://aws.amazon.com/blogs/desktop-and-application-streaming/optimize-amazon-workspaces-applications-fleet-capacity-with-the-scaling-optimizer-tool) — sizing scaling policies from hourly usage
 - [AD Connector pricing](https://www.aws.eu/directoryservice/other-directories-pricing/) — billed per directory-hour by size
