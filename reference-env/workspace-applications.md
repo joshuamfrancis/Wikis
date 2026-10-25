@@ -365,6 +365,25 @@ cleanup:
 
 The build costs little: Image Builder itself is free, a build uses a Windows EC2 instance for roughly an hour or two, plus AMI snapshot storage.
 
+**Patching the OS and applications**
+
+Patching is done by rebuilding the image, never on running fleet instances, so SSM Patch Manager is not used on the fleet. Fleet instances are non-persistent (each is created from the image and any change is lost when it is replaced), they are not long-lived SSM-managed nodes, and Windows automatic updates are switched off in the image as the import requires.
+
+| Trigger | What changes | How |
+| --- | --- | --- |
+| Monthly OS patching | Windows cumulative updates, .NET, drivers | Scheduled GitLab pipeline a few days after Patch Tuesday; EC2 Image Builder's Windows update step applies the latest updates during the build |
+| Application update | A thin-client app's version | Merge request bumps the version and installer hash in `apps/<app>/`; the pipeline builds, tests and ships a new image |
+| WorkSpaces Applications agent | Streaming agent | Picked up in the next build, since the version is pinned in production |
+| Urgent or zero-day fix | One critical patch | Run the pipeline outside the schedule with an expedited approval, or as a stopgap run `CreateUpdatedImage` on the current image |
+
+Every change rolls out blue/green onto Fleet B; with the 12-hour maximum session duration, all users are on the patched image within a day. Rollback is re-associating the stack with the previous fleet, using one of the three retained images.
+
+Compliance evidence comes from the build, not the fleet:
+
+- **Image tags** record the build date and Git commit, so each fleet's patch level is known exactly.
+- **Amazon Inspector** scans each image during the EC2 Image Builder test stage; the pipeline fails on critical findings.
+- **Patch baselines** live only in the image-factory account. If the fleet must follow the same approval rules as the EC2 estate, Patch Manager baselines can choose which updates go into the image during the build; Image Builder's own update step is the simpler default.
+
 ## Security controls
 
 Streaming traffic never leaves private addressing, fleet instances have no inbound path from users, and all outbound internet goes through the central egress inspection.
