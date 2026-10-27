@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720.0" height="570.0" viewBox="0 0 720.0 570.0">
+<style>
+.bg{fill:#ffffff}.st{fill:#c9ccd1;stroke:#333;stroke-width:1}
+.pl{fill:#8a929c;stroke:#333;stroke-width:1}.hid{fill:none;stroke:#555;stroke-width:1;stroke-dasharray:6 4}
+.dim{stroke:#1f4e8c;stroke-width:1;fill:none}.t{font:13px sans-serif;fill:#1f4e8c}
+.lbl{font:13px sans-serif;fill:#222}.h{font:bold 15px sans-serif;fill:#222}
+</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1f4e8c"/></marker></defs>
+<rect class="bg" width="720.0" height="570.0"/>
+<text class="h" x="70" y="24">Top view – hybrid top (looking down)</text>
+<rect class="hid" x="100.0" y="100.0" width="480.0" height="30.0"/>
+<rect class="hid" x="100.0" y="370.0" width="480.0" height="30.0"/>
+<rect class="hid" x="100.0" y="130.0" width="30.0" height="240.0"/>
+<rect class="hid" x="550.0" y="130.0" width="30.0" height="240.0"/>
+<rect class="hid" x="235.0" y="130.0" width="30.0" height="240.0"/>
+<rect class="hid" x="265.0" y="235.0" width="285.0" height="30.0"/>
+<rect class="pl" fill-opacity="0.75" x="70.0" y="70.0" width="180.0" height="360.0"/>
+<text class="lbl" x="160.0" y="250.0" text-anchor="middle" fill="#fff" style="fill:#fff">10 mm plate</text>
+<rect class="st" fill-opacity="0.8" x="265.0" y="70.0" width="30.0" height="360.0"/>
+<rect class="st" fill-opacity="0.8" x="310.0" y="70.0" width="30.0" height="360.0"/>
+<rect class="st" fill-opacity="0.8" x="355.0" y="70.0" width="30.0" height="360.0"/>
+<rect class="st" fill-opacity="0.8" x="400.0" y="70.0" width="30.0" height="360.0"/>
+<rect class="st" fill-opacity="0.8" x="445.0" y="70.0" width="30.0" height="360.0"/>
+<rect class="st" fill-opacity="0.8" x="490.0" y="70.0" width="30.0" height="360.0"/>
+<rect class="st" fill-opacity="0.8" x="535.0" y="70.0" width="30.0" height="360.0"/>
+<rect class="st" fill-opacity="0.8" x="580.0" y="70.0" width="30.0" height="360.0"/>
+<line class="dim" x1="70.0" y1="52" x2="610.0" y2="52" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="340.0" y="46" text-anchor="middle">900</text>
+<line class="dim" x1="70.0" y1="458.0" x2="250.0" y2="458.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="160.0" y="452.0" text-anchor="middle">300 plate</text>
+<line class="dim" x1="250.0" y1="498.0" x2="265.0" y2="498.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="257.5" y="492.0" text-anchor="middle"></text>
+<text class="t" x="253.2" y="518.0" text-anchor="end">25 gap</text>
+<line class="dim" x1="265.0" y1="498.0" x2="295.0" y2="498.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="280.0" y="492.0" text-anchor="middle"></text>
+<text class="t" x="301.0" y="502.0" text-anchor="start">50 slat (×8)</text>
+<line class="dim" x1="265.0" y1="458.0" x2="610.0" y2="458.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="437.5" y="452.0" text-anchor="middle">8 slats × 50 + 8 gaps × 25 = 600</text>
+<line class="dim" x1="632.0" y1="70.0" x2="632.0" y2="430.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="638.0" y="254.0">600</text>
+<text class="lbl" x="70" y="560.0">Dashed: 50×50×3 SHS frame below (cross rail under plate edge, centre rail under slats)</text>
+</svg>

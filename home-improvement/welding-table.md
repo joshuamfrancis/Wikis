@@ -59,6 +59,18 @@ Solid plate over the left 300 mm for small parts and layout work, slats over the
 `300 plate → 25 gap → slat → 25 gap → slat …` ending with a slat flush at the right edge (8 slats, 8 gaps).
 Check: 300 + 8 × 25 + 8 × 50 = 900 mm.
 
+#### Top view
+
+The slats run front to back. Dashed lines show the SHS frame below: the cross rail sits under the plate's right edge, and the centre rail runs under the slats so each slat is supported in three places.
+
+![Top view of the hybrid welding table top](images/welding-table-top-view.svg)
+
+#### Side view
+
+Viewed from the right end. The legs run full height to the underside of the top (890 mm), with the 400 mm end rails fitted between them. The dashed square is the end of the centre rail.
+
+![Side view of the hybrid welding table from the right end](images/welding-table-side-view.svg)
+
 ## 4. Cut list (hybrid top)
 
 ### 4.1 50×50×3 SHS
