@@ -28,7 +28,7 @@ A compact, rigid welding and fabrication table that fits a single-car garage, bu
 | Working height | ~900 mm (set just below belt line) |
 | Frame | 50×50×3 SHS, 800 × 500 mm outer (inset 50 mm under the top) |
 | Shelf | 150 mm above the floor |
-| Weight | ~90 kg (solid plate) / ~80 kg (hybrid) |
+| Weight | ~90 kg (solid plate) / ~81 kg (hybrid) |
 
 ## 3. Top options
 
@@ -53,15 +53,16 @@ A compact, rigid welding and fabrication table that fits a single-car garage, bu
 
 ### 3.3 Option C – hybrid (recommended)
 
-Solid plate over the left 300 mm for small parts and layout work, slats over the remaining 600 mm for clamping.
+Solid plate over the left 325 mm for small parts and layout work, slats over the remaining 575 mm for clamping. The right-hand end slat is 100 mm wide so it sits fully on the end rail and still overhangs 50 mm for clamping.
 
 **Top layout (left to right):**
-`300 plate → 25 gap → slat → 25 gap → slat …` ending with a slat flush at the right edge (8 slats, 8 gaps).
-Check: 300 + 8 × 25 + 8 × 50 = 900 mm.
+`325 plate → 25 gap → 50 slat → … (6 × 50 slats) → 25 gap → 100 end slat`
+Check: 325 + 7 × 25 + 6 × 50 + 100 = 900 mm.
+The end slat spans 800–900 mm: its inner 50 mm sits on the right end rail and the outer 50 mm is the clamping overhang.
 
 #### Frame plan (top removed)
 
-The bare frame from above, with the top outline and plate edge dotted for reference. The cross rail's right face sits 50 mm in from the plate edge.
+The bare frame from above, with the top outline and plate edge dotted for reference. The cross rail's right face sits 50 mm in from the plate edge, and the dashed outline at the right shows where the 100 mm end slat sits over the end rail.
 
 ![Frame plan of the hybrid welding table with the top removed](images/welding-table-frame-plan.svg)
 
@@ -92,8 +93,8 @@ Viewed from the right end. The legs run full height to the underside of the top 
 | Legs | 4 | 890 | Subtract caster height if fitting wheels |
 | Top long rails (front/back) | 2 | 700 | Fitted between legs |
 | Top end rails | 2 | 400 | Fitted between legs |
-| Cross rail under plate | 1 | 400 | Right face 250 mm from the top's left edge (50 mm in from the plate edge) |
-| Centre rail under slats | 1 | 550 | From cross rail to right end rail |
+| Cross rail under plate | 1 | 400 | Right face 275 mm from the top's left edge (50 mm in from the plate edge) |
+| Centre rail under slats | 1 | 525 | From cross rail to right end rail |
 | Shelf long rails | 2 | 700 | Fitted between legs |
 | Shelf end rails | 2 | 400 | Fitted between legs |
 
@@ -103,13 +104,14 @@ Total ≈ 8.9 m → buy two 8 m lengths. Legs run full height to the underside o
 
 | Part | Qty | Size (mm) |
 |---|---|---|
-| Plate | 1 | 300 × 600 × 10 |
-| Slats (50×10 flat bar) | 8 | 600 long (one 6 m length) |
+| Plate | 1 | 325 × 600 × 10 |
+| Slats (50×10 flat bar) | 6 | 600 long (3.6 m, from one 6 m length) |
+| End slat (100×10 flat bar) | 1 | 600 long |
 | Shelf sheet | 1 | 800 × 500 × 3 with 50 × 50 corner notches for the legs (or expanded mesh) |
 
 ### 4.3 Fixings
 
-- **Slats, bolted:** M10 × 70 countersunk bolts through both SHS walls with nylocs, 3 per slat (24 total). 3 mm SHS wall is too thin to tap for M10.
+- **Slats, bolted:** M10 × 70 countersunk bolts through both SHS walls with nylocs, 3 per slat (21 total); bolt the end slat into the end rail. 3 mm SHS wall is too thin to tap for M10.
 - **Slats, welded:** stitch weld at the front and back rails only, so they can be ground off and replaced.
 - **Plate:** plug weld or stitch weld; it doesn't need replacing.
 
@@ -117,11 +119,11 @@ Total ≈ 8.9 m → buy two 8 m lengths. Legs run full height to the underside o
 
 | Item | kg |
 |---|---|
-| SHS (8.91 m × 4.25 kg/m) | 38 |
-| Plate 300 × 600 × 10 | 14 |
-| Slats (4.8 m × 3.93 kg/m) | 19 |
+| SHS (8.89 m × 4.25 kg/m) | 38 |
+| Plate 325 × 600 × 10 | 15 |
+| Slats (3.6 m × 3.93 kg/m + 0.6 m × 7.85 kg/m) | 19 |
 | Shelf 3 mm sheet | 9 |
-| **Total** | **~80** |
+| **Total** | **~81** |
 
 ## 5. Clamping provisions
 
@@ -171,4 +173,4 @@ Total ≈ 8.9 m → buy two 8 m lengths. Legs run full height to the underside o
 | Bits of Steel Supplies | 1 Maxwell St, Brendale | Online ordering, drilling service, delivery | 07 3865 7740 |
 | The Steel Market | 61 Griffin Cres, Brendale | Retail steel | 1300 400 876 |
 
-Call ahead to confirm 10 mm plate and 50×10 flat bar are in stock, whether they'll cut to the list, and ask about offcuts.
+Call ahead to confirm 10 mm plate and 50×10 and 100×10 flat bar are in stock, whether they'll cut to the list, and ask about offcuts.
