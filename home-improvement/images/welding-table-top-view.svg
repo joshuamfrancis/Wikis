@@ -8,12 +8,16 @@
 <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1f4e8c"/></marker></defs>
 <rect class="bg" width="720.0" height="570.0"/>
 <text class="h" x="70" y="24">Top view – hybrid top (looking down)</text>
-<rect class="hid" x="100.0" y="100.0" width="480.0" height="30.0"/>
-<rect class="hid" x="100.0" y="370.0" width="480.0" height="30.0"/>
+<rect class="hid" x="100.0" y="100.0" width="30.0" height="30.0"/>
+<rect class="hid" x="550.0" y="100.0" width="30.0" height="30.0"/>
+<rect class="hid" x="100.0" y="370.0" width="30.0" height="30.0"/>
+<rect class="hid" x="550.0" y="370.0" width="30.0" height="30.0"/>
+<rect class="hid" x="130.0" y="100.0" width="420.0" height="30.0"/>
+<rect class="hid" x="130.0" y="370.0" width="420.0" height="30.0"/>
 <rect class="hid" x="100.0" y="130.0" width="30.0" height="240.0"/>
 <rect class="hid" x="550.0" y="130.0" width="30.0" height="240.0"/>
-<rect class="hid" x="235.0" y="130.0" width="30.0" height="240.0"/>
-<rect class="hid" x="265.0" y="235.0" width="285.0" height="30.0"/>
+<rect class="hid" x="190.0" y="130.0" width="30.0" height="240.0"/>
+<rect class="hid" x="220.0" y="235.0" width="330.0" height="30.0"/>
 <rect class="pl" fill-opacity="0.75" x="70.0" y="70.0" width="180.0" height="360.0"/>
 <text class="lbl" x="160.0" y="250.0" text-anchor="middle" fill="#fff" style="fill:#fff">10 mm plate</text>
 <rect class="st" fill-opacity="0.8" x="265.0" y="70.0" width="30.0" height="360.0"/>
@@ -32,5 +36,5 @@
 <text class="t" x="301.0" y="502.0" text-anchor="start">50 slat (×8)</text>
 <line class="dim" x1="265.0" y1="458.0" x2="610.0" y2="458.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="437.5" y="452.0" text-anchor="middle">8 slats × 50 + 8 gaps × 25 = 600</text>
 <line class="dim" x1="632.0" y1="70.0" x2="632.0" y2="430.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="638.0" y="254.0">600</text>
-<text class="lbl" x="70" y="560.0">Dashed: 50×50×3 SHS frame below (cross rail under plate edge, centre rail under slats)</text>
+<text class="lbl" x="70" y="560.0">Dashed: 50×50×3 SHS frame below (cross rail 50 in from plate edge, centre rail under slats)</text>
 </svg>

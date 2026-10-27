@@ -18,7 +18,7 @@
 <rect class="st" x="535.0" y="100.0" width="30.0" height="6.0"/>
 <rect class="st" x="580.0" y="100.0" width="30.0" height="6.0"/>
 <rect class="st" x="130.0" y="106.0" width="420.0" height="30.0"/>
-<rect class="hid" x="235.0" y="106.0" width="30.0" height="30.0"/>
+<rect class="hid" x="190.0" y="106.0" width="30.0" height="30.0"/>
 <rect class="st" x="100.0" y="106.0" width="30.0" height="534.0"/>
 <rect class="st" x="550.0" y="106.0" width="30.0" height="534.0"/>
 <rect class="st" x="130.0" y="520.0" width="420.0" height="30.0"/>
@@ -32,5 +32,5 @@
 <line class="dim" x1="70.0" y1="668.0" x2="100.0" y2="668.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="85.0" y="662.0" text-anchor="middle"></text>
 <text class="t" x="85.0" y="688.0" text-anchor="middle">50</text>
 <line class="dim" x1="100.0" y1="708.0" x2="580.0" y2="708.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="340.0" y="702.0" text-anchor="middle">Frame / leg spacing, 800 outer</text>
-<text class="lbl" x="70" y="750.0">All frame members 50×50×3 SHS. Dashed: cross rail behind front rail.</text>
+<text class="lbl" x="70" y="750.0">All frame members 50×50×3 SHS. Dashed: cross rail behind front rail, 50 in from plate edge.</text>
 </svg>

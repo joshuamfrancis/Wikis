@@ -59,15 +59,21 @@ Solid plate over the left 300 mm for small parts and layout work, slats over the
 `300 plate → 25 gap → slat → 25 gap → slat …` ending with a slat flush at the right edge (8 slats, 8 gaps).
 Check: 300 + 8 × 25 + 8 × 50 = 900 mm.
 
+#### Frame plan (top removed)
+
+The bare frame from above, with the top outline and plate edge dotted for reference. The cross rail's right face sits 50 mm in from the plate edge.
+
+![Frame plan of the hybrid welding table with the top removed](images/welding-table-frame-plan.svg)
+
 #### Front view
 
-Viewed from the front. The plate and slat ends sit on the 700 mm long rail, which fits between the legs. The dashed square is the cross rail under the plate edge.
+Viewed from the front. The plate and slat ends sit on the 700 mm long rail, which fits between the legs. The dashed square is the cross rail, set 50 mm in from the plate's edge.
 
 ![Front view of the hybrid welding table](images/welding-table-front-view.svg)
 
 #### Top view
 
-The slats run front to back. Dashed lines show the SHS frame below: the cross rail sits under the plate's right edge, and the centre rail runs under the slats so each slat is supported in three places.
+The slats run front to back. Dashed lines show the SHS frame below. The cross rail sits under the plate, 50 mm in from its right edge, so that edge has a clamping lip and the gap to the first slat stays open. The centre rail runs from the cross rail under all the slats, so each slat is supported in three places.
 
 ![Top view of the hybrid welding table top](images/welding-table-top-view.svg)
 
@@ -86,12 +92,12 @@ Viewed from the right end. The legs run full height to the underside of the top 
 | Legs | 4 | 890 | Subtract caster height if fitting wheels |
 | Top long rails (front/back) | 2 | 700 | Fitted between legs |
 | Top end rails | 2 | 400 | Fitted between legs |
-| Cross rail under plate/slat join | 1 | 400 | Centred 300 mm from the top's left edge |
-| Centre rail under slats | 1 | 475 | From cross rail to right end rail |
+| Cross rail under plate | 1 | 400 | Right face 250 mm from the top's left edge (50 mm in from the plate edge) |
+| Centre rail under slats | 1 | 550 | From cross rail to right end rail |
 | Shelf long rails | 2 | 700 | Fitted between legs |
 | Shelf end rails | 2 | 400 | Fitted between legs |
 
-Total ≈ 8.8 m → buy two 8 m lengths. Legs run full height to the underside of the top; every rail fits between them. Use offcuts for the ground tab and a clamp rack.
+Total ≈ 8.9 m → buy two 8 m lengths. Legs run full height to the underside of the top; every rail fits between them. Use offcuts for the ground tab and a clamp rack.
 
 ### 4.2 Top and shelf
 
@@ -111,7 +117,7 @@ Total ≈ 8.8 m → buy two 8 m lengths. Legs run full height to the underside o
 
 | Item | kg |
 |---|---|
-| SHS (8.84 m × 4.25 kg/m) | 38 |
+| SHS (8.91 m × 4.25 kg/m) | 38 |
 | Plate 300 × 600 × 10 | 14 |
 | Slats (4.8 m × 3.93 kg/m) | 19 |
 | Shelf 3 mm sheet | 9 |
@@ -123,6 +129,7 @@ Total ≈ 8.8 m → buy two 8 m lengths. Legs run full height to the underside o
 
 - **50 mm overhang on all sides** – F-clamps, C-clamps and locking-jaw clamps grab the lip anywhere around the edge.
 - **Slat gaps** (Options B/C) – clamp through the top anywhere over the slatted section.
+- **Plate inner edge** (Option C) – the cross rail sits 50 mm in from the plate edge, giving a clamp lip there and keeping the plate-to-slat gap clear.
 - **Optional 16 mm hole grid** on 100 mm centres in the plate – for fixture clamps, stop pins and hold-downs. Cut before assembly and keep holes clear of rails.
 - **Legs and shelf rail** – somewhere to clamp long stock vertically or brace a job.
 
