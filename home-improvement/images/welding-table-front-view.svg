@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="830.0" height="760.0" viewBox="0 0 830.0 760.0">
+<style>
+.bg{fill:#ffffff}.st{fill:#c9ccd1;stroke:#333;stroke-width:1}
+.pl{fill:#8a929c;stroke:#333;stroke-width:1}.hid{fill:none;stroke:#555;stroke-width:1;stroke-dasharray:6 4}
+.dim{stroke:#1f4e8c;stroke-width:1;fill:none}.t{font:13px sans-serif;fill:#1f4e8c}
+.lbl{font:13px sans-serif;fill:#222}.h{font:bold 15px sans-serif;fill:#222}
+</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1f4e8c"/></marker></defs>
+<rect class="bg" width="830.0" height="760.0"/>
+<text class="h" x="70" y="24">Front view – hybrid top (width × height)</text>
+<rect class="pl" x="70.0" y="100.0" width="180.0" height="6.0"/>
+<rect class="st" x="265.0" y="100.0" width="30.0" height="6.0"/>
+<rect class="st" x="310.0" y="100.0" width="30.0" height="6.0"/>
+<rect class="st" x="355.0" y="100.0" width="30.0" height="6.0"/>
+<rect class="st" x="400.0" y="100.0" width="30.0" height="6.0"/>
+<rect class="st" x="445.0" y="100.0" width="30.0" height="6.0"/>
+<rect class="st" x="490.0" y="100.0" width="30.0" height="6.0"/>
+<rect class="st" x="535.0" y="100.0" width="30.0" height="6.0"/>
+<rect class="st" x="580.0" y="100.0" width="30.0" height="6.0"/>
+<rect class="st" x="130.0" y="106.0" width="420.0" height="30.0"/>
+<rect class="hid" x="235.0" y="106.0" width="30.0" height="30.0"/>
+<rect class="st" x="100.0" y="106.0" width="30.0" height="534.0"/>
+<rect class="st" x="550.0" y="106.0" width="30.0" height="534.0"/>
+<rect class="st" x="130.0" y="520.0" width="420.0" height="30.0"/>
+<rect class="pl" x="130.0" y="518.2" width="420.0" height="1.7999999999999998"/>
+<line x1="52.0" y1="640.0" x2="628.0" y2="640.0" stroke="#333" stroke-width="1.5"/>
+<line class="dim" x1="70.0" y1="56" x2="610.0" y2="56" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="340.0" y="50" text-anchor="middle">900</text>
+<line class="dim" x1="70.0" y1="86" x2="250.0" y2="86" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="160.0" y="80" text-anchor="middle">300 plate</text>
+<line class="dim" x1="130.0" y1="280.0" x2="550.0" y2="280.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="340.0" y="274.0" text-anchor="middle">Long rail, 700 (between legs)</text>
+<line class="dim" x1="630.0" y1="640.0" x2="630.0" y2="100.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="636.0" y="374.0">900</text>
+<line class="dim" x1="680.0" y1="640.0" x2="680.0" y2="550.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="686.0" y="599.0">150</text>
+<line class="dim" x1="70.0" y1="668.0" x2="100.0" y2="668.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="85.0" y="662.0" text-anchor="middle"></text>
+<text class="t" x="85.0" y="688.0" text-anchor="middle">50</text>
+<line class="dim" x1="100.0" y1="708.0" x2="580.0" y2="708.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="340.0" y="702.0" text-anchor="middle">Frame / leg spacing, 800 outer</text>
+<text class="lbl" x="70" y="750.0">All frame members 50×50×3 SHS. Dashed: cross rail behind front rail.</text>
+</svg>

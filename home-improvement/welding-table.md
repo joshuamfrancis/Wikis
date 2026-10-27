@@ -1,7 +1,7 @@
 # Small Welding Table – Design, Cut List and Build Notes
 
 > **Status:** Design · **Date:** 2026-10-28 · **Units:** millimetres
-> **Size:** 900 × 600 mm top, ~900 mm working height, ~82–90 kg all-up
+> **Size:** 900 × 600 mm top, ~900 mm working height, ~80–90 kg all-up
 
 ## 1. Purpose
 
@@ -28,7 +28,7 @@ A compact, rigid welding and fabrication table that fits a single-car garage, bu
 | Working height | ~900 mm (set just below belt line) |
 | Frame | 50×50×3 SHS, 800 × 500 mm outer (inset 50 mm under the top) |
 | Shelf | 150 mm above the floor |
-| Weight | ~90 kg (solid plate) / ~82 kg (hybrid) |
+| Weight | ~90 kg (solid plate) / ~80 kg (hybrid) |
 
 ## 3. Top options
 
@@ -59,6 +59,12 @@ Solid plate over the left 300 mm for small parts and layout work, slats over the
 `300 plate → 25 gap → slat → 25 gap → slat …` ending with a slat flush at the right edge (8 slats, 8 gaps).
 Check: 300 + 8 × 25 + 8 × 50 = 900 mm.
 
+#### Front view
+
+Viewed from the front. The plate and slat ends sit on the 700 mm long rail, which fits between the legs. The dashed square is the cross rail under the plate edge.
+
+![Front view of the hybrid welding table](images/welding-table-front-view.svg)
+
 #### Top view
 
 The slats run front to back. Dashed lines show the SHS frame below: the cross rail sits under the plate's right edge, and the centre rail runs under the slats so each slat is supported in three places.
@@ -78,14 +84,14 @@ Viewed from the right end. The legs run full height to the underside of the top 
 | Part | Qty | Length (mm) | Notes |
 |---|---|---|---|
 | Legs | 4 | 890 | Subtract caster height if fitting wheels |
-| Top long rails (front/back) | 2 | 800 | |
-| Top end rails | 2 | 400 | Fitted between long rails |
+| Top long rails (front/back) | 2 | 700 | Fitted between legs |
+| Top end rails | 2 | 400 | Fitted between legs |
 | Cross rail under plate/slat join | 1 | 400 | Centred 300 mm from the top's left edge |
 | Centre rail under slats | 1 | 475 | From cross rail to right end rail |
-| Shelf long rails | 2 | 800 | |
-| Shelf end rails | 2 | 400 | |
+| Shelf long rails | 2 | 700 | Fitted between legs |
+| Shelf end rails | 2 | 400 | Fitted between legs |
 
-Total ≈ 9.3 m → buy two 8 m lengths. Use offcuts for the ground tab and a clamp rack.
+Total ≈ 8.8 m → buy two 8 m lengths. Legs run full height to the underside of the top; every rail fits between them. Use offcuts for the ground tab and a clamp rack.
 
 ### 4.2 Top and shelf
 
@@ -93,7 +99,7 @@ Total ≈ 9.3 m → buy two 8 m lengths. Use offcuts for the ground tab and a cl
 |---|---|---|
 | Plate | 1 | 300 × 600 × 10 |
 | Slats (50×10 flat bar) | 8 | 600 long (one 6 m length) |
-| Shelf sheet | 1 | 800 × 500 × 3 (or expanded mesh) |
+| Shelf sheet | 1 | 800 × 500 × 3 with 50 × 50 corner notches for the legs (or expanded mesh) |
 
 ### 4.3 Fixings
 
@@ -105,11 +111,11 @@ Total ≈ 9.3 m → buy two 8 m lengths. Use offcuts for the ground tab and a cl
 
 | Item | kg |
 |---|---|
-| SHS (9.24 m × 4.25 kg/m) | 39 |
+| SHS (8.84 m × 4.25 kg/m) | 38 |
 | Plate 300 × 600 × 10 | 14 |
 | Slats (4.8 m × 3.93 kg/m) | 19 |
 | Shelf 3 mm sheet | 9 |
-| **Total** | **~82** |
+| **Total** | **~80** |
 
 ## 5. Clamping provisions
 
