@@ -1,11 +1,11 @@
 # Small Welding Table – Design, Cut List and Build Notes
 
 > **Status:** Design · **Date:** 2026-10-28 · **Units:** millimetres
-> **Size:** 900 × 600 mm top, ~900 mm working height, ~80–90 kg all-up
+> **Size:** 900 × 600 mm top, ~900 mm working height, ~82–90 kg all-up
 
 ## 1. Purpose
 
-A compact, rigid welding and fabrication table that fits a single-car garage, built entirely from standard Australian steel sections. Two top options are covered: a full solid plate, and a hybrid plate + slat top (recommended) that gives clamp access anywhere on the table.
+A compact, rigid welding and fabrication table that fits a single-car garage, built entirely from standard Australian steel sections. Three top options are covered: a full solid plate, slats only, and a hybrid plate + slat top (recommended) that gives clamp access anywhere on the table.
 
 ## 2. Overall design
 
@@ -28,7 +28,7 @@ A compact, rigid welding and fabrication table that fits a single-car garage, bu
 | Working height | ~900 mm (set just below belt line) |
 | Frame | 50×50×3 SHS, 800 × 500 mm outer (inset 50 mm under the top) |
 | Shelf | 150 mm above the floor |
-| Weight | ~90 kg (solid plate) / ~81 kg (hybrid) |
+| Weight | ~90 kg (solid plate) / ~82 kg (hybrid) |
 
 ## 3. Top options
 
@@ -40,9 +40,10 @@ A compact, rigid welding and fabrication table that fits a single-car garage, bu
 
 ### 3.2 Option B – slats only
 
-- 13 × 600 mm lengths of 50×10 flat bar, laid flat, running front to back
-- 20 mm gaps (13 × 50 + 12 × 20 = 890 mm)
-- Needs a centre rail so slats don't flex under hammering
+- 9 × 600 mm lengths of 50×10 flat bar plus 2 × 600 mm of 100×10 flat bar for the end slats, laid flat, running front to back
+- Layout: `100 end slat → 25 gap → 50 slat → … (9 × 50 slats) → 25 gap → 100 end slat` = 100 + 10 × 25 + 9 × 50 + 100 = 900 mm
+- Each 100 mm end slat sits half on an end rail and half as the 50 mm clamping overhang. Narrow slats at the ends would sit outside the frame with nothing under them.
+- Needs a 700 mm centre rail between the end rails so slats don't flex under hammering
 
 | Pros | Cons |
 |---|---|
@@ -59,6 +60,8 @@ Solid plate over the left 325 mm for small parts and layout work, slats over the
 `325 plate → 25 gap → 50 slat → … (6 × 50 slats) → 25 gap → 100 end slat`
 Check: 325 + 7 × 25 + 6 × 50 + 100 = 900 mm.
 The end slat spans 800–900 mm: its inner 50 mm sits on the right end rail and the outer 50 mm is the clamping overhang.
+
+> Note: the clamping lip along the plate's inner edge is clear for most of its length, but the front, back and centre rails all pass under it, so there's no clamp access at those three 50 mm spots.
 
 #### Frame plan (top removed)
 
@@ -98,7 +101,11 @@ Viewed from the right end. The legs run full height to the underside of the top 
 | Shelf long rails | 2 | 700 | Fitted between legs |
 | Shelf end rails | 2 | 400 | Fitted between legs |
 
-Total ≈ 8.9 m → buy two 8 m lengths. Legs run full height to the underside of the top; every rail fits between them. Use offcuts for the ground tab and a clamp rack.
+Total = 8,885 mm. Legs run full height to the underside of the top; every rail fits between them.
+
+**Buying:** one 8 m length covers the 4 legs, 4 × 700, the 525 and 2 × 400 (7,718 mm with 3 mm saw kerfs, ~280 mm left over). The remaining 3 × 400 (1,209 mm) come from a second length or an offcut. Cheapest is usually to have the supplier cut the whole list from stock, or ask for 50×50×3 offcuts for the three 400s. Use leftovers for the ground tab and a clamp rack.
+
+**Casters:** if fitting casters, shorten all four legs by the caster's overall height (e.g. a 100 mm caster is typically ~125 mm overall, giving 765 mm legs).
 
 ### 4.2 Top and shelf
 
@@ -109,9 +116,11 @@ Total ≈ 8.9 m → buy two 8 m lengths. Legs run full height to the underside o
 | End slat (100×10 flat bar) | 1 | 600 long |
 | Shelf sheet | 1 | 800 × 500 × 3 with 50 × 50 corner notches for the legs (or expanded mesh) |
 
+The 3 mm sheet spans 700 × 400 between the shelf rails, which is fine for clamps and tools. For heavy storage (gas bottles, a vise), add a 400 mm SHS bar across the middle of the shelf frame.
+
 ### 4.3 Fixings
 
-- **Slats, bolted:** M10 × 70 countersunk bolts through both SHS walls with nylocs, 3 per slat (21 total); bolt the end slat into the end rail. 3 mm SHS wall is too thin to tap for M10.
+- **Slats, bolted:** M10 × 80 countersunk bolts through both SHS walls with a washer and nyloc. A 70 mm bolt is too short: 10 mm slat + 50 mm SHS + washer + nyloc needs about 74 mm, 3 per slat (21 total); bolt the end slat into the end rail. 3 mm SHS wall is too thin to tap for M10.
 - **Slats, welded:** stitch weld at the front and back rails only, so they can be ground off and replaced.
 - **Plate:** plug weld or stitch weld; it doesn't need replacing.
 
@@ -120,10 +129,27 @@ Total ≈ 8.9 m → buy two 8 m lengths. Legs run full height to the underside o
 | Item | kg |
 |---|---|
 | SHS (8.89 m × 4.25 kg/m) | 38 |
-| Plate 325 × 600 × 10 | 15 |
-| Slats (3.6 m × 3.93 kg/m + 0.6 m × 7.85 kg/m) | 19 |
+| Plate 325 × 600 × 10 (78.5 kg/m²) | 15 |
+| Slats (3.6 m × 4.02 kg/m + 0.6 m × 8.04 kg/m) | 19 |
 | Shelf 3 mm sheet | 9 |
-| **Total** | **~81** |
+| **Total** | **~82** |
+
+Section weights are from the Bits of Steel catalogue.
+
+### 4.5 Shopping list and availability
+
+Checked 28 Oct 2026 against supplier websites. Catalogue listings show what a supplier carries, not live stock, so call ahead.
+
+| Item | Quantity | Bits of Steel (Brendale) | Metro Steel / True Metal |
+|---|---|---|---|
+| 50×50×3 SHS (painted) | 8.9 m cut to list | Listed (4.25 kg/m); cut-to-length service | Hollow sections and cutting offered; size not published |
+| 50×10 flat bar | 6 × 600 mm (3.6 m) | Listed (4.02 kg/m) | Flat bar offered (True Metal: 6 m or 4 m lengths, or cut to size); sizes not published |
+| 100×10 flat bar | 1 × 600 mm | Listed (8.04 kg/m) | As above |
+| 10 mm HR plate | 325 × 600 mm | Listed; custom panels cut to size | Plate offered; True Metal cuts to size and has HD plasma cutting |
+| 3 mm HR sheet | 800 × 500 mm | Listed; guillotined to size | Sheet offered; thickness not published |
+| M10 × 80 countersunk bolts, washers, nylocs | 21 each | Not a fastener supplier – use a bolt or hardware shop | – |
+
+Bits of Steel is the only one that publishes every size, and it takes cut lists online. That makes it the easiest single order.
 
 ## 5. Clamping provisions
 
@@ -171,6 +197,6 @@ Total ≈ 8.9 m → buy two 8 m lengths. Legs run full height to the underside o
 | Metro Steel | 109 Kabi Cct, Deception Bay | Closest; odd sizes and cheap offcuts. Mon–Fri 7am–4pm | 07 3204 1000 |
 | True Metal Solutions | 594 Old Gympie Rd, Narangba | Cut to length, offcut area, profile cutting. Open Sat 8am–12pm | 07 3888 0176 |
 | Bits of Steel Supplies | 1 Maxwell St, Brendale | Online ordering, drilling service, delivery | 07 3865 7740 |
-| The Steel Market | 61 Griffin Cres, Brendale | Retail steel | 1300 400 876 |
+| The Steel Market | 61 Griffin Cres, Brendale | Mainly stainless steel and aluminium, so not suited to this mild-steel build | 1300 400 876 |
 
-Call ahead to confirm 10 mm plate and 50×10 and 100×10 flat bar are in stock, whether they'll cut to the list, and ask about offcuts.
+See section 4.5 for what each supplier lists. Call ahead to confirm stock, whether they'll cut to the list, and ask about offcuts.
