@@ -64,25 +64,25 @@ The end slat spans 800–900 mm: its inner 50 mm sits on the right end rail and 
 
 The bare frame from above, with the top outline and plate edge dotted for reference. The cross rail's right face sits 50 mm in from the plate edge, and the dashed outline at the right shows where the 100 mm end slat sits over the end rail.
 
-![Frame plan of the hybrid welding table with the top removed](images/welding-table-frame-plan.svg)
+![Frame plan of the hybrid welding table with the top removed](images/welding-table-frame-plan-v2.svg)
 
 #### Front view
 
 Viewed from the front. The plate and slat ends sit on the 700 mm long rail, which fits between the legs. The dashed square is the cross rail, set 50 mm in from the plate's edge.
 
-![Front view of the hybrid welding table](images/welding-table-front-view.svg)
+![Front view of the hybrid welding table](images/welding-table-front-view-v2.svg)
 
 #### Top view
 
 The slats run front to back. Dashed lines show the SHS frame below. The cross rail sits under the plate, 50 mm in from its right edge, so that edge has a clamping lip and the gap to the first slat stays open. The centre rail runs from the cross rail under all the slats, so each slat is supported in three places.
 
-![Top view of the hybrid welding table top](images/welding-table-top-view.svg)
+![Top view of the hybrid welding table top](images/welding-table-top-view-v2.svg)
 
 #### Side view
 
 Viewed from the right end. The legs run full height to the underside of the top (890 mm), with the 400 mm end rails fitted between them. The dashed square is the end of the centre rail.
 
-![Side view of the hybrid welding table from the right end](images/welding-table-side-view.svg)
+![Side view of the hybrid welding table from the right end](images/welding-table-side-view-v2.svg)
 
 ## 4. Cut list (hybrid top)
 
