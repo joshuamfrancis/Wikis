@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="830.0" height="760.0" viewBox="0 0 830.0 760.0">
+<style>
+.bg{fill:#ffffff}.st{fill:#c9ccd1;stroke:#333;stroke-width:1}
+.pl{fill:#8a929c;stroke:#333;stroke-width:1}.hid{fill:none;stroke:#555;stroke-width:1;stroke-dasharray:6 4}
+.dim{stroke:#1f4e8c;stroke-width:1;fill:none}.t{font:13px sans-serif;fill:#1f4e8c}
+.lbl{font:13px sans-serif;fill:#222}.h{font:bold 15px sans-serif;fill:#222}
+</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1f4e8c"/></marker></defs>
+<rect class="bg" width="830.0" height="760.0"/>
+<text class="h" x="70" y="24">Light table – front view (width × height)</text>
+<rect class="pl" x="70.0" y="100.0" width="195.0" height="3.0"/>
+<rect class="st" x="280.0" y="100.0" width="30.0" height="3.0"/>
+<rect class="st" x="325.0" y="100.0" width="30.0" height="3.0"/>
+<rect class="st" x="370.0" y="100.0" width="30.0" height="3.0"/>
+<rect class="st" x="415.0" y="100.0" width="30.0" height="3.0"/>
+<rect class="st" x="460.0" y="100.0" width="30.0" height="3.0"/>
+<rect class="st" x="505.0" y="100.0" width="30.0" height="3.0"/>
+<rect class="st" x="550.0" y="100.0" width="60.0" height="3.0"/>
+<rect class="st" x="115.0" y="103.0" width="450.0" height="15.0"/>
+<rect class="hid" x="220.0" y="103.0" width="15.0" height="15.0"/>
+<rect class="st" x="100.0" y="103.0" width="15.0" height="537.0"/>
+<rect class="st" x="565.0" y="103.0" width="15.0" height="537.0"/>
+<rect class="st" x="115.0" y="535.0" width="450.0" height="15.0"/>
+<rect class="pl" x="115.0" y="533.8" width="450.0" height="1.2"/>
+<rect class="hid" x="332.5" y="535.0" width="15.0" height="15.0"/>
+<line x1="52.0" y1="640.0" x2="628.0" y2="640.0" stroke="#333" stroke-width="1.5"/>
+<line class="dim" x1="70.0" y1="56" x2="610.0" y2="56" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="340.0" y="50" text-anchor="middle">900</text>
+<line class="dim" x1="70.0" y1="86" x2="265.0" y2="86" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="167.5" y="80" text-anchor="middle">325 plate</text>
+<line class="dim" x1="550.0" y1="86" x2="610.0" y2="86" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="580.0" y="80" text-anchor="middle">100 end slat</text>
+<line class="dim" x1="115.0" y1="280.0" x2="565.0" y2="280.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="340.0" y="274.0" text-anchor="middle">Long rail, 750 (between legs)</text>
+<line class="dim" x1="630.0" y1="640.0" x2="630.0" y2="100.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="636.0" y="374.0">900</text>
+<line class="dim" x1="680.0" y1="640.0" x2="680.0" y2="550.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="686.0" y="599.0">150</text>
+<line class="dim" x1="100.0" y1="678.0" x2="580.0" y2="678.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="340.0" y="672.0" text-anchor="middle">Leg spacing, 800 outer</text>
+<text class="lbl" x="70" y="750.0">Legs 895 to underside of 5 mm top. Dashed: cross rail, and shelf centre bar (450).</text>
+</svg>

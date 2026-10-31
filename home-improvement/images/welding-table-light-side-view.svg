@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760.0" height="730.0" viewBox="0 0 760.0 730.0">
+<style>
+.bg{fill:#ffffff}.st{fill:#c9ccd1;stroke:#333;stroke-width:1}
+.pl{fill:#8a929c;stroke:#333;stroke-width:1}.hid{fill:none;stroke:#555;stroke-width:1;stroke-dasharray:6 4}
+.dim{stroke:#1f4e8c;stroke-width:1;fill:none}.t{font:13px sans-serif;fill:#1f4e8c}
+.lbl{font:13px sans-serif;fill:#222}.h{font:bold 15px sans-serif;fill:#222}
+</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1f4e8c"/></marker></defs>
+<rect class="bg" width="760.0" height="730.0"/>
+<text class="h" x="70" y="24">Light table – side view, right end (depth × height)</text>
+<rect class="st" x="70.0" y="100.0" width="360.0" height="3.0"/>
+<rect class="st" x="115.0" y="103.0" width="270.0" height="15.0"/>
+<rect class="st" x="100.0" y="103.0" width="15.0" height="537.0"/>
+<rect class="st" x="385.0" y="103.0" width="15.0" height="537.0"/>
+<rect class="st" x="115.0" y="535.0" width="270.0" height="15.0"/>
+<rect class="pl" x="115.0" y="533.8" width="270.0" height="1.2"/>
+<rect class="hid" x="242.5" y="103.0" width="15.0" height="15.0"/>
+<line x1="52.0" y1="640.0" x2="448.0" y2="640.0" stroke="#333" stroke-width="1.5"/>
+<line class="dim" x1="70.0" y1="78" x2="430.0" y2="78" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="250.0" y="72" text-anchor="middle">600</text>
+<line class="dim" x1="70.0" y1="124.0" x2="100.0" y2="124.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="85.0" y="118.0" text-anchor="middle"></text>
+<text class="t" x="85.0" y="148.0" text-anchor="middle">50</text>
+<line class="dim" x1="450.0" y1="640.0" x2="450.0" y2="100.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="456.0" y="374.0">900</text>
+<line class="dim" x1="500.0" y1="640.0" x2="500.0" y2="550.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="506.0" y="599.0">150</text>
+<line x1="406.0" y1="101.8" x2="526.0" y2="82.0" stroke="#888" stroke-width="0.8" stroke-dasharray="3 3"/>
+<text class="lbl" x="530.0" y="86.0">100×5 end slat</text>
+<line x1="358.0" y1="110.8" x2="526.0" y2="124.0" stroke="#888" stroke-width="0.8" stroke-dasharray="3 3"/>
+<text class="lbl" x="530.0" y="128.0">Top end rail, 450</text>
+<line x1="392.2" y1="340.0" x2="526.0" y2="340.0" stroke="#888" stroke-width="0.8" stroke-dasharray="3 3"/>
+<text class="lbl" x="530.0" y="344.0">Leg, 895</text>
+<line x1="358.0" y1="534.4" x2="526.0" y2="502.0" stroke="#888" stroke-width="0.8" stroke-dasharray="3 3"/>
+<text class="lbl" x="530.0" y="506.0">1.55 mm shelf sheet</text>
+<line x1="358.0" y1="542.8" x2="526.0" y2="542.8" stroke="#888" stroke-width="0.8" stroke-dasharray="3 3"/>
+<text class="lbl" x="530.0" y="546.8">Shelf end rail, 450</text>
+<text class="lbl" x="70" y="718.0">All frame members 25×25×2 SHS. Dashed: centre rail section.</text>
+</svg>

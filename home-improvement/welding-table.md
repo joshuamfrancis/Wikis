@@ -1,11 +1,11 @@
 # Small Welding Table – Design, Cut List and Build Notes
 
 > **Status:** Design · **Date:** 2026-10-28 · **Units:** millimetres
-> **Size:** 900 × 600 mm top, ~900 mm working height, ~82–90 kg all-up
+> **Size:** 900 × 600 mm top, ~900 mm working height, ~35 kg (light) to ~90 kg (solid plate) of steel
 
 ## 1. Purpose
 
-A compact, rigid welding and fabrication table that fits a single-car garage, built entirely from standard Australian steel sections. Three top options are covered: a full solid plate, slats only, and a hybrid plate + slat top (recommended) that gives clamp access anywhere on the table.
+A compact, rigid welding and fabrication table that fits a single-car garage, built entirely from standard Australian steel sections. Three top options are covered: a full solid plate, slats only, and a hybrid plate + slat top (recommended) that gives clamp access anywhere on the table. Section 5 adds a **light table option**: the same hybrid layout in thinner sections, for welding only, at well under half the steel.
 
 ## 2. Overall design
 
@@ -26,9 +26,9 @@ A compact, rigid welding and fabrication table that fits a single-car garage, bu
 |---|---|
 | Top | 900 × 600 mm |
 | Working height | ~900 mm (set just below belt line) |
-| Frame | 50×50×3 SHS, 800 × 500 mm outer (inset 50 mm under the top) |
+| Frame | 50×50×3 SHS (light option: 25×25×2), 800 × 500 mm outer (inset 50 mm under the top) |
 | Shelf | 150 mm above the floor |
-| Weight | ~90 kg (solid plate) / ~82 kg (hybrid) |
+| Weight | ~90 kg (solid plate) / ~82 kg (hybrid) / ~35 kg (light option) |
 
 ## 3. Top options
 
@@ -87,7 +87,7 @@ Viewed from the right end. The legs run full height to the underside of the top 
 
 ![Side view of the hybrid welding table from the right end](images/welding-table-side-view-v2.svg)
 
-## 4. Cut list (hybrid top)
+## 4. Cut list – standard hybrid table
 
 ### 4.1 50×50×3 SHS
 
@@ -151,7 +151,116 @@ Checked 28 Oct 2026 against supplier websites. Catalogue listings show what a su
 
 Bits of Steel is the only one that publishes every size, and it takes cut lists online. That makes it the easiest single order.
 
-## 5. Clamping provisions
+## 5. Light table option (welding only)
+
+For a table used only for welding, with hammering, straightening and other heavy work done on a separate bench. It keeps the hybrid's 900 × 600 top layout, 900 mm height and clamping lips, built from lighter, cheaper sections.
+
+| | Standard hybrid | Light option |
+|---|---|---|
+| Frame | 50×50×3 SHS | 25×25×2.0 SHS |
+| Plate | 325 × 600 × 10 | 325 × 600 × 5 |
+| Slats | 6 × 50×10, 1 × 100×10 end slat | 6 × 50×5, 1 × 100×5 end slat |
+| Shelf | 3 mm HR sheet | 1.55 mm HR sheet + centre bar |
+| Fixing the top | Bolts or stitch welds | Stitch welds only |
+| Steel weight | ~82 kg | ~35 kg |
+
+**Limits of the light option**
+
+- Not for hammering, straightening or heavy loads; the frame flexes and the top dents.
+- The 5 mm top warps more easily under heat (see build notes).
+- The shelf is for light items such as clamps, gloves, wire and hand tools.
+- The lighter frame racks (sways out of square) more when pushed; welding the shelf sheet down all round stiffens it.
+
+### 5.1 Layout
+
+The top layout is unchanged: `325 plate → 25 gap → 6 × 50 slats with 25 gaps → 25 gap → 100 end slat`. Because the legs are 25 mm instead of 50, the frame changes:
+
+- Rails fitted between the legs are longer: 750 mm long rails and 450 mm end rails.
+- The cross rail sits at 250–275 mm from the top's left edge, so its face is still 50 mm in from the plate edge.
+- The centre rail runs from the cross rail to the right end rail, centred front to back. The longest unsupported slat span is about 212 mm.
+- The 100 mm end slat rests on the right end rail for its full depth and on the ends of the front, back and centre rails. Its outer 50 mm is the clamping overhang.
+- The shelf has a 450 mm centre bar across the middle, front to back, to stop the thin sheet sagging.
+
+#### Frame plan (top removed)
+
+![Light table frame plan with the top removed](images/welding-table-light-frame-plan.svg)
+
+#### Front view
+
+![Light table front view](images/welding-table-light-front-view.svg)
+
+#### Top view
+
+![Light table top view](images/welding-table-light-top-view.svg)
+
+#### Side view
+
+![Light table side view from the right end](images/welding-table-light-side-view.svg)
+
+### 5.2 Cut list – light option
+
+**25×25×2.0 SHS (painted, not galvanised)**
+
+| Part | Qty | Length (mm) | Notes |
+|---|---|---|---|
+| Legs | 4 | 895 | To the underside of the 5 mm top. Subtract caster height if fitting wheels |
+| Top long rails (front/back) | 2 | 750 | Fitted between legs |
+| Top end rails | 2 | 450 | Fitted between legs |
+| Cross rail under plate | 1 | 450 | Right face 275 mm from the top's left edge (50 mm in from the plate edge) |
+| Centre rail under slats | 1 | 550 | Centred front to back, from cross rail to right end rail |
+| Shelf long rails | 2 | 750 | Fitted between legs, bottom face 150 mm off the floor |
+| Shelf end rails | 2 | 450 | Fitted between legs |
+| Shelf centre bar | 1 | 450 | Across the middle of the shelf frame, front to back |
+
+Total = 9,830 mm. From 6.5 m stock this is two lengths (one carries the legs, three long rails and the centre rail; the other the remaining rails). From 8 m stock it's one length plus five 450 mm pieces from an offcut. Simplest is to have the supplier cut the list.
+
+**Top and shelf**
+
+| Part | Qty | Size (mm) |
+|---|---|---|
+| Plate (HR) | 1 | 325 × 600 × 5 |
+| Slats (50×5 flat bar) | 6 | 600 long (3.6 m) |
+| End slat (100×5 flat bar) | 1 | 600 long |
+| Shelf sheet (1.55 mm HR) | 1 | 800 × 500 with 25 × 25 corner notches for the legs |
+
+**Fixings:** none. The plate, slats and shelf sheet are all stitch welded. 5 mm flat bar is too thin for countersunk bolts, and 2 mm tube would crush under bolt tension.
+
+**Approximate weights**
+
+| Item | kg |
+|---|---|
+| SHS (9.83 m × 1.36 kg/m) | 13.4 |
+| Plate 325 × 600 × 5 | 7.7 |
+| Slats (3.6 m × 1.96 kg/m) | 7.1 |
+| End slat (0.6 m × 3.93 kg/m) | 2.4 |
+| Shelf sheet 1.55 mm | 4.8 |
+| **Total** | **~35** |
+
+### 5.3 Shopping list and availability – light option
+
+Checked against the Bits of Steel online catalogue; listings show what's carried, not live stock, so call ahead.
+
+| Item | Quantity | Bits of Steel (Brendale) |
+|---|---|---|
+| 25×25×2.0 SHS (painted) | 9.8 m cut to list | Listed (1.36 kg/m); cut-to-length service |
+| 50×5 flat bar | 6 × 600 mm | Listed |
+| 100×5 flat bar | 1 × 600 mm | Listed |
+| 5 mm HR plate | 325 × 600 mm | Listed; custom panels cut to size |
+| 1.55 mm HR sheet | 800 × 500 mm | Listed; guillotined to size |
+
+Metro Steel and True Metal Solutions also sell hollow sections, flat bar, plate and sheet but don't publish sizes (see section 4.5).
+
+### 5.4 Build notes – light option
+
+- **Thin wall welding:** 2 mm tube burns through easily. Turn the current down, keep tacks and stitches short, and aim the arc at the thicker part of each joint.
+- **Keep it square:** tack the whole frame first, check the diagonals, then weld in short stitches, swapping corners so it doesn't pull out of square.
+- **Fixing the top:** stitch weld the plate and slats to the rails with 20–25 mm welds every 100–150 mm, skipping around the table to spread the heat. Check flatness with a straightedge as you go.
+- **Shelf sheet:** tack every 100–150 mm all round and along the centre bar. Welded all round, it acts as bracing against racking.
+- **No galvanised steel** in welded parts: the zinc coating gives off harmful fumes when heated. Use painted or black (uncoated) steel.
+- **Looking after the top:** use antispatter spray, plasma cut over the slat gaps rather than on the plate, and avoid welding jigs or tabs straight onto the 5 mm top.
+- **If it still sways:** add a diagonal brace from a leg to the shelf rail on the back, where it won't get in the way.
+
+## 6. Clamping provisions
 
 **Built in**
 
@@ -170,7 +279,7 @@ Bits of Steel is the only one that publishes every size, and it takes cut lists 
 
 > Keep the 50 mm overhang zone clear of brackets underneath – anything there blocks clamp jaws.
 
-## 6. Build sequence and tips
+## 7. Build sequence and tips
 
 1. Tack the top and shelf frames on a flat floor; check square by measuring diagonals.
 2. Tack the legs on, then final weld in short alternating stitches, swapping corners, so the frame doesn't pull out of square.
@@ -179,7 +288,7 @@ Bits of Steel is the only one that publishes every size, and it takes cut lists 
 5. Weld a ground tab (flat bar offcut) to a leg for a reliable earth clamp point.
 6. Options: two locking 100 mm casters (each rated 100 kg+) on one end, levelling feet on the other.
 
-## 7. Glossary
+## 8. Glossary
 
 | Term | Meaning |
 |---|---|
@@ -189,8 +298,11 @@ Bits of Steel is the only one that publishes every size, and it takes cut lists 
 | **Stitch weld** | Short welds spaced along a joint (e.g. 25–40 mm every ~150 mm) instead of one continuous bead. Less heat, less warping. Skip around the job to spread heat. |
 | **Plug weld** | Weld through a drilled hole (~10–12 mm) in the top piece, fusing it to the piece below. Ground flush, it leaves a smooth top with no edge beads. |
 | **Nyloc** | Nylon-insert lock nut that resists vibrating loose. |
+| **HR** | Hot rolled – standard mild steel plate and sheet, with a dark grey mill-scale finish. |
+| **Galvanised** | Steel with a zinc coating. Avoid it in welded parts: heated zinc gives off harmful fumes. |
+| **Racking** | A frame twisting or leaning out of square when pushed sideways. |
 
-## 8. Suppliers near Rothwell QLD
+## 9. Suppliers near Rothwell QLD
 
 | Supplier | Location | Notes | Phone |
 |---|---|---|---|
@@ -199,4 +311,4 @@ Bits of Steel is the only one that publishes every size, and it takes cut lists 
 | Bits of Steel Supplies | 1 Maxwell St, Brendale | Online ordering, drilling service, delivery | 07 3865 7740 |
 | The Steel Market | 61 Griffin Cres, Brendale | Mainly stainless steel and aluminium, so not suited to this mild-steel build | 1300 400 876 |
 
-See section 4.5 for what each supplier lists. Call ahead to confirm stock, whether they'll cut to the list, and ask about offcuts.
+See sections 4.5 and 5.3 for what each supplier lists. Call ahead to confirm stock, whether they'll cut to the list, and ask about offcuts.
