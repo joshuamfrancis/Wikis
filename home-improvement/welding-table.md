@@ -134,19 +134,79 @@ Hardware
 
 > Keep the 50 mm overhang zone clear of brackets underneath; anything there blocks clamp jaws.
 
-## 6. Build sequence
+## 6. Welding setup – gasless MIG
 
-1. **Prepare:** grind the paint off the tube ends and joint areas. Cut the mesh corner notches with an angle grinder if the supplier hasn't.
-2. **Top frame:** lay out the front, back and end rails between the four leg tops on a flat floor, upside down. Tack, then check square by measuring the diagonals.
-3. **Inner rails:** tack in the cross rail (right face 275 mm from the top's left edge, i.e. 225 mm from the frame's left outer face) and the centre rail.
-4. **Shelf frame:** stand the frame up and tack the shelf rails between the legs with their bottom face 150 mm off the floor, then the shelf centre bar across the middle. Recheck square and that the legs are plumb.
-5. **Final weld the frame:** short stitches, swapping corners so it doesn't pull out of square. 2.5 mm wall can burn through, so keep the current moderate and aim at the thicker part of each joint.
-6. **Fit the top:** lay the plate and slats in place with 25 mm spacers between them. Check flush with a straightedge, then stitch weld 20–25 mm every 100–150 mm, skipping around the table to spread the heat.
-7. **Finish:** clean up, paint the welds, fit the end caps or feet.
-8. **Shelf mesh:** after all welding is done, screw the mesh to the shelf rails and centre bar about every 150 mm. Never weld galvanised steel; heated zinc gives off harmful fumes.
-9. **Check for sway:** push the top sideways. If it racks, fit the diagonal brace across the back, from the top of one leg to the far end of the back shelf rail.
+Welder: **Bossweld MST190** (180 A, runs on a 10 A outlet, synergic auto-set) with **0.9 mm gasless flux-core wire**.
 
-## 7. Glossary
+**Machine setup**
+
+| Item | Setting |
+|---|---|
+| Polarity | DCEN (electrode negative): torch on **negative**, earth clamp on **positive**. Most machines ship set for gas MIG (the opposite), so check the polarity lead in the wire bay |
+| Drive roller | 0.9 mm **knurled** groove (a smooth V-groove crushes or slips on tubular flux-core wire); tension just enough that the wire doesn't slip |
+| Contact tip | 0.9 mm |
+| Program | Synergic gasless 0.9 mm. Set ~2.5–3 mm material for tube joints, a little higher for the top-to-frame welds. In manual, start from the chart inside the wire door |
+| Tuning by sound | Steady crackle (like bacon frying) is right. Popping and spatter: voltage too high or wire speed too low. Stubbing: the opposite |
+
+**Technique**
+
+- **Drag** the gun (pull it along the joint) at about 10–15°. With flux core, "if there's slag, you drag".
+- Stick-out about 15 mm.
+- Chip and wire-brush the slag after every weld. Never weld over slag.
+- On 2.5 mm tube, keep moving and aim slightly at the thicker side of the joint. A sagging puddle means you're about to burn through.
+- Earth clamp on clean metal, close to the joint.
+
+**Safety and power**
+
+- Flux core smokes far more than gas MIG. Weld with the garage door open and a fan moving fumes away from you; a welding-fume respirator is worth having.
+- Grind the paint off every joint before welding: burning paint adds fumes and causes porosity.
+- Antispatter spray on the top, nozzle gel on the gun.
+- Plug straight into a wall outlet. If an extension lead is unavoidable, keep it short and heavy duty (2.5 mm²).
+
+**Practise first:** the supplier cuts the list exactly, so there are no offcuts. Ask for a ~300 mm scrap of 35×35×2.5 SHS and a small piece of 6 mm plate, and run test beads to dial in the settings before touching the frame.
+
+## 7. Welding and build sequence
+
+**Principle:** tack everything before fully welding anything, then weld in short balanced runs, alternating between opposite corners, so the heat pulls evenly. Check square at every stage.
+
+**Before you start**
+
+- Build on a flat surface. A garage slab often isn't flat: check it with a straightedge or string line and shim as needed, because the top ends up that shape.
+- Cut the mesh corner notches with an angle grinder if the supplier hasn't.
+
+### Stage 1 – Top frame, upside down
+
+1. Lay the four legs and the top rails (2 × 730, 2 × 430) upside down on the flat surface, top face down, and clamp them.
+2. Tack each joint on two opposite faces.
+3. Measure both diagonals; they should be equal within 1–2 mm. Correct with a clamp or ratchet strap across the long diagonal.
+4. Fully weld the corners in a cross pattern: corner 1, 3, 2, 4. At each joint, weld two opposite sides first, then the other two. Each side is 35 mm, so one short bead per side.
+5. Don't weld the face the top sits on, or grind any weld there flush; a proud bead stops the plate sitting flat.
+6. Tack in the cross rail (right face 275 mm from the top's left edge, i.e. 225 mm from the frame's left outer face) and the centre rail. Check positions, then weld, alternating ends.
+
+### Stage 2 – Shelf frame
+
+1. Stand the frame on its legs. Clamp the shelf rails with their bottom face 150 mm off the floor, then the 430 mm centre bar across the middle.
+2. Check the legs are plumb and the diagonals still match, then tack.
+3. Weld in the same cross pattern, short balanced joints.
+
+### Stage 3 – The top, welded from underneath
+
+The plate and slat edges overhang the rails by 50 mm, so they can't be welded from above. Weld them from below instead, where every weld is an easy flat or horizontal fillet:
+
+1. Lay the plate and slats face down on the flat surface with 25 mm spacers between them. Check they're flush.
+2. Lower the frame onto them upside down and line it up for a 50 mm overhang on all sides.
+3. Tack the plate at its four corners. Tack each slat where it crosses the front and back rails, starting with the middle slats and working outward, alternating sides.
+4. Stitch weld the inside corner where each rail meets the plate or slat, 20–25 mm long: the plate every 100–150 mm along its rails, and each slat where it crosses the front, centre and back rails (one short weld each side of the rail).
+5. Start in the middle of the table and work outward, jumping front/back and left/right. Let it cool between runs; the flat floor holds the top flat as it cools.
+
+### Stage 4 – Finish
+
+1. Flip the table onto its legs. Check the top with a straightedge and check for rocking.
+2. Push the top sideways. If it racks, fit the diagonal brace across the back (top of one leg to the far end of the back shelf rail): tack, check, weld.
+3. Clean off slag and spatter, paint the welds, and fit the end caps or feet.
+4. Screw the mesh to the shelf rails and centre bar about every 150 mm, **after all welding is done**. Never weld galvanised steel; heated zinc gives off harmful fumes.
+
+## 8. Glossary
 
 | Term | Meaning |
 |---|---|
@@ -157,8 +217,11 @@ Hardware
 | **Stitch weld** | Short welds spaced along a joint instead of one continuous bead. Less heat, less warping. |
 | **Racking** | A frame twisting or leaning out of square when pushed sideways. |
 | **Tek screw** | Self-drilling screw that drills its own hole in steel. |
+| **Flux core (gasless)** | Tubular MIG wire with flux inside that shields the weld, so no gas bottle is needed. Leaves slag to chip off. |
+| **DCEN** | Direct current, electrode negative: the polarity gasless flux-core wire needs. |
+| **Tack** | A small temporary weld that holds parts in place before final welding. |
 
-## 8. Suppliers near Rothwell QLD
+## 9. Suppliers near Rothwell QLD
 
 | Supplier | Location | Notes | Phone |
 |---|---|---|---|
