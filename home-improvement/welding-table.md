@@ -1,11 +1,11 @@
 # Small Welding Table – Design, Cut List and Build Notes
 
 > **Status:** Design · **Date:** 2026-10-28 · **Units:** millimetres
-> **Size:** 900 × 600 mm top, ~900 mm working height, ~35 kg (light) to ~90 kg (solid plate) of steel
+> **Size:** 900 × 600 mm top, ~900 mm working height, ~44 kg (light) to ~90 kg (solid plate) of steel
 
 ## 1. Purpose
 
-A compact, rigid welding and fabrication table that fits a single-car garage, built entirely from standard Australian steel sections. Three top options are covered: a full solid plate, slats only, and a hybrid plate + slat top (recommended) that gives clamp access anywhere on the table. Section 5 adds a **light table option**: the same hybrid layout in thinner sections, for welding only, at well under half the steel.
+A compact, rigid welding and fabrication table that fits a single-car garage, built entirely from standard Australian steel sections. Three top options are covered: a full solid plate, slats only, and a hybrid plate + slat top (recommended) that gives clamp access anywhere on the table. Section 5 adds a **light table option**: the same hybrid layout in thinner sections, for welding only, at about half the steel.
 
 ## 2. Overall design
 
@@ -26,9 +26,9 @@ A compact, rigid welding and fabrication table that fits a single-car garage, bu
 |---|---|
 | Top | 900 × 600 mm |
 | Working height | ~900 mm (set just below belt line) |
-| Frame | 50×50×3 SHS (light option: 25×25×2), 800 × 500 mm outer (inset 50 mm under the top) |
+| Frame | 50×50×3 SHS (light option: 35×35×2.5), 800 × 500 mm outer (inset 50 mm under the top) |
 | Shelf | 150 mm above the floor |
-| Weight | ~90 kg (solid plate) / ~82 kg (hybrid) / ~35 kg (light option) |
+| Weight | ~90 kg (solid plate) / ~82 kg (hybrid) / ~44 kg (light option, excluding mesh) |
 
 ## 3. Top options
 
@@ -157,84 +157,81 @@ For a table used only for welding, with hammering, straightening and other heavy
 
 | | Standard hybrid | Light option |
 |---|---|---|
-| Frame | 50×50×3 SHS | 25×25×2.0 SHS |
-| Plate | 325 × 600 × 10 | 325 × 600 × 5 |
-| Slats | 6 × 50×10, 1 × 100×10 end slat | 6 × 50×5, 1 × 100×5 end slat |
-| Shelf | 3 mm HR sheet | 1.55 mm HR sheet + centre bar |
-| Fixing the top | Bolts or stitch welds | Stitch welds only |
-| Steel weight | ~82 kg | ~35 kg |
+| Frame | 50×50×3 SHS | 35×35×2.5 SHS |
+| Plate | 325 × 600 × 10 | 325 × 600 × 6 |
+| Slats | 6 × 50×10, 1 × 100×10 end slat | 6 × 50×6, 1 × 100×6 end slat |
+| Shelf | 3 mm HR sheet, welded | Galvanised mesh, screwed down, + centre bar |
+| Fixing the top | Bolts or stitch welds | Stitch welds |
+| Steel weight | ~82 kg | ~44 kg plus mesh |
+
+**Why 35×35×2.5:** it's about three times as stiff as 25×25 tube (a 100 kg load mid-rail sags about 0.7 mm instead of about 2.5 mm), and the 2.5 mm wall is much easier to weld without burning through. It's still only about a quarter as stiff as 50×50×3, so the limits below still apply.
 
 **Limits of the light option**
 
-- Not for hammering, straightening or heavy loads; the frame flexes and the top dents.
-- The 5 mm top warps more easily under heat (see build notes).
-- The shelf is for light items such as clamps, gloves, wire and hand tools.
-- The lighter frame racks (sways out of square) more when pushed; welding the shelf sheet down all round stiffens it.
+- Not for hammering, straightening or heavy loads.
+- The 6 mm top warps more easily under heat than 10 mm (see build notes).
+- The mesh shelf is for light items such as clamps, gloves, wire and hand tools.
+- With a mesh shelf the frame has no welded panel bracing it, so it racks (sways out of square) more when pushed. Add the diagonal brace in 5.4 if it does.
 
 ### 5.1 Layout
 
-The top layout is unchanged: `325 plate → 25 gap → 6 × 50 slats with 25 gaps → 25 gap → 100 end slat`. Because the legs are 25 mm instead of 50, the frame changes:
+The top layout is unchanged: `325 plate → 25 gap → 6 × 50 slats with 25 gaps → 25 gap → 100 end slat`. The 35 mm legs change the frame:
 
-- Rails fitted between the legs are longer: 750 mm long rails and 450 mm end rails.
-- The cross rail sits at 250–275 mm from the top's left edge, so its face is still 50 mm in from the plate edge.
-- The centre rail runs from the cross rail to the right end rail, centred front to back. The longest unsupported slat span is about 212 mm.
-- The 100 mm end slat rests on the right end rail for its full depth and on the ends of the front, back and centre rails. Its outer 50 mm is the clamping overhang.
-- The shelf has a 450 mm centre bar across the middle, front to back, to stop the thin sheet sagging.
+- Rails fitted between the legs: 730 mm long rails and 430 mm end rails.
+- The cross rail sits at 240–275 mm from the top's left edge, so its face is still 50 mm in from the plate edge.
+- The centre rail runs from the cross rail to the right end rail, centred front to back. The longest unsupported slat span is about 198 mm.
+- The 100 mm end slat rests on the right end rail (35 mm of bearing) for its full depth, and on the ends of the front, back and centre rails. Its outer 50 mm is the clamping overhang.
+- The shelf rails sit with their bottom face 150 mm off the floor. A 430 mm centre bar runs front to back across the middle to support the mesh.
 
 #### Frame plan (top removed)
 
-![Light table frame plan with the top removed](images/welding-table-light-frame-plan.svg)
+![Light table frame plan with the top removed](images/welding-table-light35-frame-plan.svg)
 
 #### Front view
 
-![Light table front view](images/welding-table-light-front-view.svg)
+![Light table front view](images/welding-table-light35-front-view.svg)
 
 #### Top view
 
-![Light table top view](images/welding-table-light-top-view.svg)
+![Light table top view](images/welding-table-light35-top-view.svg)
 
 #### Side view
 
-![Light table side view from the right end](images/welding-table-light-side-view.svg)
+![Light table side view from the right end](images/welding-table-light35-side-view.svg)
 
 ### 5.2 Cut list – light option
 
-**25×25×2.0 SHS (painted, not galvanised)**
+**35×35×2.5 SHS (painted, not galvanised)**
 
 | Part | Qty | Length (mm) | Notes |
 |---|---|---|---|
-| Legs | 4 | 895 | To the underside of the 5 mm top. Subtract caster height if fitting wheels |
-| Top long rails (front/back) | 2 | 750 | Fitted between legs |
-| Top end rails | 2 | 450 | Fitted between legs |
-| Cross rail under plate | 1 | 450 | Right face 275 mm from the top's left edge (50 mm in from the plate edge) |
-| Centre rail under slats | 1 | 550 | Centred front to back, from cross rail to right end rail |
-| Shelf long rails | 2 | 750 | Fitted between legs, bottom face 150 mm off the floor |
-| Shelf end rails | 2 | 450 | Fitted between legs |
-| Shelf centre bar | 1 | 450 | Across the middle of the shelf frame, front to back |
+| Legs | 4 | 894 | To the underside of the 6 mm top. Subtract caster height if fitting wheels |
+| Long rails (top front/back, shelf front/back) | 4 | 730 | Fitted between legs |
+| Short rails (top ends, cross rail, shelf ends, shelf centre bar) | 6 | 430 | Cross rail's right face 275 mm from the top's left edge |
+| Centre rail under slats | 1 | 540 | Centred front to back, from cross rail to right end rail |
 
-Total = 9,830 mm. From 6.5 m stock this is two lengths (one carries the legs, three long rails and the centre rail; the other the remaining rails). From 8 m stock it's one length plus five 450 mm pieces from an offcut. Simplest is to have the supplier cut the list.
+Order as **4 @ 894, 4 @ 730, 6 @ 430, 1 @ 540** (15 pieces, 9,616 mm). Have the supplier cut the list.
 
 **Top and shelf**
 
 | Part | Qty | Size (mm) |
 |---|---|---|
-| Plate (HR) | 1 | 325 × 600 × 5 |
-| Slats (50×5 flat bar) | 6 | 600 long (3.6 m) |
-| End slat (100×5 flat bar) | 1 | 600 long |
-| Shelf sheet (1.55 mm HR) | 1 | 800 × 500 with 25 × 25 corner notches for the legs |
+| Plate (HR) | 1 | 325 × 600 × 6 |
+| Slats (50×6 flat bar) | 6 | 600 long (3.6 m) |
+| End slat (100×6 flat bar) | 1 | 600 long |
+| Shelf (galvanised mesh) | 1 | 800 × 500 with 35 × 35 corner notches for the legs |
 
-**Fixings:** none. The plate, slats and shelf sheet are all stitch welded. 5 mm flat bar is too thin for countersunk bolts, and 2 mm tube would crush under bolt tension.
+**Fixings:** the plate and slats are stitch welded. The mesh is screwed to the shelf rails and centre bar with self-drilling (tek) screws and washers, about every 150 mm. Don't weld galvanised mesh.
 
 **Approximate weights**
 
 | Item | kg |
 |---|---|
-| SHS (9.83 m × 1.36 kg/m) | 13.4 |
-| Plate 325 × 600 × 5 | 7.7 |
-| Slats (3.6 m × 1.96 kg/m) | 7.1 |
-| End slat (0.6 m × 3.93 kg/m) | 2.4 |
-| Shelf sheet 1.55 mm | 4.8 |
-| **Total** | **~35** |
+| SHS (9.62 m × 2.42 kg/m) | 23.3 |
+| Plate 325 × 600 × 6 | 9.2 |
+| Slats (3.6 m × 2.36 kg/m) | 8.5 |
+| End slat (0.6 m × 4.71 kg/m) | 2.8 |
+| **Total (excluding mesh)** | **~44** |
 
 ### 5.3 Shopping list and availability – light option
 
@@ -242,23 +239,23 @@ Checked against the Bits of Steel online catalogue; listings show what's carried
 
 | Item | Quantity | Bits of Steel (Brendale) |
 |---|---|---|
-| 25×25×2.0 SHS (painted) | 9.8 m cut to list | Listed (1.36 kg/m); cut-to-length service |
-| 50×5 flat bar | 6 × 600 mm | Listed |
-| 100×5 flat bar | 1 × 600 mm | Listed |
-| 5 mm HR plate | 325 × 600 mm | Listed; custom panels cut to size |
-| 1.55 mm HR sheet | 800 × 500 mm | Listed; guillotined to size |
+| 35×35×2.5 SHS (painted) | 4 @ 894, 4 @ 730, 6 @ 430, 1 @ 540 | Listed (2.42 kg/m); cut-to-length service |
+| 50×6 flat bar | 6 @ 600 | Listed |
+| 100×6 flat bar | 1 @ 600 | Listed |
+| 6 mm HR plate | 325 × 600 | Listed; custom panels cut to size |
+| Galvanised mesh | 800 × 500 | Not checked; Metro Steel lists galvanised mesh |
+| Tek screws and washers | ~20 | Hardware shop |
 
 Metro Steel and True Metal Solutions also sell hollow sections, flat bar, plate and sheet but don't publish sizes (see section 4.5).
 
 ### 5.4 Build notes – light option
 
-- **Thin wall welding:** 2 mm tube burns through easily. Turn the current down, keep tacks and stitches short, and aim the arc at the thicker part of each joint.
+- **Thin wall welding:** 2.5 mm tube is manageable but can still burn through. Keep tacks and stitches short and aim the arc at the thicker part of each joint.
 - **Keep it square:** tack the whole frame first, check the diagonals, then weld in short stitches, swapping corners so it doesn't pull out of square.
 - **Fixing the top:** stitch weld the plate and slats to the rails with 20–25 mm welds every 100–150 mm, skipping around the table to spread the heat. Check flatness with a straightedge as you go.
-- **Shelf sheet:** tack every 100–150 mm all round and along the centre bar. Welded all round, it acts as bracing against racking.
-- **No galvanised steel** in welded parts: the zinc coating gives off harmful fumes when heated. Use painted or black (uncoated) steel.
-- **Looking after the top:** use antispatter spray, plasma cut over the slat gaps rather than on the plate, and avoid welding jigs or tabs straight onto the 5 mm top.
-- **If it still sways:** add a diagonal brace from a leg to the shelf rail on the back, where it won't get in the way.
+- **No galvanised steel in welded parts:** the zinc coating gives off harmful fumes when heated. Use painted or black steel for the frame, and screw the mesh on after all welding is done.
+- **Looking after the top:** use antispatter spray, plasma cut over the slat gaps rather than on the plate, and avoid welding jigs or tabs straight onto the top.
+- **If it sways:** add a diagonal brace across the back, from the top of a leg to the far end of the back shelf rail, using a 35×35 offcut.
 
 ## 6. Clamping provisions
 
