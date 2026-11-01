@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="830.0" height="760.0" viewBox="0 0 830.0 760.0">
+<svg xmlns="http://www.w3.org/2000/svg" width="830.0" height="790.0" viewBox="0 0 830.0 790.0">
 <style>
 .bg{fill:#ffffff}.st{fill:#c9ccd1;stroke:#333;stroke-width:1}
 .pl{fill:#8a929c;stroke:#333;stroke-width:1}.hid{fill:none;stroke:#555;stroke-width:1;stroke-dasharray:6 4}
@@ -7,8 +7,8 @@
 .mesh{fill:none;stroke:#6b7a8a;stroke-width:1.5;stroke-dasharray:2 2}
 </style>
 <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1f4e8c"/></marker></defs>
-<rect class="bg" width="830.0" height="760.0"/>
-<text class="h" x="70" y="24">Light table – front view (width × height)</text>
+<rect class="bg" width="830.0" height="790.0"/>
+<text class="h" x="70" y="24">Front view (width × height)</text>
 <rect class="pl" x="70.0" y="100.0" width="195.0" height="3.5999999999999996"/>
 <rect class="st" x="280.0" y="100.0" width="30.0" height="3.5999999999999996"/>
 <rect class="st" x="325.0" y="100.0" width="30.0" height="3.5999999999999996"/>
@@ -19,18 +19,18 @@
 <rect class="st" x="550.0" y="100.0" width="60.0" height="3.5999999999999996"/>
 <rect class="st" x="121.0" y="103.6" width="438.0" height="21.0"/>
 <rect class="hid" x="214.0" y="103.6" width="21.0" height="21.0"/>
-<rect class="st" x="100.0" y="103.6" width="21.0" height="536.4"/>
-<rect class="st" x="559.0" y="103.6" width="21.0" height="536.4"/>
-<rect class="st" x="121.0" y="529.0" width="438.0" height="21.0"/>
-<line class="mesh" x1="100.0" y1="527.0" x2="580.0" y2="527.0"/>
-<rect class="hid" x="329.5" y="529.0" width="21.0" height="21.0"/>
-<line x1="52.0" y1="640.0" x2="628.0" y2="640.0" stroke="#333" stroke-width="1.5"/>
+<rect class="st" x="100.0" y="103.6" width="21.0" height="566.4"/>
+<rect class="st" x="559.0" y="103.6" width="21.0" height="566.4"/>
+<rect class="st" x="121.0" y="559.0" width="438.0" height="21.0"/>
+<line class="mesh" x1="100.0" y1="557.0" x2="580.0" y2="557.0"/>
+<rect class="hid" x="329.5" y="559.0" width="21.0" height="21.0"/>
+<line x1="52.0" y1="670.0" x2="628.0" y2="670.0" stroke="#333" stroke-width="1.5"/>
 <line class="dim" x1="70.0" y1="56" x2="610.0" y2="56" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="340.0" y="50" text-anchor="middle">900</text>
 <line class="dim" x1="70.0" y1="86" x2="265.0" y2="86" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="167.5" y="80" text-anchor="middle">325 plate</text>
 <line class="dim" x1="550.0" y1="86" x2="610.0" y2="86" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="580.0" y="80" text-anchor="middle">100 end slat</text>
-<line class="dim" x1="121.0" y1="280.0" x2="559.0" y2="280.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="340.0" y="274.0" text-anchor="middle">Long rail, 730 (between legs)</text>
-<line class="dim" x1="630.0" y1="640.0" x2="630.0" y2="100.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="636.0" y="374.0">900</text>
-<line class="dim" x1="680.0" y1="640.0" x2="680.0" y2="550.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="686.0" y="599.0">150</text>
-<line class="dim" x1="100.0" y1="678.0" x2="580.0" y2="678.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="340.0" y="672.0" text-anchor="middle">Leg spacing, 800 outer</text>
-<text class="lbl" x="70" y="750.0">Legs 894 to underside of 6 mm top. Dashed: cross rail and shelf centre bar (430). Dotted: mesh shelf.</text>
+<line class="dim" x1="121.0" y1="310.0" x2="559.0" y2="310.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="340.0" y="304.0" text-anchor="middle">Long rail, 730 (between legs)</text>
+<line class="dim" x1="630.0" y1="670.0" x2="630.0" y2="100.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="636.0" y="389.0">950</text>
+<line class="dim" x1="680.0" y1="670.0" x2="680.0" y2="580.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="686.0" y="629.0">150</text>
+<line class="dim" x1="100.0" y1="708.0" x2="580.0" y2="708.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="340.0" y="702.0" text-anchor="middle">Leg spacing, 800 outer</text>
+<text class="lbl" x="70" y="780.0">Legs 944 to underside of 6 mm top. Dashed: cross rail and shelf centre bar (430). Dotted: mesh shelf.</text>
 </svg>
