@@ -9,16 +9,16 @@
 <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1f4e8c"/></marker></defs>
 <rect class="bg" width="830.0" height="790.0"/>
 <text class="h" x="70" y="24">Front view (width × height)</text>
-<rect class="pl" x="70.0" y="100.0" width="195.0" height="3.5999999999999996"/>
-<rect class="st" x="280.0" y="100.0" width="30.0" height="3.5999999999999996"/>
-<rect class="st" x="325.0" y="100.0" width="30.0" height="3.5999999999999996"/>
-<rect class="st" x="370.0" y="100.0" width="30.0" height="3.5999999999999996"/>
-<rect class="st" x="415.0" y="100.0" width="30.0" height="3.5999999999999996"/>
-<rect class="st" x="460.0" y="100.0" width="30.0" height="3.5999999999999996"/>
-<rect class="st" x="505.0" y="100.0" width="30.0" height="3.5999999999999996"/>
+<rect class="pl" x="70.0" y="100.0" width="180.0" height="3.5999999999999996"/>
+<rect class="st" x="267.1428571428571" y="100.0" width="30.0" height="3.5999999999999996"/>
+<rect class="st" x="314.2857142857142" y="100.0" width="30.0" height="3.5999999999999996"/>
+<rect class="st" x="361.4285714285714" y="100.0" width="30.0" height="3.5999999999999996"/>
+<rect class="st" x="408.5714285714285" y="100.0" width="30.0" height="3.5999999999999996"/>
+<rect class="st" x="455.7142857142857" y="100.0" width="30.0" height="3.5999999999999996"/>
+<rect class="st" x="502.8571428571428" y="100.0" width="30.0" height="3.5999999999999996"/>
 <rect class="st" x="550.0" y="100.0" width="60.0" height="3.5999999999999996"/>
 <rect class="st" x="121.0" y="103.6" width="438.0" height="21.0"/>
-<rect class="hid" x="214.0" y="103.6" width="21.0" height="21.0"/>
+<rect class="hid" x="199.0" y="103.6" width="21.0" height="21.0"/>
 <rect class="st" x="100.0" y="103.6" width="21.0" height="566.4"/>
 <rect class="st" x="559.0" y="103.6" width="21.0" height="566.4"/>
 <rect class="st" x="121.0" y="559.0" width="438.0" height="21.0"/>
@@ -26,7 +26,7 @@
 <rect class="hid" x="329.5" y="559.0" width="21.0" height="21.0"/>
 <line x1="52.0" y1="670.0" x2="628.0" y2="670.0" stroke="#333" stroke-width="1.5"/>
 <line class="dim" x1="70.0" y1="56" x2="610.0" y2="56" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="340.0" y="50" text-anchor="middle">900</text>
-<line class="dim" x1="70.0" y1="86" x2="265.0" y2="86" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="167.5" y="80" text-anchor="middle">325 plate</text>
+<line class="dim" x1="70.0" y1="86" x2="250.0" y2="86" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="160.0" y="80" text-anchor="middle">300 plate</text>
 <line class="dim" x1="550.0" y1="86" x2="610.0" y2="86" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="580.0" y="80" text-anchor="middle">100 end slat</text>
 <line class="dim" x1="121.0" y1="310.0" x2="559.0" y2="310.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="340.0" y="304.0" text-anchor="middle">Long rail, 730 (between legs)</text>
 <line class="dim" x1="630.0" y1="670.0" x2="630.0" y2="100.0" marker-start="url(#a)" marker-end="url(#a)"/><text class="t" x="636.0" y="389.0">950</text>

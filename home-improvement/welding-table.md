@@ -11,7 +11,7 @@ A compact welding table for a single-car garage, built from standard Australian 
 
 | Item | Value |
 |---|---|
-| Top | 900 × 600 mm: 325 mm of 6 mm plate, then 50×6 slats and a 100×6 end slat |
+| Top | 900 × 600 mm: 300 mm of 6 mm plate, then 50×6 slats with equal gaps and a 100×6 end slat |
 | Working height | 950 mm (sized for a 181 cm user; elbow height less ~180 mm) |
 | Frame | 35×35×2.5 SHS, painted, 800 × 500 mm outer, inset 50 mm under the top |
 | Shelf | Galvanised mesh on a 35×35 shelf frame, 150 mm above the floor |
@@ -27,15 +27,23 @@ A compact welding table for a single-car garage, built from standard Australian 
 
 ## 3. Layout
 
-**Top (left to right):** `325 plate → 25 gap → 6 × 50 slats with 25 mm gaps → 25 gap → 100 end slat`
-Check: 325 + 7 × 25 + 6 × 50 + 100 = 900 mm.
+**Top (left to right):** `300 plate → 7 equal gaps of ~28.6 mm between the plate, 6 × 50 slats and the 100 end slat`
+Check: 300 + 7 × 28.57 + 6 × 50 + 100 = 900 mm.
+
+**Slat set-out** – left edge of each 50 mm slat, measured from the plate's left (outer) edge:
+
+| Slat | 1 | 2 | 3 | 4 | 5 | 6 | End slat |
+|---|---|---|---|---|---|---|---|
+| Left edge (mm) | 328.5 | 407 | 485.5 | 564.5 | 643 | 721.5 | 800 |
+
+Mark these with a tape measured from one end rather than stacking spacers, so small errors don't add up. A 28.5 mm spacer block is handy for checking each gap.
 
 **Frame**
 
 - Legs run full height (944 mm) to the underside of the 6 mm top; every rail fits between them.
 - Top frame: 730 mm front and back rails, 430 mm end rails.
-- Cross rail under the plate at 240–275 mm from the top's left edge, so its face is 50 mm in from the plate edge. This gives the plate's inner edge a clamping lip and keeps the plate-to-slat gap clear.
-- Centre rail from the cross rail to the right end rail, centred front to back. Each slat is supported at the front, centre and back; the longest unsupported span is about 198 mm.
+- Cross rail under the plate at 215–250 mm from the top's left edge, so its face is 50 mm in from the plate edge. This gives the plate's inner edge a clamping lip and keeps the plate-to-slat gap clear.
+- Centre rail from the cross rail to the right end rail, centred front to back. Each slat is supported at the front, centre and back; the longest unsupported span is about 198 mm. The slats begin 78.5 mm past the cross rail, so the centre rail supports every slat.
 - The 100 mm end slat rests on the right end rail for its full depth (35 mm of bearing) and on the ends of the front, back and centre rails. Its outer 50 mm is the clamping overhang.
 - Shelf frame: 730 mm long rails and 430 mm end rails with their bottom face 150 mm off the floor, plus a 430 mm centre bar front to back to support the mesh.
 
@@ -63,17 +71,17 @@ Check: 325 + 7 × 25 + 6 × 50 + 100 = 900 mm.
 |---|---|---|---|
 | Legs | 4 | 944 | To the underside of the 6 mm top. Subtract caster or foot height if fitted |
 | Long rails (top front/back, shelf front/back) | 4 | 730 | Fitted between legs |
-| Short rails (top ends, cross rail, shelf ends, shelf centre bar) | 6 | 430 | Cross rail's right face 275 mm from the top's left edge |
-| Centre rail under slats | 1 | 540 | Centred front to back, cross rail to right end rail |
+| Short rails (top ends, cross rail, shelf ends, shelf centre bar) | 6 | 430 | Cross rail's right face 250 mm from the top's left edge |
+| Centre rail under slats | 1 | 565 | Centred front to back, cross rail to right end rail |
 | Diagonal brace (optional) | 1 | ~1,050 | Cut to fit on assembly, only if the frame sways |
 
-**Order:** 4 @ 944, 4 @ 730, 6 @ 430, 1 @ 540 (15 pieces, 9,816 mm), plus the optional brace.
+**Order:** 4 @ 944, 4 @ 730, 6 @ 430, 1 @ 565 (15 pieces, 9,841 mm), plus the optional brace.
 
 ### 4.2 Top and shelf
 
 | Part | Qty | Size (mm) |
 |---|---|---|
-| HR plate, 6 mm | 1 | 600 × 325 |
+| HR plate, 6 mm | 1 | 600 × 300 |
 | Flat bar 50×6 (slats) | 6 | 600 long |
 | Flat bar 100×6 (end slat) | 1 | 600 long |
 | Galvanised welded mesh, ~4 mm wire, 50 × 50 mm aperture | 1 | 800 × 500, with a 35 × 35 notch at each corner |
@@ -91,8 +99,8 @@ Check: 325 + 7 × 25 + 6 × 50 + 100 = 900 mm.
 
 | Item | kg |
 |---|---|
-| SHS (9.82 m × 2.42 kg/m) | 23.8 |
-| Plate 600 × 325 × 6 | 9.2 |
+| SHS (9.84 m × 2.42 kg/m) | 23.8 |
+| Plate 600 × 300 × 6 | 8.5 |
 | Slats (3.6 m × 2.36 kg/m) | 8.5 |
 | End slat (0.6 m × 4.71 kg/m) | 2.8 |
 | **Total (excluding mesh)** | **~44** |
@@ -103,12 +111,12 @@ Check: 325 + 7 × 25 + 6 × 50 + 100 = 900 mm.
 Materials and cut list – welding table
 
 1. SHS 35x35x2.5 mm, painted
-   Cuts: 4 @ 944 mm, 4 @ 730 mm, 6 @ 430 mm, 1 @ 540 mm
-   (15 pieces, 9,816 mm total)
+   Cuts: 4 @ 944 mm, 4 @ 730 mm, 6 @ 430 mm, 1 @ 565 mm
+   (15 pieces, 9,841 mm total)
    Optional brace: 1 @ 1,050 mm
 
 2. HR plate, 6 mm
-   Cut panel: 1 @ 600 x 325 mm
+   Cut panel: 1 @ 600 x 300 mm
 
 3. Flat bar, 50x6 mm
    Cuts: 6 @ 600 mm
@@ -181,7 +189,7 @@ Welder: **Bossweld MST190** (180 A, runs on a 10 A outlet, synergic auto-set) wi
 3. Measure both diagonals; they should be equal within 1–2 mm. Correct with a clamp or ratchet strap across the long diagonal.
 4. Fully weld the corners in a cross pattern: corner 1, 3, 2, 4. At each joint, weld two opposite sides first, then the other two. Each side is 35 mm, so one short bead per side.
 5. Don't weld the face the top sits on, or grind any weld there flush; a proud bead stops the plate sitting flat.
-6. Tack in the cross rail (right face 275 mm from the top's left edge, i.e. 225 mm from the frame's left outer face) and the centre rail. Check positions, then weld, alternating ends.
+6. Tack in the cross rail (right face 250 mm from the top's left edge, i.e. 200 mm from the frame's left outer face) and the centre rail. Check positions, then weld, alternating ends.
 
 ### Stage 2 – Shelf frame
 
@@ -193,7 +201,7 @@ Welder: **Bossweld MST190** (180 A, runs on a 10 A outlet, synergic auto-set) wi
 
 The plate and slat edges overhang the rails by 50 mm, so they can't be welded from above. Weld them from below instead, where every weld is an easy flat or horizontal fillet:
 
-1. Lay the plate and slats face down on the flat surface with 25 mm spacers between them. Check they're flush.
+1. Lay the plate and slats face down on the flat surface at the set-out positions in section 3 (gaps ~28.6 mm). Check they're flush.
 2. Lower the frame onto them upside down and line it up for a 50 mm overhang on all sides.
 3. Tack the plate at its four corners. Tack each slat where it crosses the front and back rails, starting with the middle slats and working outward, alternating sides.
 4. Stitch weld the inside corner where each rail meets the plate or slat, 20–25 mm long: the plate every 100–150 mm along its rails, and each slat where it crosses the front, centre and back rails (one short weld each side of the rail).
