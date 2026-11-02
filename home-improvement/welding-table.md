@@ -49,19 +49,19 @@ Mark these with a tape measured from one end rather than stacking spacers, so sm
 
 ### Frame plan (top removed)
 
-![Frame plan with the top removed](images/welding-table-final-frame-plan.svg)
+![Frame plan with the top removed](images/welding-table-final-v2-frame-plan.svg)
 
 ### Front view
 
-![Front view](images/welding-table-final-front-view.svg)
+![Front view](images/welding-table-final-v2-front-view.svg)
 
 ### Top view
 
-![Top view](images/welding-table-final-top-view.svg)
+![Top view](images/welding-table-final-v2-top-view.svg)
 
 ### Side view
 
-![Side view from the right end](images/welding-table-final-side-view.svg)
+![Side view from the right end](images/welding-table-final-v2-side-view.svg)
 
 ## 4. Cut list
 
