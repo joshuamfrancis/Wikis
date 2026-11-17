@@ -58,6 +58,8 @@ flowchart LR
     IDC -.->|"direct access denied by IAM and SCP"| TARGET
 ```
 
+Editable draw.io version of this diagram: [ec2-target-access-protection.drawio](ec2-target-access-protection.drawio).
+
 ## 4. Layer 1: Network (RDP, SSH, WinRM)
 
 - Targets sit in private subnets with no public IP and no key pair.

@@ -1,0 +1,91 @@
+<?xml version="1.0" ?>
+<mxfile host="app.diagrams.net">
+  <diagram id="ec2-target-access" name="Access paths">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="id" value="Identity" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=4;fontStyle=1;fillColor=#f5f5f5;strokeColor=#666666;container=1;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="20" y="40" width="200" height="440" as="geometry"/>
+        </mxCell>
+        <mxCell id="wl" value="Workload account" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=4;fontStyle=1;fillColor=#fff2cc;strokeColor=#d6b656;container=1;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="300" y="40" width="780" height="440" as="geometry"/>
+        </mxCell>
+        <mxCell id="vpc" value="Workload VPC, private subnets" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=4;fontStyle=1;fillColor=#d5e8d4;strokeColor=#82b366;container=1;collapsible=0;" vertex="1" parent="wl">
+          <mxGeometry x="280" y="50" width="470" height="340" as="geometry"/>
+        </mxCell>
+        <mxCell id="dep" value="Deployment account" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=4;fontStyle=1;fillColor=#fff2cc;strokeColor=#d6b656;container=1;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="20" y="520" width="440" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="rvpc" value="Runner VPC" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=4;fontStyle=1;fillColor=#d5e8d4;strokeColor=#82b366;container=1;collapsible=0;" vertex="1" parent="dep">
+          <mxGeometry x="20" y="40" width="400" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="admin" value="Administrator" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="id">
+          <mxGeometry x="20" y="50" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="pim" value="Entra ID PIM" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="id">
+          <mxGeometry x="20" y="170" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="idc" value="IAM Identity Center&lt;br&gt;admin permission set" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="id">
+          <mxGeometry x="20" y="290" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="ssm" value="Systems Manager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="wl">
+          <mxGeometry x="40" y="80" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="role" value="gitlab-deploy role" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="wl">
+          <mxGeometry x="40" y="320" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="jump" value="Jump server&lt;br&gt;AccessTier=jump" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="vpc">
+          <mxGeometry x="40" y="60" width="170" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="target" value="Target EC2&lt;br&gt;AccessTier=target&lt;br&gt;no key pair, no public IP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="vpc">
+          <mxGeometry x="260" y="200" width="180" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="runner" value="GitLab runner EC2&lt;br&gt;Docker executor" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="rvpc">
+          <mxGeometry x="20" y="60" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="sts" value="STS VPC endpoint" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="rvpc">
+          <mxGeometry x="220" y="60" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" parent="1" source="admin" target="pim">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" parent="1" source="pim" target="idc">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="StartSession or&lt;br&gt;Fleet Manager RDP" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=10;exitX=1;exitY=0.25;entryX=0;entryY=0.5;" edge="1" parent="1" source="idc" target="ssm">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="session" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=10;exitX=1;exitY=0.25;entryX=0;entryY=0.5;" edge="1" parent="1" source="ssm" target="jump">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="RDP 3389 or SSH 22&lt;br&gt;(SG reference)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=10;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="jump" target="target">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="SSM session via&lt;br&gt;VPC endpoint" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=10;exitX=0.5;exitY=1;entryX=0;entryY=0.75;" edge="1" parent="1" source="jump" target="target">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="job OIDC token" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" parent="1" source="runner" target="sts">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" value="AssumeRoleWithWebIdentity" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=10;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="sts" target="role">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" value="SendCommand,&lt;br&gt;named documents" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=10;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="role" target="ssm">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e10" value="Run Command" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=10;exitX=1;exitY=0.75;entryX=0;entryY=0.25;" edge="1" parent="1" source="ssm" target="target">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e11" value="direct access denied by IAM and SCP" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=10;exitX=1;exitY=0.75;entryX=0.5;entryY=1;dashed=1;strokeColor=#b85450;fontColor=#b85450;endArrow=cross;endFill=0;" edge="1" parent="1" source="idc" target="target">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="250" y="455"/>
+              <mxPoint x="930" y="455"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
