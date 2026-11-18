@@ -93,7 +93,7 @@
 | # | Item | When to book | Status |
 |---|---|---|---|
 | 1 | Flights for 3 to/from Sunshine Coast Airport (MCY) | **Now** | ☐ |
-| 2 | **Kanu Kapers Everglades guided tour**, Thu 10 Dec, 4 people | **Now** (December fills fast) | ☐ |
+| 2 | **Kanu Kapers Everglades guided tour**, Thu 10 Dec, 4 people ([book here](https://www.kanukapersaustralia.com/tours/book-your-tour/)) | **Now** (December fills fast) | ☐ |
 | 3 | Saturday farewell dinner, Noosa | **Now**, 2–3 weeks ahead | ☐ |
 | 4 | Noosa River kayak hire, Sat 12 Dec, 3pm | A few days ahead | ☐ |
 | 5 | Thursday dinner, Noosaville | A few days ahead | ☐ |
@@ -108,6 +108,9 @@
 
 ### Everglades Tour (Thursday)
 **Kanu Kapers Australia**
+- 🌐 Website: https://www.kanukapersaustralia.com/
+- 🗓️ One-day tours: https://www.kanukapersaustralia.com/tours/one-day-tours/
+- 🛒 Book online: https://www.kanukapersaustralia.com/tours/book-your-tour/
 - 📞 (07) 5485 3328
 - ✉️ info@kanukapersaustralia.com
 - 🏠 Office: 11 Toolara St, Boreen Point
