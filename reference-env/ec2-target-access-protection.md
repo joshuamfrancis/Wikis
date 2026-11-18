@@ -98,12 +98,34 @@ Instances are tagged `AccessTier=jump` or `AccessTier=target`. Policies use the 
 
 These stop layers 1 and 2 from being undone inside an account.
 
-- Deny `ssm:StartSession` and `ssm:SendCommand` on `target` instances unless `aws:PrincipalArn` is the jump role or `gitlab-deploy`.
+- Deny `ssm:StartSession` and `ssm:SendCommand` on `target` instances unless `aws:PrincipalArn` is the jump role, `gitlab-deploy`, or one of the platform service roles in section 7.
+- Deny `ssm:CreateAssociation`, `ssm:UpdateAssociation` and `ssm:StartAutomationExecution` on `target` instances with the same exceptions. These run commands on an instance without a `SendCommand` call (see section 7).
 - Deny the side doors: EC2 Instance Connect, EC2 serial console, and `ec2:GetPasswordData`.
 - Deny `ec2:RunInstances` on resource `arn:aws:ec2:*:*:key-pair/*`, which blocks launching with any key pair.
-- Deny changes to the `AccessTier` tag, the target security groups, and the two exempt roles, except by the account provisioning role. Without this, an administrator could retag a target as a jump server or create a look-alike role.
+- Deny changes to the `AccessTier` tag, the target security groups, and the exempt roles, except by the account provisioning role. Without this, an administrator could retag a target as a jump server or create a look-alike role.
 
-## 7. Resulting access matrix
+## 7. Platform services (AWS Backup, Patch Manager, State Manager)
+
+Some AWS services act on instances through Systems Manager. The SCP in section 6 affects them, so they need named exceptions. Each exception is limited to the SSM documents that service needs, so it cannot be used to run arbitrary commands.
+
+| Service | Mechanism | Impact without an exception | Treatment |
+|---|---|---|---|
+| AWS Backup, EBS snapshot or AMI backups | EC2 snapshot and image APIs only | None | No exception needed |
+| AWS Backup, Windows VSS (application-consistent) | Backup role calls `ssm:SendCommand` with `AWSEC2-CreateVssSnapshot` | `SendCommand` is denied. Backup falls back to a crash-consistent snapshot, so the failure is easy to miss | Exempt the Backup role, limited to `AWSEC2-CreateVssSnapshot` |
+| AWS Backup, restore | Restore role launches an instance and may copy tags | Blocked if the tag guardrail denies setting `AccessTier` | Exempt the restore role from the tag guardrail |
+| Patch Manager, maintenance window with a custom service role | Service role calls `ssm:SendCommand` with `AWS-RunPatchBaseline` | Patching is denied | Exempt the role, limited to `AWS-RunPatchBaseline` |
+| Patch Manager, maintenance window with the Systems Manager service-linked role | Service-linked role | None. SCPs do not apply to service-linked roles | No exception needed |
+| Patch Manager, Quick Setup patch policies | State Manager associations, plus Automation runbooks and Lambda functions under Quick Setup roles | Depends on the roles Quick Setup creates | Exempt the Quick Setup roles for patching documents only, then test against the SCP |
+| State Manager associations | Runs documents on the instance without a `SendCommand` call | Not blocked by the `SendCommand` deny. This is a bypass of the access model | Deny `CreateAssociation` and `UpdateAssociation` except by the provisioning role (section 6) |
+| Automation runbooks with `aws:runCommand` steps | Run under the caller or the automation assume role | Another bypass if left open | Deny `StartAutomationExecution` on targets except by named roles (section 6) |
+
+**Rules for these roles:**
+
+- Restrict each exempt role with a condition on `ssm:SendCommand` document ARNs, e.g. `arn:aws:ssm:*::document/AWSEC2-CreateVssSnapshot` for Backup and `arn:aws:ssm:*::document/AWS-RunPatchBaseline` for patching.
+- Deny `iam:PassRole` for the automation and maintenance window service roles except by the provisioning role, so nobody else can attach them to a new task.
+- Associations, maintenance windows and patch policies are created only by the provisioning pipeline, so they are code-reviewed like other changes.
+
+## 8. Resulting access matrix
 
 | Path to target | Outcome | Enforced by |
 |---|---|---|
@@ -113,14 +135,17 @@ These stop layers 1 and 2 from being undone inside an account.
 | Any other role | Blocked | SCP |
 | Any other network source | Blocked | Security group |
 | SSH with key pair, Instance Connect, serial console | Blocked | No key pair, SCP |
+| AWS Backup and Patch Manager service roles | Allowed, named documents only | SCP exception with document condition |
+| New State Manager association or Automation run by an admin | Blocked | SCP |
 
-## 8. Detection
+## 9. Detection
 
 - Session Manager logs go to S3 or CloudWatch Logs.
-- CloudTrail alert on any `StartSession` or `SendCommand` against a `target` instance from a principal other than the jump role or `gitlab-deploy`.
+- CloudTrail alert on any `StartSession`, `SendCommand`, `CreateAssociation`, `UpdateAssociation` or `StartAutomationExecution` against a `target` instance from a principal other than the jump role, `gitlab-deploy`, the platform service roles, or the provisioning role.
 - CloudTrail alert on changes to the `AccessTier` tag or the target security groups.
+- Alert on AWS Backup jobs for Windows targets that complete without a VSS snapshot, since that failure falls back silently.
 
-## 9. Open decisions
+## 10. Open decisions
 
 - Which jump-to-target option to use (section 5). Option 2 is preferred if per-user audit is required.
 - Whether any workload needs direct network access from the pipeline (WinRM, SSH, Ansible). That would need Transit Gateway or peering from the runner VPC and a CIDR-based security group rule on targets, and it weakens the "no inbound path from outside the account" property.
