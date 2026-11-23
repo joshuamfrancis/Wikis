@@ -54,7 +54,7 @@ Guiding principles:
 | | T19 | Set up monitoring and SIEM: volume per consumer and per user, anomalies, write attempts | Dashboards, alerts | T16 | Operations, SOC |
 | **4. Verify** | T20 | Test read-only enforcement (attempt writes at every layer) | Test evidence | T15–T17 | Security |
 | | T20a | Differential access test where rules are reproduced outside the application (options B, G, H): MCP-path results must match the application UI for each test user | Test evidence, regression suite | T15 | System SMEs, Security |
-| | T21 | Load test at quota and at 2× quota: limits hold, other consumers unaffected | Load-test report | T17, T18 | Performance test |
+| | T21 | Load test at quota and at 2× quota. **Pass criteria:** (1) backend limits hold and other consumers are unaffected; (2) after `429`s, the consumer's request rate to the backend **drops** and stays at or below quota, rather than climbing; (3) retries stay within the CoC-12.7 budget; (4) during an injected backend outage, the consumer's circuit breaker opens and calls stop until it tests again | Load-test report | T17, T18 | Performance test, AI team |
 | | T22 | Test the kill switch, and user attribution in audit logs | Test evidence | T17, T19 | Operations |
 | | T23 | Sign the OLA (D6) and go live for the pilot | Signed OLA | T20–T22 | Both leads |
 | **5. Scale** | T24 | Re-estimate using pilot actuals, then run the next backends through onboarding (D7) | Updated D8 | T23 | – |

@@ -44,9 +44,26 @@ Our controls are designed so that the conditions protecting backend integrity an
 |---|---|---|
 | CoC-10 | Consumers stay within the **allocated quota** per backend (requests per second, concurrent connections, allowed time windows) set in the quota register. | Enforced – F5 connection/rate limits, backend resource caps |
 | CoC-11 | Every list or search request uses **filters and pagination** within the published maximum page size. Unbounded queries are rejected. | Enforced where the interface allows (view/procedure parameters), otherwise Detected |
-| CoC-12 | Consumers apply **timeouts, exponential backoff and circuit breaking**. No automatic retry of timed-out requests without backoff; no retry storms. | Attested + Detected – error-rate and burst monitoring |
+| CoC-12 | Consumers meet the **retry and backoff requirements in §5.1**: retries in one layer only, limited attempts with backoff and jitter, no retry of timeouts, `Retry-After` honoured, circuit breaker, retry budget, clear errors to the model. | Attested + Detected – retry-rate and burst monitoring; verified in load test T21 |
 | CoC-13 | Consumers **cache** stable or reference data for at least the published TTL rather than re-reading it. | Attested |
 | CoC-14 | Consumers provide a **demand forecast** before onboarding and before any significant change in users or use cases. | Attested – onboarding (D7) |
+
+### 5.1 Retry and backoff requirements (CoC-12)
+
+Backoff is coded in the **consumer's MCP server**, the component that calls our backends. It's consumer behaviour, so it's attested and tested; our enforced controls are the F5 `429` response and backend resource caps (D2 §3.4, §3.5).
+
+| ID | Requirement |
+|---|---|
+| CoC-12.1 | **Retry in one layer only: the MCP server.** The HTTP client library, gateway and agent don't add their own retries of backend calls, and the agent doesn't automatically re-run a tool that returned an error. (Three layers each retrying three times turns one failure into up to 27 calls.) |
+| CoC-12.2 | **At most 3 attempts in total** per backend call (the first try plus 2 retries), with **exponential backoff and full jitter** starting at ≥ 1 s (e.g. 1 s, 2 s, randomised). |
+| CoC-12.3 | **Retry only fast, transient failures:** connection refused or reset, `503`, `429`. **Never retry** `400`, `401`, `403`, `404` or other errors that will fail the same way again. |
+| CoC-12.4 | **Don't retry timeouts on queries or long-running operations.** The work may still be running on the backend, so a retry adds load at the worst moment. Return the failure instead. |
+| CoC-12.5 | **Honour `Retry-After`:** wait at least the time given on a `429` or `503` before any further request to that backend from that pod, not just before retrying the same request. |
+| CoC-12.6 | **Circuit breaker per backend:** after repeated failures (e.g. 5 within 30 s, or ≥ 50% errors over 20 calls), stop calling the backend and fail fast for a cooling-off period (≥ 30 s), then test with a single request before resuming. With many pods, use conservative thresholds or shared breaker state. |
+| CoC-12.7 | **Retry budget:** retries stay ≤ 10% of the consumer's requests to a backend over any 1-minute window. Once the budget is used up, fail without retrying. |
+| CoC-12.8 | **Timeouts** on every backend call, no longer than the published per-operation timeout in the catalogue. |
+| CoC-12.9 | **Clear errors to the model:** when the MCP server gives up, it returns a tool result with `isError: true` and a plain message that discourages an immediate re-call, e.g. *"The orders system is busy. Try again in a few minutes, or narrow the search."* It never suggests broadening the query. |
+| CoC-12.10 | **Limits on the agent side:** the agent caps tool calls per turn and per session, so a model can't loop on a failing or slow tool. |
 
 ## 6. User context and audit
 

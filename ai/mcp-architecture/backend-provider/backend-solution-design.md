@@ -87,6 +87,7 @@ Default order of preference when capacity is the concern:
 | Method and path allowlist (iRule or policy) | ✓ (iRule) | ✓ (OpenAPI/schema enforcement) | |
 | Connection limit and connection-rate limit per pool member | ✓ | | |
 | Request rate limit per consumer (iRule with tables) | ✓ | ✓ (L7 DoS) | |
+| Over quota: reply **immediately** with `429` and `Retry-After`, without queueing (fast rejection keeps load off the backend and lets consumer backoff work, CoC-12) | ✓ (iRule) | ✓ | |
 | Reject requests without `X-On-Behalf-Of` / `X-Correlation-ID` | ✓ (iRule) | | |
 | Kill-switch rule (data group toggle that blocks a consumer) | ✓ | | |
 | Validate consumer JWT, or single sign-on to backend (Kerberos, header) | | | ✓ |
@@ -125,6 +126,7 @@ Cap what consumer accounts can use, so even a misbehaving consumer can't starve 
 * Alerts:
   - write or permission-denied events;
   - sustained use above 80% of quota;
+  - retry rate above the CoC-12.7 budget, or requests continuing during `Retry-After` periods;
   - unusual read volume per user, the main signal for data exfiltration through read-only access;
   - requests missing user context;
   - access from unregistered sources.
