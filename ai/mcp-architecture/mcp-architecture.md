@@ -1,6 +1,7 @@
 # MCP Reference Architecture – Secure, Containerised, Cloud-Agnostic
 
 > **Status:** Proposed · **Date:** 2026-10-18 · **Target spec:** MCP `2026-07-28` (with `2025-11-25` back-compat)
+> **Backend owners:** [backend-provider/](backend-provider/README.md) – conditions of connection, controls and onboarding for teams whose systems MCP servers read from.
 > **Companion:** [security-concerns.md](security-concerns.md) – threat catalogue referenced below as `SC-xx`.
 
 ## 1. Purpose
