@@ -12,7 +12,7 @@
 1. **Provider stance.** The AI platform is treated as an external consumer. Anything that must be true about our systems is enforced on our side, not assumed from the consumer's design.
 2. **Read-only only.** Writes are out of scope and would need a separate request and review.
 3. **Capacity protection.** Each backend grants an explicit quota sized against measured headroom. It's enforced at the F5 (connection and rate limits) and in the backend (resource governors / WLM), with a kill switch. Load moves to replicas or an ODS where that doesn't bypass access rules the application enforces in code. Otherwise the application's own API is used, under quota.
-4. **Attribution.** Every request carries the end user's identity and a correlation ID, logged at the F5 and the backend, even where the system can't enforce access by user.
+4. **Act as the end user.** The target is delegated, read-only end-user identity, so each system applies its own access rules for that user. Where a legacy system can't accept that, a tightly restricted service account acts for the user with compensating controls. Every request carries the end user's identity and a correlation ID, logged at the F5 and the backend.
 5. **Standards and process.** Conditions of connection, a shared responsibility matrix with the AI team, a per-backend readiness assessment with an eligible / not-eligible verdict, an OLA per backend, and a repeatable onboarding process.
 
 **Plan.** Mobilise and standards (`<dates>`), discovery and assessment of `<n>` prioritised backends (`<dates>`), pilot on one or two low-complexity backends (`<dates>`), then re-estimate and scale.
@@ -23,6 +23,7 @@
 * Investment in read replicas / ODS for backends without capacity headroom.
 * F5 module licensing (APM / Advanced WAF), if edge identity or API schema enforcement is needed.
 * Access-control approach for systems whose access rules are enforced in application code (application API acting as the user, reproducing the rules in a copy, or restricting to coarse data).
+* Identity tier per system: where systems can't accept delegated end-user identity, whether to invest (e.g. F5 APM, application features) or accept the service-account fallback with compensating controls.
 * Any exception to the read-only principle.
 
 **Requested of ARB.** Note the approach, and provide feedback, particularly on dependencies on other teams (Network/F5, Security, Data/Privacy).
@@ -54,4 +55,5 @@
 | How do we know who did what? | Every request carries the end user and a correlation ID, logged at the F5 and the backend and sent to the SIEM, so it can be matched with the AI team's logs. |
 | Does data leave our environment? | Only for data classes approved per backend through Security / privacy review, and only to LLM providers Security has approved. |
 | What does it cost? | Backend-team effort as a range by confidence, refined after discovery. Possible additional costs: replicas/ODS, F5 modules, vendor licensing. These come back as decisions. |
+| Why not always call our systems as the end user? | That's the target, and we use it wherever a system can verify a delegated credential. Many legacy systems can't, so a restricted service account acts for the user instead, with the user's identity passed, logged, and enforced where the system allows. Each system's tier is recorded in its assessment. |
 | Why read-only only? | It removes the highest-impact risks while value is proven. Writes would need a separate design with human confirmation and stronger identity guarantees. |

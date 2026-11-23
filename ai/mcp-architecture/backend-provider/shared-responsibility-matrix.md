@@ -7,6 +7,8 @@
 |---|---|---|---|---|
 | **End users** | Authenticate end users (SSO, MFA) | O | – | Consumer architecture |
 | | Decide which users may use which tools (per-tool authorisation) | O | C (defines which data each use case may get) | Gateway policy, D3 use cases |
+| | Obtain a delegated, down-scoped user credential per request where the backend supports it (tier 1, CoC-05a) | O | C (defines audience, scopes, accepted issuers) | Token exchange config, F5 APM / backend logs |
+| | Validate delegated credentials (signature, issuer, audience, expiry, scope) | – | O | Backend / F5 APM config, negative tests |
 | | Derive end-user identity from verified tokens only (CoC-16) | O | C (verifies in onboarding) | Design evidence, two-user test |
 | | Pass user context and correlation ID on every request (CoC-15) | O | C (rejects requests without it) | F5 logs |
 | **AI platform** | Tool metadata review and pinning, prompt-injection defences | O | – | Consumer architecture |
@@ -16,6 +18,7 @@
 | **Backend access** | Publish the operation catalogue, side-effect checks | C (requests operations) | O | Catalogue |
 | | Read-only enforcement (role, views, replica, F5 methods) | – | O | T20 test evidence |
 | | Network access path and source allowlist | C (registers IPs) | O | F5 and firewall config |
+| | Identity tier per backend (aim for tier 1) | C | O | D3 assessment |
 | | Service accounts, least privilege | – | O | Account review |
 | | Object-level access control | C (option B: sets user context, option C: filters) | O (chooses option, builds RLS or views) | D3, contract tests |
 | **Capacity** | Demand forecast | O | – | Intake (T02) |

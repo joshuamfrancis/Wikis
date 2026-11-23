@@ -9,6 +9,7 @@
 * There is **no API gateway**. The **F5** is the only edge component available.
 * The AI team owns everything upstream: AI clients, agents, MCP gateway and MCP servers. We treat their platform as an external consumer.
 * Scope is **read-only** access.
+* The target is **delegated end-user identity** (identity tier 1, §3.3). Service accounts are the fallback for backends that can't accept it.
 
 ## 2. Control architecture
 
@@ -80,8 +81,27 @@ Default order of preference when capacity is the concern:
 * **A physical replica (P1) is read-only, so objects can't be created on it.** Create the views or row-level security policies on the **primary** (a small schema change) and they replicate across. SQL Server RLS and Oracle VPD policies defined on the primary apply on readable secondaries.
 * **Packaged vendor schemas may forbid custom objects.** Use a separate schema, and check vendor support terms (task T12).
 
-### 3.3 Service accounts
+### 3.3 Identity: end user first, service account as fallback
+
+Choose the **highest tier the backend can support**, per backend and per entity type:
+
+| Tier | Mechanism | Backend applies the user's own rules | Trust placed in the consumer | Typical legacy fit |
+|---|---|---|---|---|
+| **1. Delegated credential the backend verifies** (target) | JWT from IdP token exchange (consumer architecture Flow B2), SAML assertion (Flow B3), Kerberos constrained delegation, F5 APM SSO (option E) | Yes | Low. The backend checks a credential signed by the IdP. | Backends with JWT/SAML/Kerberos support, or any HTTP backend behind APM with Kerberos or trusted headers |
+| **2. Trusted service account acting as the user** | Proxy user (e.g. Oracle `svc_mcp[alice]`), application "act as" API (option F), database row-level security on session context (option B) | Yes | High. The account can name any user, so CoC-16 evidence, tight account restrictions and monitoring are required. | Most legacy databases, many packaged applications |
+| **3. Service account, rules enforced elsewhere** | Coarse data (A), ODS entitlements (G), production permission check (H), consumer-side filtering (C) | No, or a reproduced copy | High | Systems with neither of the above |
+
+**Rules for every tier**
+* **Delegated, not borrowed.** The agent never holds or replays a user's password. Tier 1 credentials are issued per request by the IdP or STS.
+* **Down-scoped to read.** A tier 1 credential carries read-only scope (JWT `scope`) or maps to a read-only role or entity ID (SAML), so the agent gets the **overlap** of the user's access and read-only, never the user's full power.
+* **User and agent both identified.** The consumer service also authenticates as itself (mTLS client certificate or its own client identity), and the credential records the acting agent (JWT `act`, SAML `actor` attribute). The F5 allowlists, quotas and kill switch therefore still apply per consumer, and audit shows "alice via agent X".
+* **Unattended runs** (scheduled jobs, no user present) use a registered service identity for that job (CoC-17).
+
+**Capacity impact of per-user identity.** Opening a separate session or connection pool per user can exhaust connection or session limits on legacy systems that a single pooled service account wouldn't. Prefer mechanisms that reuse pooled connections (proxy user, session context, per-request tokens over HTTP), and check vendor licensing for named-user or "digital access" counting (task T12).
+
+**Service accounts (tiers 2 and 3, and for consumer authentication in tier 1)**
 * One account per consumer service per backend per environment. Non-interactive. Least privilege: only the catalogue's objects.
+* Tier 2 accounts may act only as users who are entitled to the use case (e.g. members of an AD group), where the mechanism allows. Alert on unusual numbers of distinct users per account.
 * Credentials handed over through the consumer's secrets store and rotated every 90 days or on demand.
 * **Alert on any write or permission-denied event** for these accounts (CoC-09).
 
@@ -110,16 +130,16 @@ Cap what consumer accounts can use, so even a misbehaving consumer can't starve 
 
 ### 3.6 Access control (choose per backend)
 
-| Option | How | Use when |
-|---|---|---|
-| **A. Coarse** | Only expose data every permitted user may see | Reference or low-sensitivity data. Default for pilots. |
-| **B. Database row-level security on user context** | Consumer sets the user per request (CoC-15). Policies filter rows: Oracle VPD, SQL Server RLS with `SESSION_CONTEXT`, PostgreSQL RLS | Object-level access is needed and direct database access is acceptable. Relies on CoC-16. |
-| **C. Expose permission data to the consumer** | We publish a view of the backend's own access-rule tables, and the consumer's MCP server filters results | Last resort. Duplicates logic, and a consumer bug exposes everything the account can read. |
-| **D. Per-user credentials** | Users link their own backend login (see consumer architecture, Flow C) | Systems that only accept per-user logins. High operational cost. |
-| **E. F5 APM single sign-on** | APM validates the consumer token and signs in to the backend as the user (Kerberos/header) | APM is licensed and the backend supports Kerberos or trusted headers. |
-| **F. Application API acting as the user** | The consumer calls the application's own API with an "act as" / impersonation parameter or proxy user, so the **application's own access rules** run | Code-driven access rules. The application must support acting as a user for a trusted service account. |
-| **G. Pre-computed entitlements in an ODS** | While loading the ODS, flatten the access rules into an entitlement table (which user or role can see which entity, including AD group membership). Every ODS query is filtered against it. | Data-driven or external rules spread across several tables. We own the entitlement logic and must keep it in step with the application. |
-| **H. Copy for data, production for permission** | Entity data is read from P1/P2. "Can this user see entity X?" is checked against the production application or its permission tables (a small, cheap lookup) | Sensitive data where stale permissions aren't acceptable, but load must still move off production. |
+| Option | How | Use when | Identity tier |
+|---|---|---|---|
+| **A. Coarse** | Only expose data every permitted user may see | Reference or low-sensitivity data. Default for pilots. | 3 |
+| **B. Database row-level security on user context** | Consumer sets the user per request (CoC-15). Policies filter rows: Oracle VPD, SQL Server RLS with `SESSION_CONTEXT`, PostgreSQL RLS | Object-level access is needed and direct database access is acceptable. Relies on CoC-16. | 2 |
+| **C. Expose permission data to the consumer** | We publish a view of the backend's own access-rule tables, and the consumer's MCP server filters results | Last resort. Duplicates logic, and a consumer bug exposes everything the account can read. | 3 |
+| **D. Per-user credentials** | Users link their own backend login (see consumer architecture, Flow C) | Systems that only accept per-user logins. High operational cost. | 1 (user's own linked credential) |
+| **E. F5 APM single sign-on** | APM validates the consumer token and signs in to the backend as the user (Kerberos/header) | APM is licensed and the backend supports Kerberos or trusted headers. | 1 |
+| **F. Application API acting as the user** | The consumer calls the application's own API with an "act as" / impersonation parameter or proxy user, so the **application's own access rules** run | Code-driven access rules. The application must support acting as a user for a trusted service account. | 2 |
+| **G. Pre-computed entitlements in an ODS** | While loading the ODS, flatten the access rules into an entitlement table (which user or role can see which entity, including AD group membership). Every ODS query is filtered against it. | Data-driven or external rules spread across several tables. We own the entitlement logic and must keep it in step with the application. | 3 |
+| **H. Copy for data, production for permission** | Entity data is read from P1/P2. "Can this user see entity X?" is checked against the production application or its permission tables (a small, cheap lookup) | Sensitive data where stale permissions aren't acceptable, but load must still move off production. | 3 |
 
 > **Verification for options B, G and H (rules reproduced outside the application): differential testing.** For a sample of test users covering each role, team and hierarchy level, compare the entities returned through the MCP path with what the application's UI shows each user. They must match exactly. This is a go-live gate (T20) and a **regression test after every application upgrade**, because access rules change with upgrades.
 
@@ -146,6 +166,7 @@ Cap what consumer accounts can use, so even a misbehaving consumer can't starve 
 
 | Decision | Options |
 |---|---|
+| Identity tier | 1 / 2 / 3 (§3.3), and what it would take to reach a higher tier |
 | Where access rules live | None / data-driven / code-driven / external (§3.2) |
 | Read path | P1–P4 (§3.2), per entity type if split by sensitivity |
 | Access control | §3.6 options A–H |
@@ -162,6 +183,8 @@ Cap what consumer accounts can use, so even a misbehaving consumer can't starve 
 | No realistic non-production environment | Can't load test or verify controls | Build or refresh one as part of the backend's effort, or limit to option A on a replica |
 | Vendor terms on indirect / API access | Licence cost or breach | Check per backend (T12) before build |
 | Consumer sets wrong user identity (options B, G, H) | Data shown to the wrong user | CoC-16 evidence, two-user contract test, audit review |
+| Tier 2/3 account can act as any user | Compromise of one consumer account exposes every user's data | Move to tier 1 where possible. Restrict which users an account may act as. Alert on distinct-user counts. |
+| Per-user sessions exhaust legacy connection limits (tier 1/2) | Backend saturation | Pooled mechanisms (proxy user, session context). Connection caps per consumer at the F5 and the backend. |
 | Reproduced access rules drift from the application's (options B, G, H) | Users see entities the application would hide | Differential testing at go-live and after every application upgrade. Prefer F for code-driven rules. |
 | Stale permissions in a copy (P1, P2) | A revoked user still sees data until the next refresh | Agree acceptable lag per backend. Use H for sensitive entities. |
 | Agent demand exceeds forecast | Backend saturation | Hard caps at the F5 and backend, quota review in OLA |

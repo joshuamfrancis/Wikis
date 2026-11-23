@@ -12,7 +12,15 @@ Guiding principles:
 1. **Treat the AI platform as any other consumer.** Anything that must be true about our systems, we enforce on our side. We don't rely on the consumer's gateway, MCP servers or agent behaving as designed.
 2. **Read-only by default.** Write use cases are out of scope. Each would need a separate request and review.
 3. **Capacity first.** AI consumers get an explicit quota sized against measured headroom, enforced at the F5 and in the backend, with a kill switch.
-4. **Every call attributable to a person.** The consumer passes the end user's identity, and we log it, even where a legacy system can't enforce it.
+4. **Act as the end user wherever the backend can accept it.** The target is **delegated, down-scoped end-user identity**: the backend applies its own access rules for that user, audit shows the real person, and the agent gets the user's access limited to read. Service accounts are the fallback for systems that can't accept delegated identity, in this order:
+
+   | Identity tier | How | Backend applies the user's rules? |
+   |---|---|---|
+   | **1. Delegated credential the backend verifies** (target) | JWT token exchange, SAML assertion, Kerberos constrained delegation, F5 APM SSO | Yes. The backend verifies the IdP's signature, so the consumer can't invent a user. |
+   | **2. Trusted service account acting as the user** | Proxy user, application "act as" API, database row-level security on session context | Yes, but trusts the consumer to name the right user (CoC-16) |
+   | **3. Service account, rules enforced elsewhere** | Coarse data, ODS entitlements, production permission check | No, or a reproduced copy. Needs explicit risk acceptance for sensitive data. |
+
+   Whatever the tier, every call is **attributable to a person**: the end user's identity and a correlation ID are logged at the F5 and the backend. The consumer service also authenticates as itself, so per-consumer allowlists and quotas still apply.
 5. **Use what we have.** No API gateway: the F5 plus native backend controls (read-only roles, views, resource governors, replicas) do the enforcing.
 
 ![Controls by layer](controls-by-layer.svg)
@@ -44,7 +52,7 @@ Guiding principles:
 | | T07 | Draft shared responsibility matrix (D5) | D5 draft | T06 | AI team, Security |
 | | T08 | Draft the standard backend-side controls (D2) | D2 draft | T04 | DBAs, Network, Security |
 | | T09 | Draft the onboarding process (D7) and OLA outline (D6) | D6, D7 drafts | T06 | Service management |
-| **2. Discovery** | T10 | Readiness assessment per prioritised backend (D3): interfaces, load and headroom, read-only path, side effects, **where access rules live and how complex they are**, acceptable revocation lag, data classification | D3 per backend | T03, T08 | System SMEs, DBAs |
+| **2. Discovery** | T10 | Readiness assessment per prioritised backend (D3): interfaces, load and headroom, read-only path, side effects, **where access rules live and how complex they are**, **highest identity tier the backend can support** and what it would take to reach a higher one, acceptable revocation lag, data classification | D3 per backend | T03, T08 | System SMEs, DBAs |
 | | T11 | Measure peak utilisation and headroom per backend (≥ 2 weeks of monitoring, including month-end or batch peaks) | Headroom figures | T10 | Operations |
 | | T12 | Check vendor terms and licensing for indirect / API access | Licence note per backend | T10 | Vendor management |
 | | T13 | Allocate quotas (D4) and choose the access-control option per backend | Quota register, decisions | T02, T11 | System owners |

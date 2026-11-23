@@ -12,6 +12,7 @@
 | Complexity score (from §8) | `__ / 27` → Simple / Medium / Complex |
 | Where access rules live | None / data-driven / code-driven / external |
 | Read path chosen | P1 replica / P2 ODS / P3 views & procedures / P4 application API (per entity type if split) |
+| Identity tier | 1 delegated credential / 2 service account acting as user / 3 service account, rules elsewhere |
 | Access-control option | A / B / C / D / E / F / G / H |
 | Acceptable revocation lag | |
 | Quota granted | `__` req/s · `__` concurrent · windows `__` |
@@ -71,6 +72,10 @@
 | Permission tables and group sources | Tables and columns, and where role/group membership comes from |
 | Can the application act as a user for a service account? | Yes (mechanism: act-as parameter / proxy user / Kerberos / trusted header) / No |
 | Can the backend enforce a passed user context? | No / database RLS possible / proxy user / APM SSO |
+| **Delegated identity supported (tier 1)?** | JWT validation / SAML assertion / Kerberos constrained delegation / F5 APM SSO possible / none |
+| **Highest identity tier achievable now** | 1 / 2 / 3 |
+| What it would take to reach a higher tier | e.g. F5 APM licence, application upgrade, enable act-as feature, IdP token exchange |
+| Session / connection impact of per-user identity | Pooled (proxy user, session context, per-request token) / one session per user (check limits) |
 | **Acceptable revocation lag** | How long a revoked user may still see data through a copy: seconds / minutes / hours / none |
 | Read path per entity type | P1 / P2 / P3 / P4 (backend-solution-design §3.2) |
 | Access-control option per entity type and rationale | A–H (backend-solution-design §3.6) |

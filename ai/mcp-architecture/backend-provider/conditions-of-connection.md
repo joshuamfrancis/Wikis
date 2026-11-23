@@ -27,7 +27,9 @@ Our controls are designed so that the conditions protecting backend integrity an
 
 | ID | Condition | Assured by |
 |---|---|---|
-| CoC-05 | Each consumer service uses **its own service account issued by us**. Accounts are not shared across consumer services, environments or other integrations. | Enforced – account per service |
+| CoC-05a | **Where a backend supports delegated end-user identity (identity tier 1), the consumer must use it.** Each request carries a credential issued for that user and that backend by the IdP or STS (JWT via token exchange, SAML assertion, Kerberos delegation, or via F5 APM), down-scoped to read-only and naming the acting agent. | Enforced – backend or F5 APM validates the credential |
+| CoC-05b | The consumer **never collects, stores or replays end users' passwords** or other primary credentials for our systems. | Attested + Detected |
+| CoC-05 | Each consumer service also authenticates as itself, using **its own service account or client identity issued by us**. In tiers 2–3 that account is used for backend access; in tier 1 it identifies the consumer alongside the user. Not shared across consumer services, environments or other integrations. | Enforced – account per service |
 | CoC-06 | Credentials are kept in the consumer's secrets store, **never in code, config files, images or prompts**, and are rotated on our schedule (default 90 days, or on demand). | Attested + Detected – secret scanning, rotation |
 | CoC-07 | Service accounts are **non-interactive** and can't log in through user interfaces. | Enforced – account policy |
 
@@ -69,11 +71,11 @@ Backoff is coded in the **consumer's MCP server**, the component that calls our 
 
 | ID | Condition | Assured by |
 |---|---|---|
-| CoC-15 | Every request carries the **end user's identity** and a **correlation ID**: HTTP headers `X-On-Behalf-Of: <employee_id>` and `X-Correlation-ID: <uuid>`; for database connections, the client identifier / session context set per request (e.g. Oracle `DBMS_SESSION.SET_IDENTIFIER`, SQL Server `sp_set_session_context`). | Enforced – requests without it are rejected (F5 iRule or database logon check) |
+| CoC-15 | Every request carries the **end user's identity** and a **correlation ID**: HTTP headers `X-On-Behalf-Of: <employee_id>` and `X-Correlation-ID: <uuid>`; for database connections, the client identifier / session context set per request (e.g. Oracle `DBMS_SESSION.SET_IDENTIFIER`, SQL Server `sp_set_session_context`). In tier 1 the delegated credential carries the identity; the headers are still sent for logging and correlation. | Enforced – requests without it are rejected (F5 iRule or database logon check) |
 | CoC-16 | The end user's identity is **derived only from the consumer's verified authentication token**, never from tool arguments or anything the model generates. | Attested – evidence of the derivation and tests |
 | CoC-17 | Unattended or scheduled agent runs use a **separately registered identity** for that job, never a previous interactive user's identity. | Attested + Detected |
 
-> **Why CoC-16 matters.** Where we use the passed identity to *enforce* access (database row-level security, access-control option B), the consumer's service account can effectively act as any user. We then rely on the consumer setting the identity correctly, so it's assessed in onboarding, and misuse is a breach of these conditions.
+> **Why CoC-16 matters.** In identity tiers 2 and 3, where we use the passed identity to *enforce* access (database row-level security, an application act-as API, entitlements), the consumer's service account can effectively act as any user. We then rely on the consumer setting the identity correctly, so it's assessed in onboarding, and misuse is a breach of these conditions.
 
 ## 7. Data handling
 
