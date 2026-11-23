@@ -30,6 +30,12 @@ flowchart LR
     BE -.-> MON
 ```
 
+### 2.1 Controls by layer
+
+![Controls by layer: AI/MCP access to backend systems](controls-by-layer.svg)
+
+Layers 1–4 belong to the AI team. Their controls are attested in onboarding and verified in load test T21. Layers 5–7 and monitoring belong to us and are enforced, so they hold whatever the consumer does.
+
 ## 3. Standard controls
 
 ### 3.1 Published operation catalogue

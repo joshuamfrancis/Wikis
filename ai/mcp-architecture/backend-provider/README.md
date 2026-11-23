@@ -15,6 +15,8 @@ Guiding principles:
 4. **Every call attributable to a person.** The consumer passes the end user's identity, and we log it, even where a legacy system can't enforce it.
 5. **Use what we have.** No API gateway: the F5 plus native backend controls (read-only roles, views, resource governors, replicas) do the enforcing.
 
+![Controls by layer](controls-by-layer.svg)
+
 ## 2. Deliverables
 
 | # | Deliverable | Purpose | Audience / approver | File |
