@@ -16,12 +16,13 @@ Guiding principles:
 
    | Identity tier | How | Backend applies the user's rules? |
    |---|---|---|
-   | **1. Delegated credential the backend verifies** (target) | JWT token exchange, SAML assertion, Kerberos constrained delegation, F5 APM SSO | Yes. The backend verifies the IdP's signature, so the consumer can't invent a user. |
-   | **2. Trusted service account acting as the user** | Proxy user, application "act as" API, database row-level security on session context | Yes, but trusts the consumer to name the right user (CoC-16) |
-   | **3. Service account, rules enforced elsewhere** | Coarse data, ODS entitlements, production permission check | No, or a reproduced copy. Needs explicit risk acceptance for sensitive data. |
+   | **1. Delegated user token** (target) | OAuth 2.0 **authorization code** grant: the user signs in interactively. Where a system relies on SAML, the SAML assertion is **exchanged for an OAuth token** (RFC 7522). Validated at F5 BIG-IP, which signs in onward to legacy backends as the user (Kerberos / trusted header). | Yes. The user is proven by a token the IdP signed, so the consumer can't invent a user. |
+   | **2. Consumer token, user asserted** | OAuth 2.0 **client credentials** token for the consumer, plus the end user asserted per request and applied by the backend (proxy user, application "act as" API, database row-level security on session context) | Yes, but trusts the consumer to name the right user (CoC-16) |
+   | **3. Consumer credential, rules enforced elsewhere** | Client credentials token, or a **service-account PAT where OAuth is unavailable**, with coarse data, ODS entitlements or a production permission check | No, or a reproduced copy. Needs explicit risk acceptance for sensitive data. |
 
    Whatever the tier, every call is **attributable to a person**: the end user's identity and a correlation ID are logged at the F5 and the backend. The consumer service also authenticates as itself, so per-consumer allowlists and quotas still apply.
-5. **Use what we have.** No API gateway: the F5 plus native backend controls (read-only roles, views, resource governors, replicas) do the enforcing.
+5. **Use what we have.** **F5 BIG-IP is the API gateway.** It validates OAuth tokens and enforces the edge controls; native backend controls (read-only roles, views, resource governors, replicas) do the rest.
+6. **Follow the organisation's credential standard.** OAuth 2.0 client credentials or authorization code grants, giving scoped, time-limited, revocable tokens. SAML assertions are exchanged for OAuth tokens, never presented directly to APIs. The AI never automates browser-based SAML logins. Service-account PATs are a fallback only where OAuth is unavailable. See D2 §3.3.
 
 ![Controls by layer](controls-by-layer.svg)
 

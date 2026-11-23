@@ -292,6 +292,8 @@ SAML works between servers too. Browser SSO (the Web Browser SSO profile) isn't 
 | **B. WS-Trust STS** | The credential broker requests a SAML token for the user from a WS-Trust endpoint (e.g. ADFS, PingFederate). | Older SOAP and .NET estates that already run an STS. |
 | **C. Gateway or broker issues assertions itself** | The core system trusts the gateway as a SAML issuer. The signing key is held in KMS/HSM. | Last resort. Whoever holds this key can impersonate any user to that system ("Golden SAML"). |
 
+> **Organisational standard:** SAML assertions are **exchanged for an OAuth access token** (the SAML bearer grant, RFC 7522, shown in the diagram below) and only the OAuth token is presented to APIs, via F5 BIG-IP as the API gateway. Presenting assertions directly (e.g. in a WS-Security header) is **not used**. The AI platform never automates browser-based SAML logins. See [backend-provider/backend-solution-design.md §3.3](backend-provider/backend-solution-design.md).
+
 **How the core system accepts it**
 
 | Backend style | Mechanism |

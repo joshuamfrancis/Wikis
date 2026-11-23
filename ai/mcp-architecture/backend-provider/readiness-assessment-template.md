@@ -72,7 +72,8 @@
 | Permission tables and group sources | Tables and columns, and where role/group membership comes from |
 | Can the application act as a user for a service account? | Yes (mechanism: act-as parameter / proxy user / Kerberos / trusted header) / No |
 | Can the backend enforce a passed user context? | No / database RLS possible / proxy user / APM SSO |
-| **Delegated identity supported (tier 1)?** | JWT validation / SAML assertion / Kerberos constrained delegation / F5 APM SSO possible / none |
+| **Delegated identity supported (tier 1)?** | Backend validates OAuth tokens / BIG-IP APM SSO onward (Kerberos, trusted header) / SAML → OAuth exchange available / none |
+| Credential type to be used | Authorization code / SAML → OAuth / client credentials / service-account PAT (exception: reason OAuth unavailable, review date) |
 | **Highest identity tier achievable now** | 1 / 2 / 3 |
 | What it would take to reach a higher tier | e.g. F5 APM licence, application upgrade, enable act-as feature, IdP token exchange |
 | Session / connection impact of per-user identity | Pooled (proxy user, session context, per-request token) / one session per user (check limits) |

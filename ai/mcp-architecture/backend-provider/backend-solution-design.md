@@ -6,7 +6,8 @@
 ## 1. Context and constraints
 
 * Most backends are **legacy**. Many can't validate OAuth/JWT/SAML claims, so they can't enforce *who the user is* from a token.
-* There is **no API gateway**. The **F5** is the only edge component available.
+* **F5 BIG-IP is the API gateway.** It validates OAuth tokens and applies the edge controls in §3.4 before any request reaches a backend.
+* Credentials follow the **organisation's OAuth standard** (§3.3): client credentials or authorization code grants; SAML exchanged for OAuth; service-account PATs only where OAuth is unavailable.
 * The AI team owns everything upstream: AI clients, agents, MCP gateway and MCP servers. We treat their platform as an external consumer.
 * Scope is **read-only** access.
 * The target is **delegated end-user identity** (identity tier 1, §3.3). Service accounts are the fallback for backends that can't accept it.
@@ -83,18 +84,44 @@ Default order of preference when capacity is the concern:
 
 ### 3.3 Identity: end user first, service account as fallback
 
+#### Organisational credential standard
+
+| Credential | Represents | Use for | Tier |
+|---|---|---|---|
+| **OAuth 2.0 authorization code grant** (with PKCE) | **The end user.** The user signs in interactively, themselves, in a browser. | Any tool that returns user-specific data | 1 |
+| **SAML assertion exchanged for an OAuth token** (SAML 2.0 bearer grant, RFC 7522) | The user named in the assertion | Systems whose identity is SAML-based. The **OAuth token**, not the assertion, is presented to the API. | 1 |
+| **OAuth 2.0 client credentials grant** | **The consumer application, not a user** | The consumer's own identity at the gateway; unattended or scheduled jobs; non-user-specific data (option A); user-specific data only together with an asserted user that the backend applies (tier 2) | 2 or 3 |
+| **Service-account PAT** | A service account | **Only where the backend doesn't support OAuth.** Registered as an exception. | 2 or 3 |
+
+All OAuth tokens are **scoped, time-limited and revocable**. Order of preference: authorization code (or SAML exchanged for OAuth) → client credentials with user asserted → client credentials alone (non-user data) → service-account PAT.
+
+> **A client-credentials token identifies the application, not the user.** It's scoped, time-limited and revocable, but the scope is the *application's*. Used on its own for user-specific data, the backend can't apply that user's access rules, so every user would see what the application can see. Tools returning user-specific data therefore use an authorization-code token, or client credentials plus an asserted user that the backend applies (tier 2).
+
+**SAML rules**
+* SAML assertions are exchanged for an OAuth access token at the authorization server (RFC 7522) and **never presented directly to APIs**.
+* The AI platform **never automates browser-based SAML or SSO logins**: no headless browsers, form filling, or scraping of IdP pages. Assertions come only from non-browser, server-side issuance by the IdP or STS for the signed-in user, or from the user's own interactive login.
+
+**Service-account PAT conditions (fallback only)**
+* Issued to a **service account, never a person**. One per consumer service, backend and environment.
+* **Read-only scope**, and the **shortest expiry** the backend allows (≤ 90 days).
+* Kept in the consumer's secrets store and rotated before expiry.
+* Bound to the consumer's source IPs where the backend supports it.
+* Registered as an exception, with the reason OAuth isn't available and a review date.
+
+#### Identity tiers
+
 Choose the **highest tier the backend can support**, per backend and per entity type:
 
 | Tier | Mechanism | Backend applies the user's own rules | Trust placed in the consumer | Typical legacy fit |
 |---|---|---|---|---|
-| **1. Delegated credential the backend verifies** (target) | JWT from IdP token exchange (consumer architecture Flow B2), SAML assertion (Flow B3), Kerberos constrained delegation, F5 APM SSO (option E) | Yes | Low. The backend checks a credential signed by the IdP. | Backends with JWT/SAML/Kerberos support, or any HTTP backend behind APM with Kerberos or trusted headers |
-| **2. Trusted service account acting as the user** | Proxy user (e.g. Oracle `svc_mcp[alice]`), application "act as" API (option F), database row-level security on session context (option B) | Yes | High. The account can name any user, so CoC-16 evidence, tight account restrictions and monitoring are required. | Most legacy databases, many packaged applications |
-| **3. Service account, rules enforced elsewhere** | Coarse data (A), ODS entitlements (G), production permission check (H), consumer-side filtering (C) | No, or a reproduced copy | High | Systems with neither of the above |
+| **1. Delegated user token** (target) | OAuth token from the **authorization code** grant, or **SAML exchanged for OAuth** (RFC 7522). Validated by F5 BIG-IP, which signs in onward as the user to legacy backends (Kerberos constrained delegation or trusted header, option E), or by backends that validate OAuth tokens themselves. | Yes | Low. The user is proven by a token the IdP signed. | Any HTTP backend behind BIG-IP APM with Kerberos or trusted headers; backends that validate OAuth/JWT |
+| **2. Consumer token, user asserted** | **Client credentials** token (or PAT where OAuth is unavailable), plus the end user asserted per request and applied by the backend: proxy user (e.g. Oracle `svc_mcp[alice]`), application "act as" API (option F), database row-level security on session context (option B) | Yes | High. The consumer can name any user, so CoC-16 evidence, tight account restrictions and monitoring are required. | Most legacy databases, many packaged applications |
+| **3. Consumer credential, rules elsewhere** | Client credentials token or service-account PAT, with coarse data (A), ODS entitlements (G), production permission check (H) or consumer-side filtering (C) | No, or a reproduced copy | High | Systems with neither of the above |
 
 **Rules for every tier**
-* **Delegated, not borrowed.** The agent never holds or replays a user's password. Tier 1 credentials are issued per request by the IdP or STS.
-* **Down-scoped to read.** A tier 1 credential carries read-only scope (JWT `scope`) or maps to a read-only role or entity ID (SAML), so the agent gets the **overlap** of the user's access and read-only, never the user's full power.
-* **User and agent both identified.** The consumer service also authenticates as itself (mTLS client certificate or its own client identity), and the credential records the acting agent (JWT `act`, SAML `actor` attribute). The F5 allowlists, quotas and kill switch therefore still apply per consumer, and audit shows "alice via agent X".
+* **Delegated, not borrowed.** The agent never holds or replays a user's password, and never uses a person's own PAT. Tier 1 tokens come from the user's own sign-in (authorization code) or from a SAML-to-OAuth exchange.
+* **Down-scoped to read.** Tokens are requested with read-only scopes, so the agent gets the **overlap** of the user's access and read-only, never the user's full power.
+* **User and agent both identified.** The consumer authenticates as itself (its OAuth client, preferably with certificate-based client authentication such as `private_key_jwt` or mTLS rather than a shared secret), and the token's client ID (`azp`/`client_id`) records the acting agent. The F5 allowlists, quotas and kill switch therefore still apply per consumer, and audit shows "alice via agent X".
 * **Unattended runs** (scheduled jobs, no user present) use a registered service identity for that job (CoC-17).
 
 **Capacity impact of per-user identity.** Opening a separate session or connection pool per user can exhaust connection or session limits on legacy systems that a single pooled service account wouldn't. Prefer mechanisms that reuse pooled connections (proxy user, session context, per-request tokens over HTTP), and check vendor licensing for named-user or "digital access" counting (task T12).
@@ -116,9 +143,15 @@ Choose the **highest tier the backend can support**, per backend and per entity 
 | Over quota: reply **immediately** with `429` and `Retry-After`, without queueing (fast rejection keeps load off the backend and lets consumer backoff work, CoC-12) | ✓ (iRule) | ✓ | |
 | Reject requests without `X-On-Behalf-Of` / `X-Correlation-ID` | ✓ (iRule) | | |
 | Kill-switch rule (data group toggle that blocks a consumer) | ✓ | | |
-| Validate consumer JWT, or single sign-on to backend (Kerberos, header) | | | ✓ |
+| **Validate OAuth access tokens** (signature or introspection, issuer, audience, expiry, scope) and reject before the backend | | | ✓ |
+| Allow only tokens from approved grants and clients for each backend (authorization code vs client credentials) | | | ✓ |
+| Single sign-on onward to the legacy backend as the user (Kerberos constrained delegation, trusted header) | | | ✓ |
+| **Set `X-On-Behalf-Of` from the validated token's user claim**, overwriting any value the client sent (tier 1) | ✓ (iRule) | | ✓ |
+| **Strip inbound identity headers** that backends trust, so only BIG-IP can set them | ✓ (iRule) | | |
 
-> Confirm which modules are licensed (task T04). LTM alone covers the essentials. APM would let selected backends receive a real user identity (Kerberos constrained delegation or header-based SSO) without changing the backend.
+> **BIG-IP is the API gateway.** Token validation and onward SSO need APM (or the equivalent access module in your BIG-IP version), so confirm licensing and supported OAuth features in task T04. LTM alone covers the network, rate and allowlist controls.
+>
+> **Trusted-header SSO safety:** a backend that accepts the user from a header must accept it **only from BIG-IP** (network restriction plus mTLS between BIG-IP and the backend), and BIG-IP must strip any copy of that header arriving from clients.
 
 ### 3.5 Backend resource caps
 Cap what consumer accounts can use, so even a misbehaving consumer can't starve other users:
@@ -167,6 +200,7 @@ Cap what consumer accounts can use, so even a misbehaving consumer can't starve 
 | Decision | Options |
 |---|---|
 | Identity tier | 1 / 2 / 3 (§3.3), and what it would take to reach a higher tier |
+| Credential type | Authorization code / SAML → OAuth / client credentials / service-account PAT (exception record if PAT) |
 | Where access rules live | None / data-driven / code-driven / external (§3.2) |
 | Read path | P1–P4 (§3.2), per entity type if split by sensitivity |
 | Access control | §3.6 options A–H |
@@ -183,6 +217,9 @@ Cap what consumer accounts can use, so even a misbehaving consumer can't starve 
 | No realistic non-production environment | Can't load test or verify controls | Build or refresh one as part of the backend's effort, or limit to option A on a replica |
 | Vendor terms on indirect / API access | Licence cost or breach | Check per backend (T12) before build |
 | Consumer sets wrong user identity (options B, G, H) | Data shown to the wrong user | CoC-16 evidence, two-user contract test, audit review |
+| Client-credentials token used alone for user-specific data | Every user sees what the application can see | Require authorization code, or tier 2 with an asserted user the backend applies; otherwise coarse data only |
+| Service-account PAT leaked or over-scoped | Long-lived access to the backend | Fallback only, read-only, ≤ 90 days, IP-bound, vaulted, exception register |
+| Spoofed identity header at a trusted-header backend | Access as any user | Backend accepts the header only from BIG-IP (network + mTLS). BIG-IP strips inbound copies. |
 | Tier 2/3 account can act as any user | Compromise of one consumer account exposes every user's data | Move to tier 1 where possible. Restrict which users an account may act as. Alert on distinct-user counts. |
 | Per-user sessions exhaust legacy connection limits (tier 1/2) | Backend saturation | Pooled mechanisms (proxy user, session context). Connection caps per consumer at the F5 and the backend. |
 | Reproduced access rules drift from the application's (options B, G, H) | Users see entities the application would hide | Differential testing at go-live and after every application upgrade. Prefer F for code-driven rules. |

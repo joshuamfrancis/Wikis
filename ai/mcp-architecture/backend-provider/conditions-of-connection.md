@@ -27,10 +27,13 @@ Our controls are designed so that the conditions protecting backend integrity an
 
 | ID | Condition | Assured by |
 |---|---|---|
-| CoC-05a | **Where a backend supports delegated end-user identity (identity tier 1), the consumer must use it.** Each request carries a credential issued for that user and that backend by the IdP or STS (JWT via token exchange, SAML assertion, Kerberos delegation, or via F5 APM), down-scoped to read-only and naming the acting agent. | Enforced – backend or F5 APM validates the credential |
-| CoC-05b | The consumer **never collects, stores or replays end users' passwords** or other primary credentials for our systems. | Attested + Detected |
-| CoC-05 | Each consumer service also authenticates as itself, using **its own service account or client identity issued by us**. In tiers 2–3 that account is used for backend access; in tier 1 it identifies the consumer alongside the user. Not shared across consumer services, environments or other integrations. | Enforced – account per service |
-| CoC-06 | Credentials are kept in the consumer's secrets store, **never in code, config files, images or prompts**, and are rotated on our schedule (default 90 days, or on demand). | Attested + Detected – secret scanning, rotation |
+| CoC-05a | **Tools that return user-specific data use a delegated user token (identity tier 1) wherever the backend path supports it:** an OAuth 2.0 access token from the **authorization code** grant (the user signs in interactively), requested with read-only scopes and presented to F5 BIG-IP. | Enforced – BIG-IP validates the token (issuer, audience, expiry, scope, client) |
+| CoC-05c | **SAML:** where a system relies on SAML, the assertion is **exchanged for an OAuth access token** (RFC 7522) and only the OAuth token is presented to the API. The consumer **never automates browser-based SAML or SSO logins** (no headless browsers, form filling or IdP-page scraping). | Enforced – BIG-IP accepts OAuth tokens only; Attested – no browser automation |
+| CoC-05d | **Client credentials** tokens identify the consumer application. They may be used for unattended jobs and non-user-specific data. For user-specific data, they may be used only with the end user asserted per request (CoC-15) **and** a backend that applies it (tier 2). | Enforced – BIG-IP allows only approved grants per backend and operation |
+| CoC-05e | **Service-account PATs only where OAuth is unavailable** for that backend, registered as an exception: service account (never a person), read-only scope, expiry ≤ 90 days, source-IP bound where supported, rotated before expiry. | Enforced – issued only by us; Detected – usage monitoring |
+| CoC-05b | The consumer **never collects, stores or replays end users' passwords, personal access tokens** or other primary credentials for our systems. | Attested + Detected |
+| CoC-05 | Each consumer service authenticates as itself with **its own registered OAuth client** (or, under CoC-05e, its own service-account PAT), preferably using certificate-based client authentication (`private_key_jwt` or mTLS) rather than a shared secret. Not shared across consumer services, environments or other integrations. | Enforced – client registration per service |
+| CoC-06 | Client secrets, keys, refresh tokens and PATs are kept in the consumer's secrets store, **never in code, config files, images or prompts**, and are rotated on our schedule (default 90 days, or on demand). | Attested + Detected – secret scanning, rotation |
 | CoC-07 | Service accounts are **non-interactive** and can't log in through user interfaces. | Enforced – account policy |
 
 ## 4. Read-only
@@ -71,7 +74,7 @@ Backoff is coded in the **consumer's MCP server**, the component that calls our 
 
 | ID | Condition | Assured by |
 |---|---|---|
-| CoC-15 | Every request carries the **end user's identity** and a **correlation ID**: HTTP headers `X-On-Behalf-Of: <employee_id>` and `X-Correlation-ID: <uuid>`; for database connections, the client identifier / session context set per request (e.g. Oracle `DBMS_SESSION.SET_IDENTIFIER`, SQL Server `sp_set_session_context`). In tier 1 the delegated credential carries the identity; the headers are still sent for logging and correlation. | Enforced – requests without it are rejected (F5 iRule or database logon check) |
+| CoC-15 | Every request carries the **end user's identity** and a **correlation ID**: HTTP headers `X-On-Behalf-Of: <employee_id>` and `X-Correlation-ID: <uuid>`; for database connections, the client identifier / session context set per request (e.g. Oracle `DBMS_SESSION.SET_IDENTIFIER`, SQL Server `sp_set_session_context`). In tier 1 the user comes from the validated token, and BIG-IP sets `X-On-Behalf-Of` from it, overwriting any client value; `X-Correlation-ID` is still sent by the consumer. | Enforced – requests without it are rejected (F5 iRule or database logon check) |
 | CoC-16 | The end user's identity is **derived only from the consumer's verified authentication token**, never from tool arguments or anything the model generates. | Attested – evidence of the derivation and tests |
 | CoC-17 | Unattended or scheduled agent runs use a **separately registered identity** for that job, never a previous interactive user's identity. | Attested + Detected |
 

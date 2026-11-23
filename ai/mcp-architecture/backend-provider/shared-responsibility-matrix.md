@@ -7,8 +7,9 @@
 |---|---|---|---|---|
 | **End users** | Authenticate end users (SSO, MFA) | O | – | Consumer architecture |
 | | Decide which users may use which tools (per-tool authorisation) | O | C (defines which data each use case may get) | Gateway policy, D3 use cases |
-| | Obtain a delegated, down-scoped user credential per request where the backend supports it (tier 1, CoC-05a) | O | C (defines audience, scopes, accepted issuers) | Token exchange config, F5 APM / backend logs |
-| | Validate delegated credentials (signature, issuer, audience, expiry, scope) | – | O | Backend / F5 APM config, negative tests |
+| | Obtain user tokens via the authorization code grant, and exchange SAML assertions for OAuth tokens (CoC-05a, 05c); no browser-automated SAML logins | O | C (defines audience, scopes, accepted grants) | OAuth client config, BIG-IP logs |
+| | Validate OAuth tokens at BIG-IP (signature, issuer, audience, expiry, scope, grant, client) and SSO onward to legacy backends | – | O | BIG-IP APM config, negative tests |
+| | Service-account PAT exceptions (CoC-05e): issue, register, review | C (justifies) | O | Exception register |
 | | Derive end-user identity from verified tokens only (CoC-16) | O | C (verifies in onboarding) | Design evidence, two-user test |
 | | Pass user context and correlation ID on every request (CoC-15) | O | C (rejects requests without it) | F5 logs |
 | **AI platform** | Tool metadata review and pinning, prompt-injection defences | O | – | Consumer architecture |
