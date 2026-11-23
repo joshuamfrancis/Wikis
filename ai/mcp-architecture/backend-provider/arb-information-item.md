@@ -11,7 +11,7 @@
 **Approach.**
 1. **Provider stance.** The AI platform is treated as an external consumer. Anything that must be true about our systems is enforced on our side, not assumed from the consumer's design.
 2. **Read-only only.** Writes are out of scope and would need a separate request and review.
-3. **Capacity protection.** Each backend grants an explicit quota sized against measured headroom. It's enforced at the F5 (connection and rate limits) and in the backend (resource governors / WLM), with a kill switch. Replicas or ODS are preferred over production where available.
+3. **Capacity protection.** Each backend grants an explicit quota sized against measured headroom. It's enforced at the F5 (connection and rate limits) and in the backend (resource governors / WLM), with a kill switch. Load moves to replicas or an ODS where that doesn't bypass access rules the application enforces in code. Otherwise the application's own API is used, under quota.
 4. **Attribution.** Every request carries the end user's identity and a correlation ID, logged at the F5 and the backend, even where the system can't enforce access by user.
 5. **Standards and process.** Conditions of connection, a shared responsibility matrix with the AI team, a per-backend readiness assessment with an eligible / not-eligible verdict, an OLA per backend, and a repeatable onboarding process.
 
@@ -22,7 +22,7 @@
 **Decisions that will come to ARB.**
 * Investment in read replicas / ODS for backends without capacity headroom.
 * F5 module licensing (APM / Advanced WAF), if edge identity or API schema enforcement is needed.
-* Access-control approach for sensitive systems (database row-level security vs restricting to coarse data).
+* Access-control approach for systems whose access rules are enforced in application code (application API acting as the user, reproducing the rules in a copy, or restricting to coarse data).
 * Any exception to the read-only principle.
 
 **Requested of ARB.** Note the approach, and provide feedback, particularly on dependencies on other teams (Network/F5, Security, Data/Privacy).
@@ -49,7 +49,7 @@
 | Question | Answer |
 |---|---|
 | Why not wait for an API gateway? | The controls we need (allowlist, limits, read-only, audit) can be met with the F5 and native backend features now. A future gateway would replace some F5 rules, not the approach. |
-| Can the AI see data a user isn't allowed to see? | Not where we use coarse access (only data all permitted users may see) or database row-level security on the passed user. For sensitive systems this is a per-backend decision that comes back to ARB. |
+| Can the AI see data a user isn't allowed to see? | Many of our systems enforce access to entities by user or role in application code, and a replica or ODS bypasses those rules. So we first establish where each system's access rules live. Then we either use the application's own API acting as the user, reproduce data-driven rules in the copy and prove they match through differential testing against the application, or expose only data every permitted user may see. For sensitive systems this is a per-backend decision that comes back to ARB. |
 | What stops an agent overloading a system? | Hard quotas at the F5 and in the backend that hold regardless of consumer behaviour, tighter limits in batch windows, and a kill switch we control. Verified by load testing at 2× quota before go-live. |
 | How do we know who did what? | Every request carries the end user and a correlation ID, logged at the F5 and the backend and sent to the SIEM, so it can be matched with the AI team's logs. |
 | Does data leave our environment? | Only for data classes approved per backend through Security / privacy review, and only to LLM providers Security has approved. |

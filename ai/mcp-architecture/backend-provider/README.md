@@ -42,7 +42,7 @@ Guiding principles:
 | | T07 | Draft shared responsibility matrix (D5) | D5 draft | T06 | AI team, Security |
 | | T08 | Draft the standard backend-side controls (D2) | D2 draft | T04 | DBAs, Network, Security |
 | | T09 | Draft the onboarding process (D7) and OLA outline (D6) | D6, D7 drafts | T06 | Service management |
-| **2. Discovery** | T10 | Readiness assessment per prioritised backend (D3): interfaces, load and headroom, read-only path, side effects, where access rules live, data classification | D3 per backend | T03, T08 | System SMEs, DBAs |
+| **2. Discovery** | T10 | Readiness assessment per prioritised backend (D3): interfaces, load and headroom, read-only path, side effects, **where access rules live and how complex they are**, acceptable revocation lag, data classification | D3 per backend | T03, T08 | System SMEs, DBAs |
 | | T11 | Measure peak utilisation and headroom per backend (≥ 2 weeks of monitoring, including month-end or batch peaks) | Headroom figures | T10 | Operations |
 | | T12 | Check vendor terms and licensing for indirect / API access | Licence note per backend | T10 | Vendor management |
 | | T13 | Allocate quotas (D4) and choose the access-control option per backend | Quota register, decisions | T02, T11 | System owners |
@@ -53,6 +53,7 @@ Guiding principles:
 | | T18 | Configure backend resource caps for consumer accounts | Governor/WLM config | T13 | DBAs |
 | | T19 | Set up monitoring and SIEM: volume per consumer and per user, anomalies, write attempts | Dashboards, alerts | T16 | Operations, SOC |
 | **4. Verify** | T20 | Test read-only enforcement (attempt writes at every layer) | Test evidence | T15–T17 | Security |
+| | T20a | Differential access test where rules are reproduced outside the application (options B, G, H): MCP-path results must match the application UI for each test user | Test evidence, regression suite | T15 | System SMEs, Security |
 | | T21 | Load test at quota and at 2× quota: limits hold, other consumers unaffected | Load-test report | T17, T18 | Performance test |
 | | T22 | Test the kill switch, and user attribution in audit logs | Test evidence | T17, T19 | Operations |
 | | T23 | Sign the OLA (D6) and go live for the pilot | Signed OLA | T20–T22 | Both leads |
@@ -87,18 +88,19 @@ Score each factor 1–3.
 |---|---|---|---|
 | **Interface exposure** | Existing read API or view is usable | New views, procedures or API endpoints needed | New interface or adapter, or mainframe transaction |
 | **Read-only path** | Replica or read-only role exists | Read-only role or views to create | Side effects to fix, or a replica/ODS to build |
-| **Access-control option** | A – coarse | B – database row-level security on user context | C – permission tables exposed to the consumer, or D – per-user credentials |
+| **Access-control option** | A – coarse | B – database row-level security on user context, or F – application API acting as the user | C – permission tables exposed to the consumer, D – per-user credentials, or G – ODS entitlements |
+| **Access-rule reproduction** | Not needed (no user/role rules, or the application enforces its own rules via option E/F) | Data-driven rules reproduced in a copy or checked in production (B, H), with differential tests for a few roles | Code-driven or external (AD) rules reproduced, entitlements computed in an ODS (G), or differential tests across many roles and hierarchies |
 | **Capacity controls** | Ample headroom, F5 limits only | Resource governor/WLM config needed | Near limit, per-use charges, or replica needed |
 | **Data sensitivity** | Internal | Confidential | PII / regulated (masking views, privacy assessment) |
 | **Operations published** | 1–3 | 4–8 | 9+ |
 | **Environments & support** | Non-prod environment and SME available | Partial | No usable non-prod, or vendor-dependent |
 | **Change / vendor constraints** | Standard change | Change board + vendor notification | Vendor engagement, licence review or change freeze |
 
-| Total (8–24) | Band | Indicative build effort (person-days) | Assessment (person-days) |
+| Total (9–27) | Band | Indicative build effort (person-days) | Assessment (person-days) |
 |---|---|---|---|
-| 8–12 | Simple | O 10 · M 15 · P 25 | 3 |
-| 13–18 | Medium | O 20 · M 30 · P 50 | 5 |
-| 19–24 | Complex | O 40 · M 60 · P 100 | 8 |
+| 9–13 | Simple | O 10 · M 15 · P 25 | 3 |
+| 14–20 | Medium | O 20 · M 30 · P 50 | 5 |
+| 21–27 | Complex | O 40 · M 60 · P 100 | 8 |
 
 > **These figures are starting assumptions, not benchmarks.** Replace them with actuals from the first pilot backend. The spreadsheet holds them in an *Assumptions* sheet so they can be changed in one place.
 
@@ -106,8 +108,8 @@ Score each factor 1–3.
 
 | Backend | Score | Band | Build PERT | Assessment | Extra ops | Non-dev | Subtotal |
 |---|---|---|---|---|---|---|---|
-| HR reference data (REST, read-only role exists, internal) | 10 | Simple | 15.8 | 3 | 0 | 5 | 23.8 |
-| Orders DB (SQL Server, views + Resource Governor, confidential, 6 ops) | 15 | Medium | 31.7 | 5 | 6 | 12 | 54.7 |
+| HR reference data (REST, read-only role exists, internal) | 11 | Simple | 15.8 | 3 | 0 | 5 | 23.8 |
+| Orders DB (SQL Server, views + Resource Governor, confidential, 6 ops) | 16 | Medium | 31.7 | 5 | 6 | 12 | 54.7 |
 
 Add one-off work (e.g. 35 days) and 20% contingency at medium confidence: **(35 + 23.8 + 54.7) × 1.2 ≈ 136 person-days.** The same inputs give a range of **115–169 person-days** (optimistic to pessimistic), which is what to present. The spreadsheet reproduces this example.
 
