@@ -483,6 +483,33 @@ Example host config (Claude Desktop / VS Code `mcp.json`), committed to a dotfil
 * `command` is always `docker`, and `args` are fixed. Anything that writes this config programmatically must reject user-controlled `command`/`args` (SC-01, SC-02).
 * On Windows 11 with Git Bash, Docker Desktop's WSL2 backend handles this. Use forward-slash paths in bind mounts, or set `MSYS_NO_PATHCONV=1` when testing the command from Git Bash, which otherwise rewrites `/work`.
 
+### 5.2 What "Streamable HTTP only, no HTTP+SSE" implies
+
+MCP has had two remote transports:
+
+| | HTTP+SSE (2024, deprecated in `2025-03-26`) | Streamable HTTP (current) |
+|---|---|---|
+| Endpoints | Two: a long-lived `GET /sse` stream, plus a `POST /messages?sessionId=…` URL | One, e.g. `/mcp` |
+| Where the answer arrives | On the separate SSE stream, not in the POST response | In the same HTTP response: plain JSON, or an SSE stream inside that response for progress |
+| State | Server must map each session to its open stream | Stateless in `2026-07-28`: no sessions, identity and version in every request |
+
+"No HTTP+SSE" doesn't mean "no SSE at all". SSE is still used inside Streamable HTTP responses. The implications:
+
+1. **Ordinary load balancing works.** Each request is self-contained, so any pod can answer it: no sticky sessions, no shared session store, horizontal autoscaling.
+2. **Every call is authenticated and authorised on its own.** The bearer token arrives on each POST, so the gateway checks per-tool permissions and audits per call. HTTP+SSE authenticated one long-lived connection, and its session ID travelled in the URL, where it ends up in logs.
+3. **Routing without reading the body.** `2026-07-28` requires `Mcp-Method` and `Mcp-Name` headers on every POST, so the gateway, WAF or F5 can apply per-tool rules and rate limits from headers alone.
+4. **Proxies must pass streamed responses through cleanly.** Every component in the path (load balancer / F5 BIG-IP, WAF, ingress, gateway) must:
+   * not buffer `text/event-stream` responses (e.g. NGINX `proxy_buffering off`; on BIG-IP, no response buffering or compression on the MCP virtual server);
+   * allow chunked transfer encoding;
+   * have idle timeouts longer than the slowest tool.
+
+   Misconfigured buffering is the most common reason streaming "doesn't work" behind a proxy.
+5. **A dropped stream means a retry.** Stream resumability was removed in `2026-07-28`, so a client re-sends a broken request. Write tools must be idempotent (idempotency key). Anything longer than about 30 s uses the tasks extension (start, then poll) instead of holding a stream open.
+6. **Legacy servers and clients are excluded unless adapted.** A third-party server that only speaks HTTP+SSE is upgraded, rewritten or wrapped by an adapter behind the gateway. A host that only speaks HTTP+SSE can't connect.
+7. **Less to secure:** one endpoint, no long-lived per-client connections to exhaust, no session IDs to steal.
+
+In host configuration this is the difference between pointing at `https://mcp.example.com/mcp` with the HTTP / streamable-http transport (allowed) and pointing at an `/sse` URL (not allowed).
+
 ## 6. Security architecture (controls mapped to threats)
 
 Full threat descriptions are in [security-concerns.md](security-concerns.md). The table below is the summary; §6.1 walks through each concern in detail.

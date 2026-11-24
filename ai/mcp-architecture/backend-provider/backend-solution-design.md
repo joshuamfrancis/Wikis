@@ -10,6 +10,7 @@
 * Credentials follow the **organisation's OAuth standard** (§3.3): client credentials or authorization code grants; SAML exchanged for OAuth; service-account PATs only where OAuth is unavailable.
 * The AI team owns everything upstream: AI clients, agents, MCP gateway and MCP servers. We treat their platform as an external consumer.
 * Scope is **read-only** access.
+* **Who touches our systems.** The model *decides* which tool to call, and the agent (MCP client) *sends* the `tools/call`. The **MCP server executes** the tool code, which calls our backend. Only MCP servers ever connect to our systems, which is why the conditions of connection, credentials, allowlists and F5 rules all target them. But the model drives *what* gets called and *how often*, so quotas and resource caps sit on our side, independent of how well the consumer is built. Any other agent route to a backend (e.g. a framework's direct HTTP tool) is closed by CoC-01/02: only via BIG-IP, only from registered MCP server sources.
 * The target is **delegated end-user identity** (identity tier 1, §3.3). Service accounts are the fallback for backends that can't accept it.
 
 ## 2. Control architecture
