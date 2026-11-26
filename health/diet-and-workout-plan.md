@@ -21,27 +21,6 @@ The approach is body recomposition: a small calorie deficit, high protein, and r
 - Fitness trackers and gym machines often overestimate calories burned by 20–40%.
 - Diet changes usually do more of the work than exercise.
 
-## Baseline (Before the Plan)
-
-| Time | Meal | Est. kcal |
-|---|---|---|
-| 5:00 am | Coffee with milk, no sugar | ~50–80 |
-| 8:00 am | Coffee with milk, no sugar | ~50–80 |
-| 12:00 pm | 2 baked salmon fillets + potato salad | ~650–850 |
-| 3:00 pm | Coffee with milk, no sugar | ~50–80 |
-| 6:30 pm | 4 chapatis + curry | ~600–900 |
-| 8:00 pm | Milk + 1 tbsp collagen | ~180–220 |
-| **Total** | | **~1,650–2,150** |
-
-Activity was ~4,500 steps a day plus 1–2 gym sessions a week (mostly 45-minute walks). That put the estimated burn at ~2,100–2,200 kcal a day, so the deficit was small (about 0–400 kcal a day) and fat loss would be slow.
-
-**Main changes:**
-
-- Increase daily steps.
-- Add strength training.
-- Trim dinner.
-- Add protein at breakfast and dinner.
-
 ## Daily Meal Plan & Timing
 
 | Time | What | Protein |
