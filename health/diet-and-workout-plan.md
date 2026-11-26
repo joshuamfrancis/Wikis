@@ -105,7 +105,7 @@ Each option gives roughly 30–40 g protein and 500–650 kcal. Keep chapatis to
 
 ## Workout Plan
 
-### Strength: 3 days a week (e.g. Mon/Wed/Fri), about 45 minutes, full body
+### Strength: 3 days a week (Wed, Fri, Sat), about 45 minutes, full body
 
 | Exercise | Sets × Reps |
 |---|---|
@@ -137,48 +137,70 @@ Each option gives roughly 30–40 g protein and 500–650 kcal. Keep chapatis to
 | 250 ml skim or light milk (or water) | ~90–110 | ~9–12 g |
 | ½ cup blueberries | ~40 | — |
 
-- **Replace, don't add.** On 6:00 am training days the shake replaces the 3:30 pm snack. On 7:00 pm training days it replaces the 8:30 pm milk and collagen.
-- **Timing:** have it within about 30–60 minutes after training. See the gym-day schedules below.
+- **Replace, don't add.** On morning training days the shake replaces the 3:30 pm snack. On the occasional 7:00 pm session it replaces the 8:30 pm milk and collagen.
+- **Timing:** have it at home within about 30–60 minutes after training. See the weekly schedule below.
 - **Result:** training days stay around 2,000–2,100 kcal and still hit the protein target.
 
 ### Cardio & daily movement
 
-- 1–2 brisk or incline walks a week, 45 minutes each.
+- A brisk or incline walk on Sunday, 45 minutes, plus a 20-minute walk after dinner on office days.
 - 7,000–8,000 steps a day. The walk after dinner covers much of the gap and helps blood sugar.
 
-### Gym-day timing
+### Weekly schedule
 
-**6:00 am training days**
+Your work week shapes the plan:
+
+- **Office days (Mon, Tue, Thu):** you leave at 6:10 am and get home at 6:10 pm. These are **rest days from the gym**. Bring your meals and walk after dinner.
+- **Work-from-home days (Wed, Fri):** you work 8:00 am–4:30 pm. **Train at 6:00 am** and have the shake at home.
+- **Weekend:** Saturday is the third strength session. Sunday is a long walk plus meal prep.
+
+| Day | Training | Shake |
+|---|---|---|
+| Mon (office) | Walk after dinner, 20 min | — |
+| Tue (office) | Walk after dinner, 20 min | — |
+| Wed (WFH) | **Strength, 6:00 am** | 7:00 am at home |
+| Thu (office) | Walk after dinner, 20 min | — |
+| Fri (WFH) | **Strength, 6:00 am** | 7:00 am at home |
+| Sat | **Strength, 7:00 am** | 8:00 am at home |
+| Sun | Brisk or incline walk, 45 min, plus meal prep | — |
+
+You only ever have the shake at home after training, so the blueberries and milk don't need to travel to the office.
+
+### Office day timing (Mon, Tue, Thu)
+
+| Time | What |
+|---|---|
+| 5:00 am | Coffee with milk at home |
+| 6:10 am | Leave for work, carrying breakfast, lunch and a snack |
+| 7:30 am | **Breakfast at the office:** 3 boiled eggs + fruit, or a Greek yogurt tub + fruit |
+| 10:00 am | Coffee with milk |
+| 12:30 pm | Lunch (packed, from the lunch options) |
+| 3:30 pm | Snack: curd, nuts or roasted chana |
+| 6:10 pm | Home |
+| 6:30 pm | Dinner |
+| 7:00–7:20 pm | Walk after dinner |
+| 8:30 pm | Milk + collagen |
+
+- Boil eggs for the office days on Sunday. They keep in the fridge for up to a week.
+- Commuting usually adds steps, so check that office days reach 7,000+.
+
+### Training day timing (Wed, Fri at 6:00 am; Sat at 7:00 am)
 
 | Time | What |
 |---|---|
 | 5:00 am | Coffee with milk (a banana is optional if you feel flat) |
 | 6:00–6:45 am | Strength training |
 | 7:00 am | Protein shake |
-| 7:30–8:00 am | Breakfast as usual |
+| 7:30 am | Breakfast before work starts at 8:00 |
 | 10:00 am | Coffee with milk |
 | 12:30 pm | Lunch |
 | 3:30 pm | **Skip the snack.** The shake replaces it. |
+| 4:30–5:00 pm | After work: a short walk (optional) |
 | 6:30 pm | Dinner |
 | 7:00–7:20 pm | Walk after dinner |
 | 8:30 pm | Milk + collagen |
 
-**7:00 pm training days**
-
-| Time | What |
-|---|---|
-| 5:00 am | Coffee with milk |
-| 7:00–7:30 am | Breakfast |
-| 10:00 am | Coffee with milk |
-| 12:30 pm | Lunch |
-| 3:30 pm | Snack |
-| 5:30 pm | **Dinner, moved earlier** so you're not training on a full stomach |
-| 7:00–7:45 pm | Strength training (replaces the walk after dinner) |
-| 8:00 pm | Protein shake, **instead of** the milk + collagen |
-
-- On 7:00 pm days, the shake replaces the night-time milk and collagen rather than the afternoon snack, so you aren't training hungry.
-- Eat dinner at least 90 minutes before a 7:00 pm session.
-- If evening training disturbs your sleep, cut caffeine after 2:00 pm and keep the session to 45 minutes.
+**If you miss a 6:00 am session on a WFH day,** you can switch to 7:00 pm. Have dinner at 5:30 pm, after work, then train at 7:00. The shake at 8:00 pm replaces the night-time milk and collagen.
 
 ## Tracking Progress
 
