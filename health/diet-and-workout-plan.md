@@ -137,8 +137,8 @@ Each option gives roughly 30–40 g protein and 500–650 kcal. Keep chapatis to
 | 250 ml skim or light milk (or water) | ~90–110 | ~9–12 g |
 | ½ cup blueberries | ~40 | — |
 
-- **Replace, don't add.** The shake takes the place of the 3:30 pm snack on training days.
-- **Timing:** have it within 1–2 hours after training. That's straight after an evening session, or as part of breakfast after a morning one.
+- **Replace, don't add.** On 6:00 am training days the shake replaces the 3:30 pm snack. On 7:00 pm training days it replaces the 8:30 pm milk and collagen.
+- **Timing:** have it within about 30–60 minutes after training. See the gym-day schedules below.
 - **Result:** training days stay around 2,000–2,100 kcal and still hit the protein target.
 
 ### Cardio & daily movement
@@ -148,8 +148,37 @@ Each option gives roughly 30–40 g protein and 500–650 kcal. Keep chapatis to
 
 ### Gym-day timing
 
-- **Morning:** train around 6:00 am after coffee, then have breakfast straight afterwards.
-- **Evening:** train around 5:00–5:45 pm after the afternoon snack, then have dinner at 6:30 pm.
+**6:00 am training days**
+
+| Time | What |
+|---|---|
+| 5:00 am | Coffee with milk (a banana is optional if you feel flat) |
+| 6:00–6:45 am | Strength training |
+| 7:00 am | Protein shake |
+| 7:30–8:00 am | Breakfast as usual |
+| 10:00 am | Coffee with milk |
+| 12:30 pm | Lunch |
+| 3:30 pm | **Skip the snack.** The shake replaces it. |
+| 6:30 pm | Dinner |
+| 7:00–7:20 pm | Walk after dinner |
+| 8:30 pm | Milk + collagen |
+
+**7:00 pm training days**
+
+| Time | What |
+|---|---|
+| 5:00 am | Coffee with milk |
+| 7:00–7:30 am | Breakfast |
+| 10:00 am | Coffee with milk |
+| 12:30 pm | Lunch |
+| 3:30 pm | Snack |
+| 5:30 pm | **Dinner, moved earlier** so you're not training on a full stomach |
+| 7:00–7:45 pm | Strength training (replaces the walk after dinner) |
+| 8:00 pm | Protein shake, **instead of** the milk + collagen |
+
+- On 7:00 pm days, the shake replaces the night-time milk and collagen rather than the afternoon snack, so you aren't training hungry.
+- Eat dinner at least 90 minutes before a 7:00 pm session.
+- If evening training disturbs your sleep, cut caffeine after 2:00 pm and keep the session to 45 minutes.
 
 ## Tracking Progress
 
