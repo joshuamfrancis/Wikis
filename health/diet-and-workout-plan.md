@@ -119,6 +119,28 @@ Each option gives roughly 30–40 g protein and 500–650 kcal. Keep chapatis to
 - **Progression:** add a little weight or one rep each week.
 - **Effort:** stop each set with 1–2 reps left in the tank.
 
+### Post-workout protein shake
+
+**Old shake (~535 kcal, ~60 g protein):** too much as an extra. On training days it cancels the deficit and slows fat loss by about 0.2 kg a week.
+
+| Ingredient | kcal | Protein |
+|---|---|---|
+| 2 scoops Optimum Nutrition Gold Standard whey | ~240 | 48 g |
+| 300 ml full-cream milk | ~195 | 10 g |
+| 1.2 cups blueberries | ~100 | — |
+
+**New shake (~260 kcal, ~37 g protein):**
+
+| Ingredient | kcal | Protein |
+|---|---|---|
+| 1 scoop Optimum Nutrition Gold Standard whey | ~120 | 24 g |
+| 250 ml skim or light milk (or water) | ~90–110 | ~9–12 g |
+| ½ cup blueberries | ~40 | — |
+
+- **Replace, don't add.** The shake takes the place of the 3:30 pm snack on training days.
+- **Timing:** have it within 1–2 hours after training. That's straight after an evening session, or as part of breakfast after a morning one.
+- **Result:** training days stay around 2,000–2,100 kcal and still hit the protein target.
+
 ### Cardio & daily movement
 
 - 1–2 brisk or incline walks a week, 45 minutes each.
