@@ -30,14 +30,15 @@ The approach is body recomposition: a small calorie deficit, high protein, and r
 | 5:00 am | Coffee with milk | — |
 | 7:00–7:30 am | **Breakfast:** 3 eggs or a 2-egg omelette + 1 dosa, **or** Greek yogurt + fruit | ~25–30 g |
 | 10:00 am | Coffee with milk | — |
-| 12:30 pm | **Lunch:** see options below | ~35–45 g |
+| 12:30 pm | **Lunch:** see options below, + an orange or apple | ~35–45 g |
 | 3:30 pm | **Snack:** curd, a handful of nuts, or roasted chana (coffee optional) | ~10–15 g |
-| 6:30 pm | **Dinner:** 2–3 chapatis + chicken, fish, dal or paneer curry + vegetables or salad | ~30–35 g |
+| 6:30 pm | **Dinner:** 2–3 chapatis (2 when you have fruit) + chicken, fish, dal or paneer curry + vegetables or salad, + an orange or apple | ~30–35 g |
 | 7:00–7:20 pm | Walk after dinner | — |
 | 8:30 pm | Milk + 1 tbsp collagen | ~10 g |
 
 **Guidelines:**
 
+- **Fruit:** an orange or apple with lunch and dinner on most days. Two pieces add ~120–190 kcal a day, so keep dinner to 2 chapatis (or ⅔ cup rice) on those days to stay at target.
 - Keep oil and ghee to about 2–3 teaspoons a day.
 - Make half of each plate vegetables.
 - Finish eating 2–3 hours before bed.
@@ -155,10 +156,10 @@ You only ever have the shake at home after training, so the blueberries and milk
 | 6:10 am | Leave for work, carrying breakfast, lunch and a snack |
 | 7:30 am | **Breakfast at the office:** 3 boiled eggs + fruit, or a Greek yogurt tub + fruit |
 | 10:00 am | Coffee with milk |
-| 12:30 pm | Lunch (packed, from the lunch options) |
+| 12:30 pm | Lunch (packed, from the lunch options) + orange or apple |
 | 3:30 pm | Snack: curd, nuts or roasted chana |
 | 6:10 pm | Home |
-| 6:30 pm | Dinner |
+| 6:30 pm | Dinner + orange or apple |
 | 7:00–7:20 pm | Walk after dinner |
 | 8:30 pm | Milk + collagen |
 
@@ -174,10 +175,10 @@ You only ever have the shake at home after training, so the blueberries and milk
 | 7:00 am | Protein shake |
 | 7:30 am | Breakfast before work starts at 8:00 |
 | 10:00 am | Coffee with milk |
-| 12:30 pm | Lunch |
+| 12:30 pm | Lunch + orange or apple |
 | 3:30 pm | **Skip the snack.** The shake replaces it. |
 | 4:30–5:00 pm | After work: a short walk (optional) |
-| 6:30 pm | Dinner |
+| 6:30 pm | Dinner + orange or apple |
 | 7:00–7:20 pm | Walk after dinner |
 | 8:30 pm | Milk + collagen |
 
