@@ -83,6 +83,26 @@ Each option gives roughly 35–45 g protein and 450–600 kcal.
 - Keep these on hand: tinned tuna and salmon, eggs, rice pouches, salad kits, frozen vegetables and Greek yogurt.
 - Creamy salad-kit dressings can add 150+ kcal. Use half the packet, or swap in lemon and yogurt.
 
+## Easy Dinner Options
+
+Each option gives roughly 30–40 g protein and 500–650 kcal. Keep chapatis to 2–3 (or swap in ⅔ cup rice) and fill half the plate with vegetables.
+
+1. **Chicken curry + chapatis:** 150 g chicken breast or thigh (skin off) in an onion-tomato curry with 1 tsp oil, 2 chapatis and cucumber-onion salad. Batch cook enough for 2–3 nights.
+2. **Fish curry + rice:** 150 g white fish (basa, barramundi or ling) in a tamarind or coconut-light curry, with ⅔ cup rice and stir-fried beans or cabbage (poriyal).
+3. **Dal + paneer:** 1 cup dal (toor or moong) + 100 g paneer tikka (pan-grilled or air-fried), with 2 chapatis and sautéed spinach.
+4. **Egg curry:** 3 boiled eggs in a light masala gravy, with 2 chapatis and a vegetable side.
+5. **Chicken or tofu stir-fry:** 150 g chicken or firm tofu, frozen stir-fry veg, soy, garlic and chilli, with ⅔ cup rice or 2 chapatis. About 15 minutes.
+6. **Kheema with peas:** 150 g lean beef or chicken mince cooked with peas, onion and spices, with 2 chapatis. Cook a batch on Sunday.
+7. **Sambar + grilled chicken:** a bowl of vegetable-heavy sambar with grilled chicken pieces, plus 1 dosa or ⅔ cup rice.
+8. **Salmon + roast veg:** a salmon fillet with air-fried or oven-roasted pumpkin, zucchini and capsicum. Low-carb nights are fine occasionally.
+
+**Tips:**
+
+- **Thicken without cream.** Use tomato, onion or a spoon of Greek yogurt instead of cream or lots of coconut milk.
+- **Measure the oil.** A tadka with 1 tsp of oil or ghee is enough. Most of the extra calories hide here.
+- **Make chapatis smaller and drier.** Skip ghee on top, or use wholemeal or multigrain atta.
+- **Cook ahead.** Cooking a curry base or protein once makes 2–3 dinners and cuts weeknight cooking to reheating.
+
 ## Workout Plan
 
 ### Strength: 3 days a week (e.g. Mon/Wed/Fri), about 45 minutes, full body
