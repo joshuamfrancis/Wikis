@@ -2,6 +2,8 @@
 
 The approach is body recomposition: a small calorie deficit, high protein, and regular strength training.
 
+> 🖨️ **Printable fridge sheet:** [fridge-plan.pdf](fridge-plan.pdf) (2 pages, A4) · [HTML version](fridge-plan.html)
+
 ## Key Numbers
 
 | Item | Target |
